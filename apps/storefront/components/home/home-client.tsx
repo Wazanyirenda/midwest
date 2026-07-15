@@ -15,7 +15,6 @@ const PRODUCTS = [
   { name: "TB-500",      category: "Tissue Recovery",    handle: "tb-500",      purity: "≥98%", price: "$59.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/tb-500.jpg` },
   { name: "Ipamorelin",  category: "Growth Hormone",     handle: "ipamorelin",  purity: "≥98%", price: "$39.99",  sizes: ["2mg", "5mg", "10mg"], badge: null,          thumbnail: `${IMAGE_BASE}/ipamorelin.jpg` },
   { name: "CJC-1295",    category: "Growth Hormone",     handle: "cjc-1295",    purity: "≥98%", price: "$44.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/cjc-1295-dac.jpg` },
-  { name: "Semaglutide", category: "GLP-1 Agonist",      handle: "semaglutide", purity: "≥97%", price: "$89.99",  sizes: ["2mg", "5mg"],         badge: "New",         thumbnail: null },
   { name: "Retatrutide", category: "GLP-1 / GIP / GCG", handle: "retatrutide", purity: "≥96%", price: "$129.99", sizes: ["2mg"],                 badge: "New",         thumbnail: `${IMAGE_BASE}/retatrutide.jpg` },
 ]
 

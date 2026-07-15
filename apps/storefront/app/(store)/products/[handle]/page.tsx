@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getProductByHandle } from "@/lib/products"
-import { formatPrice } from "@/lib/utils"
-import { AddToCartButton } from "@/components/store/add-to-cart-button"
+import { ProductPurchase } from "@/components/store/product-purchase"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -34,19 +33,11 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(handle)
   if (!product) notFound()
 
-  const variants = product.variants ?? []
-  const firstVariant = variants[0]
-  const firstVariantId = firstVariant?.id ?? ""
-
-  const prices = variants.map((v) => ({
+  const variants = (product.variants ?? []).map((v) => ({
     id: v.id,
     title: v.title,
-    price: { amount: v.price_cents },
+    price_cents: v.price_cents,
   }))
-
-  const lowestPrice = prices
-    .map((v) => v.price.amount)
-    .sort((a, b) => a - b)[0]
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -76,74 +67,34 @@ export default async function ProductPage({ params }: Props) {
               Research peptide
             </p>
             <h1 className="text-3xl font-bold text-sand-900">{product.title}</h1>
-            {lowestPrice != null && (
-              <p className="mt-3 text-2xl font-semibold text-brand-600">
-                From {formatPrice(lowestPrice)}
-              </p>
+          </div>
+
+          {/* Price, variant selector, add to cart */}
+          <ProductPurchase variants={variants}>
+            {/* Description */}
+            {product.description && (
+              <div className="prose prose-sm max-w-none text-sand-600">
+                <p>{product.description}</p>
+              </div>
             )}
-          </div>
 
-          {/* Variant selector */}
-          {variants.length > 1 && (
-            <div>
-              <label className="block text-sm font-medium text-sand-700 mb-3">
-                Select size / concentration
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {prices.map((v) => (
-                  <button
-                    key={v.id}
-                    className="rounded-full border border-sand-300 px-4 py-2 text-sm
-                      hover:border-brand-500 hover:text-brand-700 transition-colors
-                      first:border-brand-500 first:text-brand-700 first:bg-brand-50"
-                  >
-                    {v.title}
-                    {v.price?.amount != null && (
-                      <span className="ml-1 text-sand-400">
-                        — {formatPrice(v.price.amount)}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+            {/* COA / Batch info */}
+            <div className="rounded-2xl border border-sand-200 bg-sand-50 p-5 text-sm space-y-2.5">
+              {[
+                { label: "Purity",                  value: "≥ 98% (HPLC verified)" },
+                { label: "Certificate of Analysis", value: "Available on request", link: true },
+                { label: "Batch / Lot",             value: "See product label", muted: true },
+                { label: "Form",                    value: "Lyophilized powder" },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between">
+                  <span className="font-medium text-sand-700">{row.label}</span>
+                  <span className={row.link ? "text-brand-600 cursor-pointer hover:underline" : row.muted ? "text-sand-400 italic" : "text-sand-600"}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Description */}
-          {product.description && (
-            <div className="prose prose-sm max-w-none text-sand-600">
-              <p>{product.description}</p>
-            </div>
-          )}
-
-          {/* COA / Batch info */}
-          <div className="rounded-2xl border border-sand-200 bg-sand-50 p-5 text-sm space-y-2.5">
-            {[
-              { label: "Purity",                  value: "≥ 98% (HPLC verified)" },
-              { label: "Certificate of Analysis", value: "Available on request", link: true },
-              { label: "Batch / Lot",             value: "See product label", muted: true },
-              { label: "Form",                    value: "Lyophilized powder" },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between">
-                <span className="font-medium text-sand-700">{row.label}</span>
-                <span className={row.link ? "text-brand-600 cursor-pointer hover:underline" : row.muted ? "text-sand-400 italic" : "text-sand-600"}>
-                  {row.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Add to cart */}
-          {firstVariantId ? (
-            <AddToCartButton variantId={firstVariantId} />
-          ) : (
-            <button
-              disabled
-              className="w-full rounded-full bg-sand-200 px-6 py-3.5 text-base font-semibold text-sand-400 cursor-not-allowed"
-            >
-              Out of Stock
-            </button>
-          )}
+          </ProductPurchase>
 
           {/* Trust badges */}
           <div className="flex flex-wrap gap-2 text-xs text-sand-500">

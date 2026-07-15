@@ -52,6 +52,7 @@ export async function addToCart(variantId: string, quantity = 1) {
 
   revalidatePath("/cart")
   revalidatePath("/checkout")
+  revalidatePath("/", "layout")
 }
 
 export async function updateLineItemQuantity(
@@ -71,12 +72,14 @@ export async function updateLineItemQuantity(
 
   revalidatePath("/cart")
   revalidatePath("/checkout")
+  revalidatePath("/", "layout")
 }
 
 export async function removeLineItem(cartId: string, lineItemId: string) {
   await supabase.from("cart_items").delete().eq("id", lineItemId).eq("cart_id", cartId)
   revalidatePath("/cart")
   revalidatePath("/checkout")
+  revalidatePath("/", "layout")
 }
 
 export async function updateCartContact(
