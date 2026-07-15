@@ -10,10 +10,6 @@ function adminEmails(): string[] {
 }
 
 export async function isAdmin(): Promise<boolean> {
-  // TEMPORARY: admin auth disabled for local dashboard access.
-  // Restore the check below before deploying anywhere reachable by others.
-  return true
-  /*
   const user = await currentUser()
   if (!user) return false
 
@@ -25,7 +21,6 @@ export async function isAdmin(): Promise<boolean> {
   return user.emailAddresses.some((e) =>
     allowed.includes(e.emailAddress.toLowerCase())
   )
-  */
 }
 
 export async function requireAdmin(): Promise<void> {
