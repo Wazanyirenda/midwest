@@ -128,7 +128,7 @@ function Hero() {
 
           {/* Right: hero image */}
           <motion.div
-            className="relative overflow-hidden rounded-2xl border border-white/10"
+            className="relative overflow-hidden rounded-2xl"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.35 }}
