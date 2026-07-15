@@ -17,7 +17,7 @@ export default async function seedResearchPeptides({ container }: ExecArgs) {
       title: "BPC-157",
       subtitle: "Body Protection Compound-157",
       description:
-        "BPC-157 is a synthetic peptide consisting of 15 amino acids. For research use only — not for human consumption.",
+        "BPC-157 is a synthetic peptide consisting of 15 amino acids. For research purposes only.",
       handle: "bpc-157",
       status: "published" as const,
       options: [{ title: "Size", values: [] }, { title: "Purity", values: [] }],
@@ -44,7 +44,7 @@ export default async function seedResearchPeptides({ container }: ExecArgs) {
       title: "TB-500",
       subtitle: "Thymosin Beta-4 Fragment",
       description:
-        "TB-500 is a synthetic version of the naturally occurring peptide Thymosin Beta-4. For research use only — not for human consumption.",
+        "TB-500 is a synthetic version of the naturally occurring peptide Thymosin Beta-4. For research purposes only.",
       handle: "tb-500",
       status: "published" as const,
       options: [{ title: "Size", values: [] }, { title: "Purity", values: [] }],
@@ -63,7 +63,7 @@ export default async function seedResearchPeptides({ container }: ExecArgs) {
       title: "Semaglutide",
       subtitle: "GLP-1 Receptor Agonist Peptide",
       description:
-        "Semaglutide is a glucagon-like peptide-1 (GLP-1) receptor agonist peptide. For research use only — not for human consumption.",
+        "Semaglutide is a glucagon-like peptide-1 (GLP-1) receptor agonist peptide. For research purposes only.",
       handle: "semaglutide",
       status: "published" as const,
       options: [{ title: "Size", values: [] }, { title: "Purity", values: [] }],
