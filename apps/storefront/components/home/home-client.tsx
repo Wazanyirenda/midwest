@@ -7,13 +7,15 @@ import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck } from "lucide-re
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 
+const IMAGE_BASE = "https://jcwoamyegoizodxfqhjn.supabase.co/storage/v1/object/public/product-images"
+
 const PRODUCTS = [
-  { name: "BPC-157",     category: "Healing / GI",      handle: "bpc-157",     purity: "≥98%", price: "$49.99",  sizes: ["2mg", "5mg", "10mg"], badge: "Best seller" },
-  { name: "TB-500",      category: "Tissue Recovery",    handle: "tb-500",      purity: "≥98%", price: "$59.99",  sizes: ["2mg", "5mg"],         badge: null },
-  { name: "Ipamorelin",  category: "Growth Hormone",     handle: "ipamorelin",  purity: "≥98%", price: "$39.99",  sizes: ["2mg", "5mg", "10mg"], badge: null },
-  { name: "CJC-1295",    category: "Growth Hormone",     handle: "cjc-1295",    purity: "≥98%", price: "$44.99",  sizes: ["2mg", "5mg"],         badge: null },
-  { name: "Semaglutide", category: "GLP-1 Agonist",      handle: "semaglutide", purity: "≥97%", price: "$89.99",  sizes: ["2mg", "5mg"],         badge: "New" },
-  { name: "Retatrutide", category: "GLP-1 / GIP / GCG", handle: "retatrutide", purity: "≥96%", price: "$129.99", sizes: ["2mg"],                 badge: "New" },
+  { name: "BPC-157",     category: "Healing / GI",      handle: "bpc-157",     purity: "≥98%", price: "$49.99",  sizes: ["2mg", "5mg", "10mg"], badge: "Best seller", thumbnail: `${IMAGE_BASE}/bpc-157.jpg` },
+  { name: "TB-500",      category: "Tissue Recovery",    handle: "tb-500",      purity: "≥98%", price: "$59.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/tb-500.jpg` },
+  { name: "Ipamorelin",  category: "Growth Hormone",     handle: "ipamorelin",  purity: "≥98%", price: "$39.99",  sizes: ["2mg", "5mg", "10mg"], badge: null,          thumbnail: `${IMAGE_BASE}/ipamorelin.jpg` },
+  { name: "CJC-1295",    category: "Growth Hormone",     handle: "cjc-1295",    purity: "≥98%", price: "$44.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/cjc-1295-dac.jpg` },
+  { name: "Semaglutide", category: "GLP-1 Agonist",      handle: "semaglutide", purity: "≥97%", price: "$89.99",  sizes: ["2mg", "5mg"],         badge: "New",         thumbnail: null },
+  { name: "Retatrutide", category: "GLP-1 / GIP / GCG", handle: "retatrutide", purity: "≥96%", price: "$129.99", sizes: ["2mg"],                 badge: "New",         thumbnail: `${IMAGE_BASE}/retatrutide.jpg` },
 ]
 
 const STATS = [
@@ -252,9 +254,18 @@ function ProductCard({ product }: { product: (typeof PRODUCTS)[number] }) {
             {product.badge}
           </span>
         )}
-        <span className="font-mono text-3xl font-bold text-sand-300 group-hover:scale-110 transition-transform duration-300 select-none">
-          {product.name.slice(0, 3).toUpperCase()}
-        </span>
+        {product.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.thumbnail}
+            alt={product.name}
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <span className="font-mono text-3xl font-bold text-sand-300 group-hover:scale-110 transition-transform duration-300 select-none">
+            {product.name.slice(0, 3).toUpperCase()}
+          </span>
+        )}
       </div>
 
       {/* Info */}
