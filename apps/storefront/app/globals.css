@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --header-height: 3.5rem;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-sand-50 text-sand-900;
+    font-feature-settings: "ss01", "cv01";
+  }
+
+  /* Tighter heading tracking */
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
+  }
+
+  /* Clean prose for legal pages */
+  .prose h2 {
+    @apply mt-8 mb-3 text-lg font-semibold text-sand-900;
+  }
+  .prose h3 {
+    @apply mt-5 mb-2 text-base font-semibold text-sand-800;
+  }
+  .prose p {
+    @apply mb-4 text-sand-700 leading-relaxed;
+  }
+  .prose ul {
+    @apply mb-4 list-disc pl-5 space-y-1 text-sand-700;
+  }
+  .prose ol {
+    @apply mb-4 list-decimal pl-5 space-y-1 text-sand-700;
+  }
+  .prose a {
+    @apply text-brand-700 underline underline-offset-2 hover:text-brand-800;
+  }
+  .prose strong {
+    @apply font-semibold text-sand-900;
+  }
+}
+
+@layer utilities {
+  /* Monospace data labels */
+  .data-label {
+    @apply font-mono text-xs tracking-wide text-sand-500 uppercase;
+  }
+
+  /* Section divider */
+  .section-rule {
+    @apply border-t border-sand-200;
+  }
+
+  /* Hide scrollbar while keeping scroll functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

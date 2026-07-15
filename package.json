@@ -1,0 +1,14 @@
+{
+  "name": "midwestern-peptides",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter storefront dev",
+    "build": "pnpm --filter storefront build",
+    "lint": "pnpm --filter storefront lint"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
