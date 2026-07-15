@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { useRef } from "react"
+import { motion, useScroll, useTransform } from "framer-motion"
 import { Reveal, StaggerReveal, StaggerItem } from "@/components/ui/reveal"
 import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck } from "lucide-react"
 
@@ -60,8 +61,17 @@ export function HomeClient() {
 // ─── Hero ─────────────────────────────────────────────────────────────────
 
 function Hero() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  })
+  const imageY = useTransform(scrollYProgress, [0, 1], [0, 90])
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08])
+  const imageRotate = useTransform(scrollYProgress, [0, 1], [0, -3])
+
   return (
-    <section className="bg-ink text-white">
+    <section ref={sectionRef} className="bg-ink text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         <div className="grid lg:grid-cols-2 gap-14 items-center">
 
@@ -133,10 +143,11 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.35 }}
           >
-            <img
+            <motion.img
               src={`${IMAGE_BASE}/bg-object.png`}
               alt="NAD+ research peptide vial"
               className="w-full h-auto object-cover"
+              style={{ y: imageY, scale: imageScale, rotate: imageRotate }}
             />
           </motion.div>
 
