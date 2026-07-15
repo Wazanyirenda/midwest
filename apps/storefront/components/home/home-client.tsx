@@ -18,13 +18,6 @@ const PRODUCTS = [
   { name: "Retatrutide", category: "GLP-1 / GIP / GCG", handle: "retatrutide", purity: "≥96%", price: "$129.99", sizes: ["2mg"],                 badge: "New",         thumbnail: `${IMAGE_BASE}/retatrutide.jpg` },
 ]
 
-const STATS = [
-  { value: "50+",   label: "Research compounds"    },
-  { value: "≥98%",  label: "Avg. batch purity"     },
-  { value: "100%",  label: "COA verified batches"  },
-  { value: "24hr",  label: "Dispatch window"       },
-]
-
 const HOW_IT_WORKS = [
   {
     title: "Independent testing",
@@ -90,7 +83,7 @@ function Hero() {
                 animate={{ y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               >
-                Trusted US supplier of lab-tested research peptides.
+                Trusted US supplier of lab-tested peptides.
               </motion.h1>
             </div>
 
@@ -133,24 +126,18 @@ function Hero() {
             </motion.div>
           </div>
 
-          {/* Right: Stats grid */}
+          {/* Right: hero image */}
           <motion.div
-            className="grid grid-cols-2 gap-4"
+            className="relative overflow-hidden rounded-2xl border border-white/10"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.35 }}
           >
-            {STATS.map((s) => (
-              <div
-                key={s.label}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors"
-              >
-                <p className="text-2xl font-bold text-white">{s.value}</p>
-                <p className="font-mono text-[10px] text-sand-500 uppercase tracking-wider mt-1.5">
-                  {s.label}
-                </p>
-              </div>
-            ))}
+            <img
+              src={`${IMAGE_BASE}/bg-object.png`}
+              alt="NAD+ research peptide vial"
+              className="w-full h-auto object-cover"
+            />
           </motion.div>
 
         </div>
