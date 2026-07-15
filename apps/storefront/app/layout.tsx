@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { SmoothScroll } from "@/components/providers/smooth-scroll"
+// @ts-ignore: allow side-effect css import in Next.js app directory
 import "./globals.css"
 
 const inter = Inter({

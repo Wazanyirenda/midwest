@@ -136,8 +136,7 @@ export function Footer() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-xs text-sand-600 leading-relaxed max-w-3xl">
             All products sold by Midwestern Peptides are intended strictly for laboratory
-            research and scientific investigation by qualified researchers. These
-            statements have not been evaluated by the FDA. By purchasing you confirm you are
+            research and scientific investigation by qualified researchers. By purchasing you confirm you are
             21+ and acquiring these products for lawful research purposes only.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-sand-600">
