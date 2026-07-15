@@ -10,13 +10,14 @@ import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck } from "lucide-re
 
 const IMAGE_BASE = "https://jcwoamyegoizodxfqhjn.supabase.co/storage/v1/object/public/product-images"
 
-const PRODUCTS = [
-  { name: "BPC-157",     category: "Healing / GI",      handle: "bpc-157",     purity: "≥98%", price: "$49.99",  sizes: ["2mg", "5mg", "10mg"], badge: "Best seller", thumbnail: `${IMAGE_BASE}/bpc-157.jpg` },
-  { name: "TB-500",      category: "Tissue Recovery",    handle: "tb-500",      purity: "≥98%", price: "$59.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/tb-500.jpg` },
-  { name: "Ipamorelin",  category: "Growth Hormone",     handle: "ipamorelin",  purity: "≥98%", price: "$39.99",  sizes: ["2mg", "5mg", "10mg"], badge: null,          thumbnail: `${IMAGE_BASE}/ipamorelin.jpg` },
-  { name: "CJC-1295",    category: "Growth Hormone",     handle: "cjc-1295",    purity: "≥98%", price: "$44.99",  sizes: ["2mg", "5mg"],         badge: null,          thumbnail: `${IMAGE_BASE}/cjc-1295-dac.jpg` },
-  { name: "Retatrutide", category: "GLP-1 / GIP / GCG", handle: "retatrutide", purity: "≥96%", price: "$129.99", sizes: ["2mg"],                 badge: "New",         thumbnail: `${IMAGE_BASE}/retatrutide.jpg` },
-]
+export type FeaturedProduct = {
+  name: string
+  category: string
+  handle: string
+  price: string
+  badge: string | null
+  thumbnail: string | null
+}
 
 const HOW_IT_WORKS = [
   {
@@ -45,12 +46,12 @@ const CATEGORIES = [
 
 // ─── Root ──────────────────────────────────────────────────────────────────
 
-export function HomeClient() {
+export function HomeClient({ featured }: { featured: FeaturedProduct[] }) {
   return (
     <main>
       <Hero />
       <StatsBar />
-      <ProductGrid />
+      <ProductGrid products={featured} />
       <HowItWorks />
       <Newsletter />
     </main>
@@ -204,7 +205,7 @@ function StatsBar() {
 
 // ─── Product Grid ──────────────────────────────────────────────────────────
 
-function ProductGrid() {
+function ProductGrid({ products }: { products: FeaturedProduct[] }) {
   return (
     <div className="bg-sand-50 border-b border-sand-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
@@ -228,7 +229,7 @@ function ProductGrid() {
 
         <StaggerReveal stagger={0.06}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
-            {PRODUCTS.map((p) => (
+            {products.map((p) => (
               <StaggerItem key={p.handle}>
                 <ProductCard product={p} />
               </StaggerItem>
@@ -241,7 +242,7 @@ function ProductGrid() {
   )
 }
 
-function ProductCard({ product }: { product: (typeof PRODUCTS)[number] }) {
+function ProductCard({ product }: { product: FeaturedProduct }) {
   return (
     <Link href={`/products/${product.handle}`} className="group block">
       {/* Image placeholder */}
@@ -282,7 +283,7 @@ function ProductCard({ product }: { product: (typeof PRODUCTS)[number] }) {
             style={{ backgroundColor: i < 4 ? "#16a34a" : "#d9d6cd" }}
           />
         ))}
-        <span className="font-mono text-[10px] text-sand-400 ml-1">{product.purity}</span>
+        <span className="font-mono text-[10px] text-sand-400 ml-1">99%</span>
       </div>
 
       <p className="font-semibold text-sand-900 text-sm mt-1.5">{product.price}</p>
