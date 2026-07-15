@@ -87,7 +87,7 @@ export default async function CheckoutPage() {
             <div className="mt-4 space-y-1 text-xs text-gray-400">
               <p>🔒 256-bit SSL encryption</p>
               <p>📦 Discreet plain packaging</p>
-              <p>🔬 Research use only</p>
+            
             </div>
           </div>
         </aside>

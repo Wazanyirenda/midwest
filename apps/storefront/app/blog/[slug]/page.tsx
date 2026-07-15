@@ -49,12 +49,6 @@ export default async function BlogPostPage({ params }: Props) {
         <span className="text-gray-900 truncate max-w-xs">{post.title}</span>
       </nav>
 
-      {/* Research use disclaimer */}
-      <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <strong>Research Use Only:</strong> This article is for informational and educational
-        purposes only. It does not constitute medical advice or instructions for human use.
-      </div>
-
       {/* Post header */}
       <header className="mb-8">
         <div className="mb-3 flex items-center gap-3 text-sm text-gray-500">

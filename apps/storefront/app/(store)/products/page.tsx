@@ -5,8 +5,7 @@ import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Research Peptides",
-  description:
-    "Browse our catalog of high-purity research peptides. All products are for research use only.",
+  description: "Browse our catalog of high-purity research peptides.",
 }
 
 export const revalidate = 3600
