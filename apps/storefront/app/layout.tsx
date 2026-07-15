@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s — Midwestern Peptides",
   },
   description:
-    "High-purity research peptides. ≥98% purity by HPLC. Third-party tested, batch-verified, COA on every lot. Research use only.",
+    "High-purity research peptides. ≥98% purity by HPLC. Third-party tested, batch-verified, COA on every lot.",
   keywords: ["research peptides", "BPC-157", "TB-500", "semaglutide", "peptide supplier"],
   robots: { index: true, follow: true },
   openGraph: {

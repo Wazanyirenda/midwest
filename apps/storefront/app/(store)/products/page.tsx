@@ -43,10 +43,7 @@ export default async function ProductsPage({
             </Link>
           )}
         </div>
-        <p className="mt-2 text-sm text-sand-500">
-          All products are for <strong className="text-sand-700">research use only</strong> — not for
-          human consumption.
-        </p>
+        
       </div>
 
       {products.length === 0 && (

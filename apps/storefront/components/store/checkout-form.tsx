@@ -29,7 +29,7 @@ const contactSchema = z.object({
   state: z.string().min(2, "State required").max(2, "Use 2-letter state code"),
   zip: z.string().min(5, "ZIP code required"),
   ageConfirmed: z.boolean().refine((v) => v === true, {
-    message: "You must confirm you are 21+ and purchasing for research",
+    message: "You must confirm you are 21+",
   }),
 })
 
@@ -154,9 +154,7 @@ function Step1({ onNext }: { onNext: (data: ContactData) => void }) {
             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
           />
           <span className="text-sm text-amber-800">
-            I confirm I am <strong>21 years of age or older</strong> and am purchasing these
-            products solely for legitimate laboratory research purposes. I understand these
-            products are <strong>not for human consumption</strong>.
+            I confirm I am <strong>21 years of age or older</strong>
           </span>
         </label>
         {errors.ageConfirmed && (
@@ -367,7 +365,7 @@ function Step3({
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-        By placing this order you confirm these products are for <strong>research use only</strong> and you are 21+.
+        By placing this order you confirm you are 21+.
       </div>
 
       {paymentMethod === "stripe" && stripeClientSecret && stripePromise ? (

@@ -80,7 +80,7 @@ function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
             >
-              North Dakota · Est. 2024 · Research use only
+              North Dakota · Est. 2024 · Lab-tested research peptides
             </motion.p>
 
             <div className="overflow-hidden mb-6">

@@ -55,12 +55,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         </ol>
       </div>
 
-      {/* Disclaimer */}
-      <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-700 text-left">
-        <strong>Research Use Only Reminder:</strong> The products in your order are
-        intended solely for laboratory research and scientific investigation. They
-        are not for human consumption.
-      </div>
+    
 
       {/* Actions */}
       <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">

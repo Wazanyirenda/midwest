@@ -107,12 +107,6 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* Research disclaimer */}
-      <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-700">
-        <strong>Research Use Only:</strong> All products purchased through this
-        account are for legitimate scientific research purposes only. Not for
-        human consumption.
-      </div>
     </main>
   )
 }

@@ -15,8 +15,7 @@ export default function TermsPage() {
 
       <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
         <strong>Important:</strong> By accessing this website or placing an order, you agree to
-        these Terms. Please read them carefully. These products are for{" "}
-        <strong>research use only</strong> — not for human consumption.
+        these Terms. Please read them carefully.
       </div>
 
       <div className="mt-8 prose prose-gray max-w-none">

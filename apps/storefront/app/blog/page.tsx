@@ -94,13 +94,7 @@ export default function BlogPage() {
         ))}
       </div>
 
-      {/* Research disclaimer */}
-      <div className="mt-16 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-700">
-        <strong>Disclaimer:</strong> All articles in the Midwestern Peptides Research Library are
-        intended solely for educational and informational purposes. They do not constitute medical
-        advice, treatment recommendations, or instructions for human use. All referenced peptides
-        are for research use only.
-      </div>
+   
     </main>
   )
 }
