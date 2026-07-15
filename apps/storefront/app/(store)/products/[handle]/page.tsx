@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: product.title,
-    description: `${product.description?.slice(0, 155) ?? "Research peptide for scientific investigation."} Research use only.`,
+    description: `${product.description?.slice(0, 155) ?? "Research peptide for scientific investigation."}.`,
     openGraph: {
       title: `${product.title} | Midwestern Peptides`,
       images: product.thumbnail ? [product.thumbnail] : [],
@@ -50,13 +50,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Research use banner */}
-      <div className="mb-8 rounded-full border border-amber-200 bg-amber-50 px-5 py-2.5 text-sm text-amber-800 inline-flex items-center gap-2">
-        <span className="bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-          Notice
-        </span>
-        <strong>Research Use Only</strong> — Not for human consumption. Must be 21+ to purchase.
-      </div>
+    
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {/* Image */}
