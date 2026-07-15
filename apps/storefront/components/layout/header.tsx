@@ -9,7 +9,7 @@ export function Header() {
     <div className="sticky top-0 z-50">
       {/* Research-use notice */}
       <div className="bg-ink text-sand-400 px-4 py-1 text-center font-mono text-[10px] tracking-widest uppercase">
-        must be 21+
+        50% off all products for a limited time.
       </div>
 
       {/* Main nav */}
