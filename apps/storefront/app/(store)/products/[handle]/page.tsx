@@ -115,15 +115,7 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Full disclaimer */}
-      <div className="mt-16 rounded-2xl border border-sand-200 bg-sand-50 p-6 text-xs text-sand-500 leading-relaxed">
-        <strong className="block text-sand-600 mb-1">Important Disclaimer</strong>
-        This product is sold exclusively for laboratory research and scientific
-        investigation by qualified researchers. It is not intended for human or
-        animal consumption, medical treatment, veterinary use, or any application
-        outside of controlled research settings. These statements have not been
-        evaluated by the FDA. Midwestern Peptides makes no therapeutic or medical claims.
-      </div>
+  
     </main>
   )
 }
