@@ -1,5 +1,5 @@
-import { SignUp } from "@clerk/nextjs"
 import type { Metadata } from "next"
+import { SignUpForm } from "@/components/auth/sign-up-form"
 
 export const metadata: Metadata = {
   title: "Create Account",
@@ -17,16 +17,7 @@ export default function SignUpPage() {
             Track orders, save addresses, and check out faster.
           </p>
         </div>
-        <SignUp
-          appearance={{
-            elements: {
-              rootBox: "w-full",
-              card: "shadow-md rounded-xl border border-gray-200",
-              headerTitle: "hidden",
-              headerSubtitle: "hidden",
-            },
-          }}
-        />
+        <SignUpForm />
         <p className="mt-4 text-center text-xs text-gray-400">
           By creating an account you confirm you are 21+ years of age and are
           purchasing for legitimate research purposes only.

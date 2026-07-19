@@ -1,5 +1,7 @@
-// Static blog posts — Phase 10 will migrate this to MDX files in /content/blog/
-// For now these serve as placeholders with real SEO-friendly content.
+// Static blog posts. Metadata lives here; article bodies (markdown) live in
+// lib/blog-content.ts and are attached by getAllPosts/getPostBySlug.
+
+import { POST_BODIES } from "./blog-content"
 
 export type BlogPost = {
   slug: string
@@ -9,9 +11,12 @@ export type BlogPost = {
   date: string
   readingTime: number
   published: boolean
+  body: string
 }
 
-export const BLOG_POSTS: BlogPost[] = [
+type BlogPostMeta = Omit<BlogPost, "body">
+
+const BLOG_POST_META: BlogPostMeta[] = [
   {
     slug: "what-is-bpc-157",
     title: "What is BPC-157? A Research Overview",
@@ -113,6 +118,11 @@ export const BLOG_POSTS: BlogPost[] = [
     published: true,
   },
 ]
+
+export const BLOG_POSTS: BlogPost[] = BLOG_POST_META.map((meta) => ({
+  ...meta,
+  body: POST_BODIES[meta.slug] ?? "",
+}))
 
 const CATEGORY_LABELS: Record<BlogPost["category"], string> = {
   educational: "Educational",

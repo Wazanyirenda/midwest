@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { updateProductStatus } from "@/app/actions/admin"
 import { VariantEditor } from "@/components/admin/variant-editor"
 

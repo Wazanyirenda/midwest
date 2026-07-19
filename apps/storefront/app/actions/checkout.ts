@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import Stripe from "stripe"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getCartById, CART_COOKIE } from "@/lib/cart"
 import { getShippingOptions } from "@/lib/shipping"
+import { getUser } from "@/lib/auth"
+import { sendOrderConfirmationEmail } from "@/lib/email"
 
 // ─── Shipping ─────────────────────────────────────────────────────────────────
 
@@ -78,10 +80,13 @@ export async function completeCart(cartId: string) {
   if (!cart.email) throw new Error("Cart is missing contact information")
   if (cart.items.length === 0) throw new Error("Cart is empty")
 
+  const user = await getUser()
+
   const { data: order, error } = await supabase
     .from("orders")
     .insert({
       cart_id: cart.id,
+      user_id: user?.id ?? null,
       email: cart.email,
       shipping_address: cart.shipping_address,
       subtotal_cents: cart.subtotal,
@@ -109,6 +114,22 @@ export async function completeCart(cartId: string) {
   await supabase.rpc("decrement_inventory", {
     items: cart.items.map((i) => ({ variant_id: i.variant.id, quantity: i.quantity })),
   })
+
+  // Fire-and-forget: an email failure must never fail the order.
+  sendOrderConfirmationEmail({
+    id: order.id,
+    display_id: order.display_id,
+    email: cart.email,
+    items: cart.items.map((i) => ({
+      product_title: i.variant.product.title,
+      variant_title: i.variant.title,
+      quantity: i.quantity,
+      unit_price_cents: i.unit_price,
+    })),
+    subtotal_cents: cart.subtotal,
+    shipping_cents: cart.shipping_total,
+    total_cents: cart.total,
+  }).catch(() => {})
 
   await supabase
     .from("carts")

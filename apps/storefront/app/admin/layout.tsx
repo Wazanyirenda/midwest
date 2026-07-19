@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { requireAdminOrRedirect } from "@/lib/admin"
 
 export const metadata = {
   title: "Admin",
@@ -10,6 +11,10 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Middleware also gates /admin by email, and every mutation re-checks via
+  // requireAdmin() — this is the layer that protects the order/PII pages.
+  await requireAdminOrRedirect()
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">

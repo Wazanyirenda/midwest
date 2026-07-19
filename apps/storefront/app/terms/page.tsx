@@ -53,7 +53,6 @@ export default function TermsPage() {
           <li>All prices are listed in USD and are subject to change without notice</li>
           <li>We reserve the right to cancel any order at our discretion</li>
           <li>Orders are not confirmed until payment is successfully processed</li>
-          <li>For crypto payments, orders are held until blockchain confirmation is received</li>
         </ul>
 
         <h2>5. Shipping & Delivery</h2>
@@ -68,7 +67,6 @@ export default function TermsPage() {
         <p>
           Due to the nature of research chemicals, we do not accept returns of opened products.
           If you receive a damaged or incorrect product, contact us within 7 days of delivery.
-          Crypto payments are <strong>non-refundable</strong> due to the nature of blockchain transactions.
           Card payment refunds are processed within 5–10 business days if approved.
         </p>
 

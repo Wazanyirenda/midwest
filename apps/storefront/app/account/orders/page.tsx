@@ -1,14 +1,17 @@
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
+import { Package } from "lucide-react"
+import { requireUser } from "@/lib/auth"
+import { getOrdersForUser } from "@/lib/orders"
 
 export const metadata: Metadata = {
   title: "My Orders",
   robots: { index: false, follow: false },
 }
 
-// Status badge styling
+export const dynamic = "force-dynamic"
+
+// Display statuses (DB "paid" maps to "processing" in lib/orders)
 const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pending", cls: "bg-yellow-100 text-yellow-700" },
   processing: { label: "Processing", cls: "bg-blue-100 text-blue-700" },
@@ -38,33 +41,19 @@ function formatDate(dateStr: string) {
   })
 }
 
-// TODO Phase 07: replace with real Medusa order fetch by customer email
-async function getOrdersForUser(_email: string) {
-  // Placeholder until Phase 07 wires up Medusa order API
-  return []
-}
-
 export default async function OrdersPage() {
-  const user = await currentUser()
-  if (!user) redirect("/sign-in")
-
-  const email = user.emailAddresses[0]?.emailAddress ?? ""
-  const orders = await getOrdersForUser(email)
+  const user = await requireUser("/account/orders")
+  const orders = await getOrdersForUser(user)
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/account" className="hover:text-gray-700">Account</Link>
-        <span>/</span>
-        <span className="text-gray-900">Orders</span>
-      </nav>
-
+    <main>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Order History</h1>
 
       {orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-dashed border-gray-300">
-          <div className="text-5xl mb-4">📋</div>
+        <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-dashed border-gray-300 bg-white">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+            <Package size={22} strokeWidth={1.5} />
+          </span>
           <h2 className="text-lg font-semibold text-gray-700">No orders yet</h2>
           <p className="mt-2 text-sm text-gray-500">
             Your order history will appear here after your first purchase.
@@ -78,14 +67,7 @@ export default async function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {(orders as Array<{
-            id: string
-            display_id: number
-            created_at: string
-            status: string
-            total: number
-            items: Array<{ title: string; quantity: number }>
-          }>).map((order) => (
+          {orders.map((order) => (
             <Link
               key={order.id}
               href={`/account/orders/${order.id}`}

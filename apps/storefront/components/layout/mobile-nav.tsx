@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs"
+import { signOut } from "@/app/actions/auth"
+import type { AuthUser } from "./auth-buttons"
 
 const NAV_LINKS = [
   { label: "Products",         href: "/products" },
@@ -11,7 +12,7 @@ const NAV_LINKS = [
   { label: "My Account",       href: "/account" },
 ]
 
-export function MobileNav() {
+export function MobileNav({ authUser }: { authUser: AuthUser | null }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -73,19 +74,28 @@ export function MobileNav() {
           </nav>
 
           <div className="mt-5 pt-4 border-t border-sand-100">
-            <SignedOut>
-              <SignInButton mode="redirect">
-                <button className="w-full rounded-full bg-ink py-2.5 text-sm font-semibold text-white hover:bg-ink-soft transition-colors">
-                  Sign in
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <div className="flex items-center gap-3">
-                <UserButton />
-                <span className="text-sm text-sand-600">Manage your account</span>
+            {!authUser ? (
+              <Link
+                href="/sign-in"
+                className="block w-full rounded-full bg-ink py-2.5 text-center text-sm font-semibold text-white hover:bg-ink-soft transition-colors"
+              >
+                Sign in
+              </Link>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="truncate text-sm text-sand-600">
+                  Signed in as {authUser.firstName ?? authUser.email}
+                </span>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-sand-300 px-4 py-1.5 text-sm font-medium text-sand-700 hover:border-brand-500 hover:text-ink transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </form>
               </div>
-            </SignedIn>
+            )}
           </div>
         </div>
       </div>

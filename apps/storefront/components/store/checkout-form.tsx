@@ -5,10 +5,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
+import { Check } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { updateCartContact } from "@/app/actions/cart"
 import { initiatePaymentSession, addShippingMethod, listShippingOptions, completeCart } from "@/app/actions/checkout"
+import { saveAddressFromCheckout } from "@/app/actions/addresses"
+import { Field, inputCls } from "@/components/ui/form-field"
+import { US_STATES } from "@/lib/us-states"
 
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 
@@ -31,22 +35,22 @@ const contactSchema = z.object({
   ageConfirmed: z.boolean().refine((v) => v === true, {
     message: "You must confirm you are 21+",
   }),
+  saveAddress: z.boolean().optional(),
 })
 
 type ContactData = z.infer<typeof contactSchema>
-type PaymentMethod = "stripe" | "nowpayments"
 
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
-  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
-  "VA","WA","WV","WI","WY",
-]
+export type CheckoutDefaults = Partial<
+  Pick<
+    ContactData,
+    "email" | "firstName" | "lastName" | "phone" | "address1" | "address2" | "city" | "state" | "zip"
+  >
+>
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: number }) {
-  const steps = ["Contact & Shipping", "Payment", "Review & Place Order"]
+  const steps = ["Contact & Shipping", "Review & Pay"]
   return (
     <ol className="mb-8 flex items-center gap-0">
       {steps.map((label, i) => {
@@ -62,7 +66,7 @@ function StepIndicator({ current }: { current: number }) {
                     : active ? "border-brand-600 text-brand-600 bg-white"
                     : "border-gray-300 text-gray-400 bg-white"}`}
               >
-                {done ? "✓" : num}
+                {done ? <Check size={14} strokeWidth={2.5} /> : num}
               </div>
               <span className={`mt-1 hidden sm:block text-xs ${active ? "font-semibold text-gray-900" : "text-gray-400"}`}>
                 {label}
@@ -78,24 +82,30 @@ function StepIndicator({ current }: { current: number }) {
   )
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-    </div>
-  )
-}
-
-const inputCls = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-
 // ─── Step 1: Contact + Shipping ───────────────────────────────────────────────
 
-function Step1({ onNext }: { onNext: (data: ContactData) => void }) {
+function Step1({
+  onNext,
+  defaults,
+  isSignedIn,
+  hasSavedAddress,
+}: {
+  onNext: (data: ContactData) => Promise<void>
+  defaults: CheckoutDefaults
+  isSignedIn: boolean
+  hasSavedAddress: boolean
+}) {
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    useForm<ContactData>({ resolver: zodResolver(contactSchema as any) })
+    useForm<ContactData>({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resolver: zodResolver(contactSchema as any),
+      defaultValues: {
+        ...defaults,
+        ageConfirmed: false,
+        // Default to saving when the user has no saved address yet.
+        saveAddress: isSignedIn && !hasSavedAddress,
+      },
+    })
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-5">
@@ -146,6 +156,17 @@ function Step1({ onNext }: { onNext: (data: ContactData) => void }) {
         </Field>
       </div>
 
+      {isSignedIn && (
+        <label className="flex items-start gap-3 cursor-pointer text-sm text-gray-600">
+          <input
+            {...register("saveAddress")}
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          <span>Save this address to my account for faster checkout</span>
+        </label>
+      )}
+
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
         <label className="flex items-start gap-3 cursor-pointer">
           <input
@@ -167,79 +188,13 @@ function Step1({ onNext }: { onNext: (data: ContactData) => void }) {
         disabled={isSubmitting}
         className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
       >
-        {isSubmitting ? "Saving…" : "Continue to Payment →"}
+        {isSubmitting ? "Saving…" : "Review Order →"}
       </button>
     </form>
   )
 }
 
-// ─── Step 2: Payment method ───────────────────────────────────────────────────
-
-function Step2({
-  onNext,
-  onBack,
-}: {
-  onNext: (method: PaymentMethod) => void
-  onBack: () => void
-}) {
-  const [selected, setSelected] = useState<PaymentMethod>("stripe")
-
-  return (
-    <div className="space-y-5">
-      <h2 className="text-lg font-semibold text-gray-900">Payment Method</h2>
-
-      <div className="space-y-3">
-        <label className={`flex items-start gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all
-          ${selected === "stripe" ? "border-brand-500 bg-brand-50" : "border-gray-200 hover:border-gray-300"}`}>
-          <input type="radio" name="payment" value="stripe"
-            checked={selected === "stripe"} onChange={() => setSelected("stripe")}
-            className="mt-1 h-4 w-4 text-brand-600" />
-          <div>
-            <div className="font-semibold text-gray-900">💳 Credit / Debit Card</div>
-            <div className="text-sm text-gray-500 mt-0.5">Visa, Mastercard, Amex — processed securely via Stripe</div>
-          </div>
-        </label>
-
-        <label className={`flex items-start gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all
-          ${selected === "nowpayments" ? "border-brand-500 bg-brand-50" : "border-gray-200 hover:border-gray-300"}`}>
-          <input type="radio" name="payment" value="nowpayments"
-            checked={selected === "nowpayments"} onChange={() => setSelected("nowpayments")}
-            className="mt-1 h-4 w-4 text-brand-600" />
-          <div>
-            <div className="font-semibold text-gray-900">₿ Cryptocurrency</div>
-            <div className="text-sm text-gray-500 mt-0.5">USDC, USDT, BTC, ETH and 350+ coins via NOWPayments</div>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {["USDC", "USDT", "BTC", "ETH", "SOL"].map((coin) => (
-                <span key={coin} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{coin}</span>
-              ))}
-            </div>
-          </div>
-        </label>
-      </div>
-
-      {selected === "nowpayments" && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
-          <strong>Note:</strong> Crypto payments require blockchain confirmations (usually 1–30 minutes).
-          Your order is held until payment is confirmed. Stablecoins (USDC/USDT) are fastest.
-          Crypto payments are non-refundable.
-        </div>
-      )}
-
-      <div className="flex gap-3">
-        <button onClick={onBack}
-          className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-          ← Back
-        </button>
-        <button onClick={() => onNext(selected)}
-          className="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors">
-          Review Order →
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Stripe payment form (used inside Step 3) ─────────────────────────────────
+// ─── Stripe payment form (used inside review step) ────────────────────────────
 
 function StripePaymentForm({
   cartId,
@@ -300,7 +255,7 @@ function StripePaymentForm({
   )
 }
 
-// ─── Step 3: Review + place order ────────────────────────────────────────────
+// ─── Step 2: Review + pay ─────────────────────────────────────────────────────
 
 type CartSummary = {
   id: string
@@ -314,22 +269,16 @@ function formatAmount(n: number | null | undefined) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n / 100)
 }
 
-function Step3({
+function ReviewStep({
   contact,
-  paymentMethod,
   cart,
   stripeClientSecret,
   onBack,
-  onSubmitCrypto,
-  submitting,
 }: {
   contact: ContactData
-  paymentMethod: PaymentMethod
   cart: CartSummary
   stripeClientSecret: string | null
   onBack: () => void
-  onSubmitCrypto: () => void
-  submitting: boolean
 }) {
   const router = useRouter()
 
@@ -368,21 +317,10 @@ function Step3({
         By placing this order you confirm you are 21+.
       </div>
 
-      {paymentMethod === "stripe" && stripeClientSecret && stripePromise ? (
+      {stripeClientSecret && stripePromise ? (
         <Elements stripe={stripePromise} options={{ clientSecret: stripeClientSecret, appearance: { theme: "stripe" } }}>
           <StripePaymentForm cartId={cart.id} onSuccess={handleOrderSuccess} onBack={onBack} />
         </Elements>
-      ) : paymentMethod === "nowpayments" ? (
-        <div className="flex gap-3">
-          <button onClick={onBack} disabled={submitting}
-            className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-            ← Back
-          </button>
-          <button onClick={onSubmitCrypto} disabled={submitting}
-            className="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors">
-            {submitting ? "Opening payment…" : "Pay with Crypto →"}
-          </button>
-        </div>
       ) : (
         <div className="flex gap-3">
           <button onClick={onBack}
@@ -406,19 +344,28 @@ type Props = {
   cartTotal: number | null
   cartSubtotal: number | null
   items: CartSummary["items"]
-  userEmail?: string
+  defaults?: CheckoutDefaults
+  isSignedIn?: boolean
+  hasSavedAddress?: boolean
 }
 
-export function CheckoutForm({ cartId, cartTotal, cartSubtotal, items, userEmail }: Props) {
+export function CheckoutForm({
+  cartId,
+  cartTotal,
+  cartSubtotal,
+  items,
+  defaults = {},
+  isSignedIn = false,
+  hasSavedAddress = false,
+}: Props) {
   const [step, setStep] = useState(1)
   const [contactData, setContactData] = useState<ContactData | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe")
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
-  const [cryptoInvoiceUrl, setCryptoInvoiceUrl] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleStep1(data: ContactData) {
+    setError(null)
+
     await updateCartContact(cartId, {
       email: data.email,
       first_name: data.firstName,
@@ -442,47 +389,35 @@ export function CheckoutForm({ cartId, cartTotal, cartSubtotal, items, userEmail
       // No shipping options configured yet — continue anyway
     }
 
+    if (isSignedIn && data.saveAddress) {
+      try {
+        await saveAddressFromCheckout({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          address_1: data.address1,
+          address_2: data.address2,
+          city: data.city,
+          province: data.state,
+          postal_code: data.zip,
+        })
+      } catch {
+        // Saving the address is a convenience — never block checkout on it
+      }
+    }
+
+    try {
+      const collection = await initiatePaymentSession(cartId, "stripe")
+      const session = collection?.payment_sessions?.[0]
+      const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
+      setStripeClientSecret(sessionData.client_secret ?? null)
+    } catch (e) {
+      setError((e as Error).message ?? "Could not initiate payment. Try again.")
+    }
+
     setContactData(data)
     setStep(2)
   }
-
-  async function handleStep2(method: PaymentMethod) {
-    setPaymentMethod(method)
-    setSubmitting(true)
-    setError(null)
-
-    try {
-      const collection = await initiatePaymentSession(cartId, method)
-      const session = collection?.payment_sessions?.[0]
-
-      const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
-      if (method === "stripe") {
-        setStripeClientSecret(sessionData.client_secret ?? null)
-      } else {
-        setCryptoInvoiceUrl(sessionData.invoiceUrl ?? null)
-      }
-    } catch (e) {
-      setError((e as Error).message ?? "Could not initiate payment. Try again.")
-      setSubmitting(false)
-      return
-    }
-
-    setSubmitting(false)
-    setStep(3)
-  }
-
-  async function handleCryptoSubmit() {
-    if (!cryptoInvoiceUrl) {
-      setError("No payment URL available. Please go back and try again.")
-      return
-    }
-    setSubmitting(true)
-    // Open the NOWPayments invoice in the same tab — they redirect back on success/cancel
-    window.location.href = cryptoInvoiceUrl
-  }
-
-  // Pre-fill email from Clerk if provided
-  const defaultEmail = userEmail
 
   return (
     <div>
@@ -495,28 +430,21 @@ export function CheckoutForm({ cartId, cartTotal, cartSubtotal, items, userEmail
       )}
 
       {step === 1 && (
-        <Step1 onNext={handleStep1} />
+        <Step1
+          onNext={handleStep1}
+          defaults={defaults}
+          isSignedIn={isSignedIn}
+          hasSavedAddress={hasSavedAddress}
+        />
       )}
-      {step === 2 && (
-        <Step2
-          onNext={handleStep2}
+      {step === 2 && contactData && (
+        <ReviewStep
+          contact={contactData}
+          cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, items }}
+          stripeClientSecret={stripeClientSecret}
           onBack={() => setStep(1)}
         />
       )}
-      {step === 3 && contactData && (
-        <Step3
-          contact={contactData}
-          paymentMethod={paymentMethod}
-          cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, items }}
-          stripeClientSecret={stripeClientSecret}
-          onBack={() => setStep(2)}
-          onSubmitCrypto={handleCryptoSubmit}
-          submitting={submitting}
-        />
-      )}
-
-      {/* Suppress unused variable warning for defaultEmail — used for future pre-fill */}
-      <input type="hidden" value={defaultEmail ?? ""} aria-hidden />
     </div>
   )
 }

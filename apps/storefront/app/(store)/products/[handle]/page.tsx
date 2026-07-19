@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { FlaskConical, Lock, Package, FileText } from "lucide-react"
 import { getProductByHandle } from "@/lib/products"
+import { getUser } from "@/lib/auth"
+import { getWishlistedProductIds } from "@/lib/wishlist"
 import { ProductPurchase } from "@/components/store/product-purchase"
+import { WishlistButton } from "@/components/store/wishlist-button"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -26,12 +30,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export const revalidate = 3600
+// Wishlist heart state is per-user — render per request.
+export const dynamic = "force-dynamic"
 
 export default async function ProductPage({ params }: Props) {
   const { handle } = await params
-  const product = await getProduct(handle)
+  const [product, user] = await Promise.all([getProduct(handle), getUser()])
   if (!product) notFound()
+
+  const wishlisted = user
+    ? (await getWishlistedProductIds(user.id)).has(product.id)
+    : false
 
   const variants = (product.variants ?? []).map((v) => ({
     id: v.id,
@@ -66,7 +75,10 @@ export default async function ProductPage({ params }: Props) {
             <p className="font-mono text-[10px] tracking-widest text-sand-400 uppercase mb-2">
               Research peptide
             </p>
-            <h1 className="text-3xl font-bold text-sand-900">{product.title}</h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-3xl font-bold text-sand-900">{product.title}</h1>
+              <WishlistButton productId={product.id} initial={wishlisted} className="mt-1 shrink-0" />
+            </div>
           </div>
 
           {/* Price, variant selector, add to cart */}
@@ -99,16 +111,17 @@ export default async function ProductPage({ params }: Props) {
           {/* Trust badges */}
           <div className="flex flex-wrap gap-2 text-xs text-sand-500">
             {[
-              "🔬 Third-party tested",
-              "🔒 Secure checkout",
-              "📦 Discreet shipping",
-              "💳 Crypto accepted",
+              { label: "Third-party tested", icon: FlaskConical },
+              { label: "Secure checkout",    icon: Lock },
+              { label: "Discreet shipping",  icon: Package },
+              { label: "COA on every lot",   icon: FileText },
             ].map((badge) => (
               <span
-                key={badge}
-                className="rounded-full border border-sand-200 bg-sand-50 px-3 py-1 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-colors"
+                key={badge.label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sand-200 bg-sand-50 px-3 py-1 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-colors"
               >
-                {badge}
+                <badge.icon size={13} strokeWidth={1.75} />
+                {badge.label}
               </span>
             ))}
           </div>

@@ -1,5 +1,6 @@
-import { SignIn } from "@clerk/nextjs"
+import { Suspense } from "react"
 import type { Metadata } from "next"
+import { SignInForm } from "@/components/auth/sign-in-form"
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -17,16 +18,9 @@ export default function SignInPage() {
             Sign in to view your orders and manage your account.
           </p>
         </div>
-        <SignIn
-          appearance={{
-            elements: {
-              rootBox: "w-full",
-              card: "shadow-md rounded-xl border border-gray-200",
-              headerTitle: "hidden",
-              headerSubtitle: "hidden",
-            },
-          }}
-        />
+        <Suspense>
+          <SignInForm />
+        </Suspense>
       </div>
     </main>
   )

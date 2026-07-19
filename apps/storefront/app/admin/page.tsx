@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { formatCartTotal } from "@/lib/cart"
 import { StatusBadge } from "@/components/admin/status-badge"
 

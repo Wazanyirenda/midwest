@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useRef } from "react"
+import { useRef, useState, useTransition } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Reveal, StaggerReveal, StaggerItem } from "@/components/ui/reveal"
-import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck } from "lucide-react"
+import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck, Check } from "lucide-react"
+import { subscribeToNewsletter } from "@/app/actions/newsletter"
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 
@@ -39,9 +40,16 @@ const HOW_IT_WORKS = [
 
 const TRUST_BADGES = ["HPLC Verified", "3rd Party Tested", "COA on Every Lot", "≥98% Purity"]
 
+// Slugs match products.tags and CATEGORY_TAGS in lib/products.ts
 const CATEGORIES = [
-  "Healing Peptides", "Growth Hormone", "GLP-1 Agonists", "Tissue Recovery",
-  "Nootropics", "Anti-aging", "COA Verified", "New Arrivals",
+  { label: "Healing Peptides", slug: "healing" },
+  { label: "Growth Hormone",   slug: "gh" },
+  { label: "GLP-1 Agonists",   slug: "glp1" },
+  { label: "Tissue Recovery",  slug: "recovery" },
+  { label: "Nootropics",       slug: "nootropic" },
+  { label: "Anti-aging",       slug: "anti-aging" },
+  { label: "COA Verified",     slug: "coa" },
+  { label: "New Arrivals",     slug: "new" },
 ]
 
 // ─── Root ──────────────────────────────────────────────────────────────────
@@ -168,11 +176,11 @@ function CategoriesStrip() {
       <div className="flex gap-3 px-4 sm:px-6 lg:px-8 py-4 min-w-max mx-auto max-w-7xl">
         {CATEGORIES.map((cat) => (
           <Link
-            key={cat}
-            href={`/products?category=${encodeURIComponent(cat)}`}
+            key={cat.slug}
+            href={`/products?category=${cat.slug}`}
             className="whitespace-nowrap text-xs font-mono text-sand-500 border border-white/10 px-4 py-2 rounded-full hover:border-brand-600 hover:text-brand-400 transition-colors"
           >
-            {cat}
+            {cat.label}
           </Link>
         ))}
       </div>
@@ -339,6 +347,20 @@ function HowItWorks() {
 // ─── Newsletter ────────────────────────────────────────────────────────────
 
 function Newsletter() {
+  const [email, setEmail] = useState("")
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setResult(null)
+    startTransition(async () => {
+      const r = await subscribeToNewsletter(email)
+      setResult(r)
+      if (r.ok) setEmail("")
+    })
+  }
+
   return (
     <section className="bg-ink text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
@@ -354,16 +376,37 @@ function Newsletter() {
               </p>
             </div>
 
-            <div className="flex bg-white/5 border border-white/10 text-sm p-1 rounded-full w-full max-w-sm shrink-0">
-              <input
-                className="flex-1 pl-5 outline-none bg-transparent placeholder-sand-600 text-white text-sm"
-                type="email"
-                placeholder="you@lab.edu"
-              />
-              <button className="font-semibold bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full transition flex items-center gap-2 shrink-0 text-sm">
-                <Send size={13} />
-                Subscribe
-              </button>
+            <div className="w-full max-w-sm shrink-0">
+              {result?.ok ? (
+                <p className="rounded-full border border-brand-600/40 bg-brand-600/10 px-5 py-3 text-center text-sm text-brand-400">
+                  <span className="inline-flex items-center gap-1.5"><Check size={14} strokeWidth={2.5} />{result.message}</span>
+                </p>
+              ) : (
+                <form
+                  onSubmit={onSubmit}
+                  className="flex bg-white/5 border border-white/10 text-sm p-1 rounded-full"
+                >
+                  <input
+                    className="flex-1 pl-5 outline-none bg-transparent placeholder-sand-600 text-white text-sm"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@lab.edu"
+                  />
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    className="font-semibold bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full transition flex items-center gap-2 shrink-0 text-sm disabled:opacity-50"
+                  >
+                    <Send size={13} />
+                    {pending ? "Joining…" : "Subscribe"}
+                  </button>
+                </form>
+              )}
+              {result && !result.ok && (
+                <p className="mt-2 pl-5 text-xs text-red-400">{result.message}</p>
+              )}
             </div>
           </div>
         </Reveal>

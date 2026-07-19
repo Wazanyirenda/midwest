@@ -27,8 +27,17 @@ const CATEGORY_COLORS: Record<string, string> = {
   industry: "bg-gray-100 text-gray-700",
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts()
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}) {
+  const { category } = await searchParams
+  const active =
+    category && CATEGORY_FILTERS.some((f) => f.value === category) ? category : "all"
+  const posts = getAllPosts().filter(
+    (p) => active === "all" || p.category === active
+  )
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -48,13 +57,22 @@ export default function BlogPage() {
           <Link
             key={f.value}
             href={f.value === "all" ? "/blog" : `/blog?category=${f.value}`}
-            className="rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600
-              hover:border-brand-400 hover:text-brand-700 transition-colors"
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+              active === f.value
+                ? "border-brand-500 bg-brand-50 text-brand-800"
+                : "border-gray-200 text-gray-600 hover:border-brand-400 hover:text-brand-700"
+            }`}
           >
             {f.label}
           </Link>
         ))}
       </div>
+
+      {posts.length === 0 && (
+        <p className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-sm text-gray-500">
+          No articles in this category yet.
+        </p>
+      )}
 
       {/* Post grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

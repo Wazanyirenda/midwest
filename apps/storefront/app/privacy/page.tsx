@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account information:</strong> Name, email address, password (hashed)</li>
           <li><strong>Order information:</strong> Shipping address, billing address, order history</li>
-          <li><strong>Payment information:</strong> We do not store payment card data. Payments are processed by Stripe or NOWPayments directly.</li>
+          <li><strong>Payment information:</strong> We do not store payment card data. Payments are processed by Stripe directly.</li>
           <li><strong>Communications:</strong> Messages you send to our support team</li>
         </ul>
 
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
         <p>We share your information only with:</p>
         <ul>
           <li><strong>Shipping carriers</strong> (name and address, to fulfill your order)</li>
-          <li><strong>Stripe / NOWPayments</strong> (payment processing only)</li>
+          <li><strong>Stripe</strong> (payment processing only)</li>
           <li><strong>Resend</strong> (transactional email delivery)</li>
           <li><strong>Law enforcement</strong> (only if required by valid legal process)</li>
         </ul>

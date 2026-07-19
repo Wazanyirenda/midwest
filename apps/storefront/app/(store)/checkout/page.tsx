@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation"
-import { currentUser } from "@clerk/nextjs/server"
+import { Lock, Package } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
-import { CheckoutForm } from "@/components/store/checkout-form"
+import { getUser, getProfile } from "@/lib/auth"
+import { supabaseAdmin } from "@/lib/supabase/admin"
+import { CheckoutForm, type CheckoutDefaults } from "@/components/store/checkout-form"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CheckoutPage() {
-  const [cart, user] = await Promise.all([getCart(), currentUser()])
+  const [cart, user] = await Promise.all([getCart(), getUser()])
 
   if (!cart || (cart.items?.length ?? 0) === 0) {
     redirect("/cart")
@@ -31,7 +33,32 @@ export default async function CheckoutPage() {
     }
   })
 
-  const userEmail = user?.emailAddresses[0]?.emailAddress
+  // Pre-fill step 1 from the profile + default saved address.
+  let defaults: CheckoutDefaults = {}
+  let hasSavedAddress = false
+  if (user) {
+    const [profile, { data: address }] = await Promise.all([
+      getProfile(user.id),
+      supabaseAdmin
+        .from("addresses")
+        .select("first_name,last_name,phone,address_1,address_2,city,province,postal_code")
+        .eq("user_id", user.id)
+        .eq("is_default_shipping", true)
+        .maybeSingle(),
+    ])
+    hasSavedAddress = !!address
+    defaults = {
+      email: user.email ?? undefined,
+      firstName: address?.first_name ?? profile?.first_name ?? undefined,
+      lastName: address?.last_name ?? profile?.last_name ?? undefined,
+      phone: address?.phone ?? profile?.phone ?? undefined,
+      address1: address?.address_1 ?? undefined,
+      address2: address?.address_2 ?? undefined,
+      city: address?.city ?? undefined,
+      state: address?.province ?? undefined,
+      zip: address?.postal_code ?? undefined,
+    }
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -45,7 +72,9 @@ export default async function CheckoutPage() {
             cartTotal={cart.total ?? null}
             cartSubtotal={cart.subtotal ?? null}
             items={items}
-            userEmail={userEmail}
+            defaults={defaults}
+            isSignedIn={!!user}
+            hasSavedAddress={hasSavedAddress}
           />
         </div>
 
@@ -84,10 +113,15 @@ export default async function CheckoutPage() {
               <span>{formatCartTotal(cart.total)}</span>
             </div>
 
-            <div className="mt-4 space-y-1 text-xs text-gray-400">
-              <p>🔒 256-bit SSL encryption</p>
-              <p>📦 Discreet plain packaging</p>
-            
+            <div className="mt-4 space-y-1.5 text-xs text-gray-400">
+              <p className="flex items-center gap-1.5">
+                <Lock size={12} strokeWidth={1.75} />
+                256-bit SSL encryption
+              </p>
+              <p className="flex items-center gap-1.5">
+                <Package size={12} strokeWidth={1.75} />
+                Discreet plain packaging
+              </p>
             </div>
           </div>
         </aside>

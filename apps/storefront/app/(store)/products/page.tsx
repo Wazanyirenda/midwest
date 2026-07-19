@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
-import { listProducts, lowestVariantPrice, type Product } from "@/lib/products"
+import { FlaskConical } from "lucide-react"
+import { listProducts, lowestVariantPrice, CATEGORY_TAGS, type Product } from "@/lib/products"
 import { formatPrice } from "@/lib/utils"
+import { getUser } from "@/lib/auth"
+import { getWishlistedProductIds } from "@/lib/wishlist"
+import { WishlistButton } from "@/components/store/wishlist-button"
 import Link from "next/link"
 
 export const metadata: Metadata = {
@@ -8,67 +12,91 @@ export const metadata: Metadata = {
   description: "Browse our catalog of high-purity research peptides.",
 }
 
-export const revalidate = 3600
-
-async function getProducts(q?: string) {
-  return listProducts(q)
-}
+// Wishlist hearts are per-user — render per request.
+export const dynamic = "force-dynamic"
 
 const PURITY_DOTS = 4
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; category?: string }>
 }) {
-  const { q } = await searchParams
-  const products = await getProducts(q)
+  const { q, category } = await searchParams
+  const tag = category && CATEGORY_TAGS[category] ? category : undefined
+
+  const [products, user] = await Promise.all([listProducts({ q, tag }), getUser()])
+  const wishlisted = user ? await getWishlistedProductIds(user.id) : new Set<string>()
+
   const peptides = products.filter((p) => p.category === "peptide")
   const equipment = products.filter((p) => p.category === "equipment")
+  const hasFilter = !!q || !!tag
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
 
       {/* Page title */}
-      <div className="mb-10">
+      <div className="mb-6">
         <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
           Available now
         </p>
         <div className="flex items-baseline justify-between">
-          <h1 className="text-3xl font-bold text-sand-900">Research Peptides</h1>
-          {q && (
+          <h1 className="text-3xl font-bold text-sand-900">
+            {tag ? CATEGORY_TAGS[tag] : "Research Peptides"}
+          </h1>
+          {hasFilter && (
             <Link href="/products" className="text-xs font-mono text-brand-700 hover:text-brand-800 underline underline-offset-2">
-              Clear search →
+              Clear {q ? "search" : "filter"} →
             </Link>
           )}
         </div>
-        
+      </div>
+
+      {/* Category chips */}
+      <div className="mb-10 flex flex-wrap gap-2">
+        {Object.entries(CATEGORY_TAGS).map(([slug, label]) => (
+          <Link
+            key={slug}
+            href={tag === slug ? "/products" : `/products?category=${slug}`}
+            className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              tag === slug
+                ? "border-brand-500 bg-brand-50 text-brand-800"
+                : "border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-700"
+            }`}
+          >
+            {label}
+          </Link>
+        ))}
       </div>
 
       {products.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center rounded-3xl border-2 border-dashed border-sand-200 bg-sand-50">
-          <div className="w-16 h-16 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center mb-4 text-2xl">
-            🧪
-          </div>
+          <span className="w-16 h-16 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center mb-4 text-brand-500">
+            <FlaskConical size={26} strokeWidth={1.5} />
+          </span>
           <h2 className="text-lg font-semibold text-sand-800">
-            {q ? `No results for "${q}"` : "Products coming soon"}
+            {q
+              ? `No results for "${q}"`
+              : tag
+                ? `Nothing in ${CATEGORY_TAGS[tag]} right now`
+                : "Products coming soon"}
           </h2>
           <p className="mt-2 text-sm text-sand-500 max-w-sm">
-            {q
+            {hasFilter
               ? "Try a different search term or browse all products."
               : "Our catalog is being set up. Check back shortly or "}
-            {!q && (
+            {!hasFilter && (
               <a href="mailto:orders@midwesternpeptides.com" className="text-brand-600 hover:underline">
                 contact us
               </a>
             )}
-            {!q && " to place an order directly."}
+            {!hasFilter && " to place an order directly."}
           </p>
         </div>
       )}
 
       {peptides.length > 0 && (
-        <ProductGrid products={peptides} />
+        <ProductGrid products={peptides} wishlisted={wishlisted} />
       )}
 
       {equipment.length > 0 && (
@@ -79,14 +107,20 @@ export default async function ProductsPage({
             </p>
             <h2 className="text-2xl font-bold text-sand-900">Lab Supplies</h2>
           </div>
-          <ProductGrid products={equipment} />
+          <ProductGrid products={equipment} wishlisted={wishlisted} />
         </>
       )}
     </div>
   )
 }
 
-function ProductGrid({ products }: { products: Product[] }) {
+function ProductGrid({
+  products,
+  wishlisted,
+}: {
+  products: Product[]
+  wishlisted: Set<string>
+}) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       {products.map((product) => {
@@ -112,6 +146,11 @@ function ProductGrid({ products }: { products: Product[] }) {
                   {product.title?.slice(0, 3).toUpperCase()}
                 </span>
               )}
+              <WishlistButton
+                productId={product.id}
+                initial={wishlisted.has(product.id)}
+                className="absolute right-2 top-2"
+              />
             </div>
 
             {/* Info */}

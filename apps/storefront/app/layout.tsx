@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
-import { ClerkProvider } from "@clerk/nextjs"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { SmoothScroll } from "@/components/providers/smooth-scroll"
@@ -37,21 +36,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${inter.variable} ${jetbrainsMono.variable}`}
-      >
-        <body>
-          <SmoothScroll>
-            <Header />
-            <div className="min-h-[calc(100vh-var(--header-height))]">
-              {children}
-            </div>
-            <Footer />
-          </SmoothScroll>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+    >
+      <body>
+        <SmoothScroll>
+          <Header />
+          <div className="min-h-[calc(100vh-var(--header-height))]">
+            {children}
+          </div>
+          <Footer />
+        </SmoothScroll>
+      </body>
+    </html>
   )
 }

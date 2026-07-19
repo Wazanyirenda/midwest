@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
+import ReactMarkdown from "react-markdown"
 import { getPostBySlug, getAllPosts, getCategoryLabel, formatDate } from "@/lib/blog"
 
 type Props = {
@@ -63,44 +64,9 @@ export default async function BlogPostPage({ params }: Props) {
         <p className="mt-3 text-lg text-gray-500">{post.excerpt}</p>
       </header>
 
-      {/* Article body — Phase 10 will render full MDX here */}
-      <article className="prose prose-gray max-w-none">
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 not-prose">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">📄</span>
-            <div>
-              <p className="font-semibold text-blue-900">Full Article Coming in Phase 10</p>
-              <p className="mt-1 text-sm text-blue-700">
-                The complete article content will be added when the MDX blog system is implemented.
-                The page structure, SEO metadata, and content infrastructure are all in place.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Placeholder content based on the article type */}
-        <h2>Overview</h2>
-        <p>
-          {post.excerpt} This article provides a comprehensive research overview for scientific
-          and educational purposes. All information is sourced from peer-reviewed literature
-          and intended for qualified researchers.
-        </p>
-
-        <h2>Key Research Areas</h2>
-        <ul>
-          <li>Molecular structure and properties</li>
-          <li>Mechanism of action (as observed in research settings)</li>
-          <li>Current state of published scientific literature</li>
-          <li>Proper handling and storage for research use</li>
-        </ul>
-
-        <h2>Important Note</h2>
-        <p>
-          All information in this article is provided for educational and research purposes only.
-          None of the content should be construed as medical advice, dosage guidance, or
-          instructions for human use. These compounds are sold exclusively for laboratory
-          research by qualified professionals.
-        </p>
+      {/* Article body */}
+      <article className="prose prose-gray max-w-none prose-headings:font-semibold prose-a:text-brand-700">
+        <ReactMarkdown>{post.body}</ReactMarkdown>
       </article>
 
       {/* Back to blog + related */}

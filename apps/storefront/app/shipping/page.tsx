@@ -23,7 +23,7 @@ export default function ShippingPage() {
 
         {/* Domestic */}
         <section className="rounded-xl border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">🇺🇸 Domestic Shipping (USA)</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Domestic Shipping (USA)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -39,25 +39,13 @@ export default function ShippingPage() {
                   <td className="py-3">Standard Shipping</td>
                   <td>USPS Priority / UPS Ground</td>
                   <td>3–5 business days</td>
-                  <td className="text-right">$8.99</td>
-                </tr>
-                <tr>
-                  <td className="py-3">Expedited Shipping</td>
-                  <td>UPS 2-Day</td>
-                  <td>2 business days</td>
-                  <td className="text-right">$19.99</td>
-                </tr>
-                <tr>
-                  <td className="py-3">Overnight</td>
-                  <td>UPS Next Day Air</td>
-                  <td>Next business day</td>
-                  <td className="text-right">$39.99</td>
+                  <td className="text-right">$9.95</td>
                 </tr>
                 <tr>
                   <td className="py-3 font-medium text-green-700">Free Shipping</td>
                   <td>USPS Priority / UPS Ground</td>
                   <td>3–5 business days</td>
-                  <td className="text-right font-medium text-green-700">Orders over $150</td>
+                  <td className="text-right font-medium text-green-700">Orders over $200</td>
                 </tr>
               </tbody>
             </table>
@@ -81,7 +69,6 @@ export default function ShippingPage() {
             Lyophilized (freeze-dried) peptides are stable at room temperature for short transit periods.
             For optimal research results, store at 2–8°C (refrigerated) upon receipt.
             Extended storage should be at −20°C or lower.
-            During summer months, we recommend selecting expedited shipping to minimize transit time.
           </p>
         </section>
 
@@ -89,13 +76,8 @@ export default function ShippingPage() {
         <section className="rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">International Shipping</h2>
           <p className="text-gray-600">
-            We currently ship to select international destinations. International shipping rates
-            and delivery times are calculated at checkout based on destination and weight.
-          </p>
-          <p className="mt-3 text-sm text-amber-700 bg-amber-50 rounded p-3">
-            <strong>Note:</strong> International customers are responsible for any customs duties,
-            import taxes, or regulatory compliance requirements in their country. We are not
-            responsible for orders held or seized by customs authorities.
+            We currently ship within the United States only. Sign up for our
+            newsletter to hear when international shipping becomes available.
           </p>
         </section>
 

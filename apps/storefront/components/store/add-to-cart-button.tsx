@@ -35,7 +35,7 @@ export function AddToCartButton({ variantId, disabled }: Props) {
       {status === "loading"
         ? "Adding…"
         : status === "added"
-          ? "✓ Added to Cart"
+          ? "Added to Cart"
           : "Add to Cart"}
     </button>
   )

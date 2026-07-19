@@ -329,3 +329,224 @@ end;
 $$;
 
 revoke execute on function decrement_inventory(jsonb) from anon, authenticated;
+
+-- ═══ Account management: profiles, addresses, wishlists, tags, newsletter ═══
+
+-- Customer profiles, one row per auth.users row.
+-- Created automatically by the on_auth_user_created trigger on signup.
+
+create table profiles (
+  id                     uuid primary key references auth.users (id) on delete cascade,
+  first_name             text,
+  last_name              text,
+  phone                  text,
+  avatar_url             text,
+  marketing_email_opt_in boolean not null default false,
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+-- Own-row access only; the storefront's service-role client bypasses RLS,
+-- these policies are defense-in-depth for any future anon/authenticated access.
+create policy "Users can read own profile"
+  on profiles for select using (auth.uid() = id);
+
+create policy "Users can update own profile"
+  on profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+
+-- Populate a profile row from the signup metadata.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, first_name, last_name, marketing_email_opt_in)
+  values (
+    new.id,
+    new.raw_user_meta_data ->> 'first_name',
+    new.raw_user_meta_data ->> 'last_name',
+    coalesce((new.raw_user_meta_data ->> 'marketing_email_opt_in')::boolean, false)
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Saved customer addresses. Column names deliberately mirror the snake_case
+-- keys used in carts/orders shipping_address jsonb (updateCartContact).
+
+create table addresses (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references auth.users (id) on delete cascade,
+  label               text,
+  first_name          text not null,
+  last_name           text not null,
+  phone               text,
+  address_1           text not null,
+  address_2           text,
+  city                text not null,
+  province            text not null,
+  postal_code         text not null,
+  country_code        text not null default 'us',
+  is_default_shipping boolean not null default false,
+  is_default_billing  boolean not null default false,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+create index addresses_user_id_idx on addresses (user_id);
+
+-- At most one default shipping / billing address per user.
+create unique index addresses_one_default_shipping
+  on addresses (user_id) where is_default_shipping;
+create unique index addresses_one_default_billing
+  on addresses (user_id) where is_default_billing;
+
+alter table addresses enable row level security;
+
+create policy "Users can read own addresses"
+  on addresses for select using (auth.uid() = user_id);
+create policy "Users can insert own addresses"
+  on addresses for insert with check (auth.uid() = user_id);
+create policy "Users can update own addresses"
+  on addresses for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users can delete own addresses"
+  on addresses for delete using (auth.uid() = user_id);
+
+-- Link orders to authenticated users (nullable: guest checkout stays possible)
+-- and create the avatars storage bucket for profile pictures.
+
+alter table orders
+  add column user_id uuid references auth.users (id) on delete set null;
+
+create index orders_user_id_idx on orders (user_id);
+
+-- Avatars: public bucket, uploads go through a server action with the
+-- service-role key; 2 MB limit, images only.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do nothing;
+
+-- Backfill: run MANUALLY once real users have re-registered post-auth-cutover.
+-- update orders o
+-- set user_id = u.id
+-- from auth.users u
+-- where o.user_id is null and lower(o.email) = lower(u.email);
+
+-- Shipment tracking + customer cancellation requests.
+
+alter table orders
+  add column tracking_number text,
+  add column tracking_carrier text check (tracking_carrier in ('usps', 'ups', 'fedex', 'dhl')),
+  add column cancellation_requested_at timestamptz;
+
+-- Tie carts to authenticated users so a cart follows the account across
+-- devices; anonymous carts keep user_id null until sign-in merges them.
+
+alter table carts add column user_id uuid;
+
+create index carts_user_open_idx on carts (user_id) where completed_at is null;
+
+-- Wishlist / saved-for-later. One wishlist per user; items keyed by product
+-- with an optional exact variant (set when saving a cart line for later).
+
+create table wishlists (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null unique,
+  share_token text not null unique default encode(gen_random_bytes(16), 'hex'),
+  created_at  timestamptz not null default now()
+);
+
+create table wishlist_items (
+  id          uuid primary key default gen_random_uuid(),
+  wishlist_id uuid not null references wishlists (id) on delete cascade,
+  product_id  uuid not null references products (id) on delete cascade,
+  variant_id  uuid references product_variants (id) on delete set null,
+  created_at  timestamptz not null default now(),
+  unique (wishlist_id, product_id)
+);
+
+create index wishlist_items_wishlist_id_idx on wishlist_items (wishlist_id);
+
+alter table wishlists enable row level security;
+alter table wishlist_items enable row level security;
+
+-- Marketing category tags so the home/footer category links can filter the
+-- catalog. Slugs: healing, gh, glp1, recovery, nootropic, anti-aging, coa,
+-- new, supplies.
+
+alter table products add column tags text[] not null default '{}';
+
+create index products_tags_idx on products using gin (tags);
+
+update products set tags = array['coa'] where category = 'peptide';
+update products set tags = array['supplies'] where category = 'equipment';
+
+update products set tags = tags || '{healing}'
+  where handle in ('bpc-157', 'tb-500', 'ghk-cu', 'kpv', 'thymosin-alpha-1');
+update products set tags = tags || '{recovery}'
+  where handle in ('bpc-157', 'tb-500', 'mots-c');
+update products set tags = tags || '{gh}'
+  where handle in ('aod-9604', 'cjc-1295-dac', 'ipamorelin', 'tesamorelin');
+update products set tags = tags || '{glp1}'
+  where handle in ('retatrutide');
+update products set tags = tags || '{nootropic}'
+  where handle in ('selank', 'semax');
+update products set tags = tags || '{anti-aging}'
+  where handle in ('nad-plus', 'ghk-cu', 'mots-c');
+update products set tags = tags || '{new}'
+  where handle in ('retatrutide', 'kpv', 'mots-c');
+
+-- Newsletter signups from the homepage form.
+
+create table newsletter_subscribers (
+  id              uuid primary key default gen_random_uuid(),
+  email           text not null unique,
+  created_at      timestamptz not null default now(),
+  unsubscribed_at timestamptz
+);
+
+alter table newsletter_subscribers enable row level security;
+
+-- ═══ Google OAuth: profile metadata from OAuth providers ═══
+-- Teach the signup trigger to read OAuth metadata as well as email-signup
+-- metadata. Google returns given_name/family_name/full_name/name + avatar_url
+-- or picture, where our own form sends first_name/last_name.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  meta        jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
+  display_name text := coalesce(meta ->> 'full_name', meta ->> 'name', '');
+begin
+  insert into public.profiles (id, first_name, last_name, avatar_url, marketing_email_opt_in)
+  values (
+    new.id,
+    nullif(coalesce(
+      meta ->> 'first_name',
+      meta ->> 'given_name',
+      split_part(display_name, ' ', 1)
+    ), ''),
+    nullif(coalesce(
+      meta ->> 'last_name',
+      meta ->> 'family_name',
+      nullif(substring(display_name from position(' ' in display_name) + 1), display_name)
+    ), ''),
+    nullif(coalesce(meta ->> 'avatar_url', meta ->> 'picture'), ''),
+    coalesce((meta ->> 'marketing_email_opt_in')::boolean, false)
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;

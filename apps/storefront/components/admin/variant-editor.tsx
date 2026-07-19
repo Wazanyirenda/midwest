@@ -68,7 +68,7 @@ export function VariantEditor({ variant }: { variant: Variant }) {
           disabled={pending || !dirty}
           className="rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          {pending ? "Saving…" : saved ? "✓ Saved" : "Save"}
+          {pending ? "Saving…" : saved ? "Saved" : "Save"}
         </button>
       </td>
     </tr>

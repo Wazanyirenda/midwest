@@ -1,7 +1,9 @@
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
+import { AlertTriangle } from "lucide-react"
 import { formatCartTotal } from "@/lib/cart"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { OrderStatusSelect } from "@/components/admin/order-status-select"
+import { OrderTrackingForm } from "@/components/admin/order-tracking-form"
 
 export const dynamic = "force-dynamic"
 
@@ -12,6 +14,9 @@ type OrderRow = {
   status: string
   total_cents: number
   shipping_address: Record<string, string> | null
+  tracking_number: string | null
+  tracking_carrier: string | null
+  cancellation_requested_at: string | null
   created_at: string
   items: Array<{
     id: string
@@ -26,7 +31,8 @@ export default async function AdminOrdersPage() {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id,display_id,email,status,total_cents,shipping_address,created_at," +
+      "id,display_id,email,status,total_cents,shipping_address," +
+        "tracking_number,tracking_carrier,cancellation_requested_at,created_at," +
         "items:order_items(id,product_title,variant_title,quantity,unit_price_cents)"
     )
     .order("created_at", { ascending: false })
@@ -50,11 +56,17 @@ export default async function AdminOrdersPage() {
           <div key={order.id} className="rounded-2xl border border-sand-200 bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="font-mono text-sm font-semibold text-sand-900">
                     #{order.display_id}
                   </span>
                   <StatusBadge status={order.status} />
+                  {order.cancellation_requested_at &&
+                    ["pending", "paid"].includes(order.status) && (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        <AlertTriangle size={12} strokeWidth={2} className="mr-1 inline" />Cancellation requested
+                      </span>
+                    )}
                   <span className="text-xs text-sand-400">
                     {new Date(order.created_at).toLocaleString("en-US")}
                   </span>
@@ -75,6 +87,14 @@ export default async function AdminOrdersPage() {
                 </span>
                 <OrderStatusSelect orderId={order.id} current={order.status} />
               </div>
+            </div>
+
+            <div className="mt-4 border-t border-sand-100 pt-3">
+              <OrderTrackingForm
+                orderId={order.id}
+                trackingNumber={order.tracking_number}
+                trackingCarrier={order.tracking_carrier}
+              />
             </div>
 
             <div className="mt-4 rounded-lg bg-sand-50 divide-y divide-sand-100">

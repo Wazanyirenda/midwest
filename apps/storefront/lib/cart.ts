@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import { supabase } from "./supabase"
+import { supabaseAdmin as supabase } from "./supabase/admin"
 
 export const CART_COOKIE = "cart_id"
 

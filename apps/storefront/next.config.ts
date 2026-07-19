@@ -1,6 +1,12 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Avatar uploads post the image through a server action (default is 1 MB).
+      bodySizeLimit: "3mb",
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -29,12 +35,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com https://*.nowpayments.io",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self'",
-              "connect-src 'self' https://*.clerk.com https://clerk.com https://*.clerk.accounts.dev https://api.stripe.com https://*.supabase.co https://*.nowpayments.io",
-              "frame-src https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com https://hooks.stripe.com https://*.nowpayments.io",
+              "connect-src 'self' https://api.stripe.com https://*.supabase.co",
+              "frame-src https://js.stripe.com https://hooks.stripe.com",
             ].join("; "),
           },
         ],

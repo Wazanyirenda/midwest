@@ -1,6 +1,8 @@
 import Link from "next/link"
+import { Lock, ShoppingCart } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
+import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -20,7 +22,9 @@ export default async function CartPage() {
 
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-6xl mb-4">🧪</div>
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+            <ShoppingCart size={26} strokeWidth={1.5} />
+          </span>
           <h2 className="text-xl font-semibold text-gray-700">Your cart is empty</h2>
           <p className="mt-2 text-gray-500">Browse our catalog to add research peptides.</p>
           <Link
@@ -79,16 +83,26 @@ export default async function CartPage() {
 
                   {/* Qty + Remove */}
                   <div className="flex flex-col items-end justify-between gap-2">
-                    <form
-                      action={removeLineItem.bind(null, cart!.id, item.id)}
-                    >
-                      <button
-                        type="submit"
-                        className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    <div className="flex items-center gap-3">
+                      <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
+                        <button
+                          type="submit"
+                          className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+                        >
+                          Save for later
+                        </button>
+                      </form>
+                      <form
+                        action={removeLineItem.bind(null, cart!.id, item.id)}
                       >
-                        Remove
-                      </button>
-                    </form>
+                        <button
+                          type="submit"
+                          className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </form>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <form
@@ -172,8 +186,9 @@ export default async function CartPage() {
                 Continue Shopping
               </Link>
 
-              <p className="mt-4 text-center text-xs text-gray-400">
-                🔒 Secure checkout · Crypto & card accepted
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-400">
+                <Lock size={12} strokeWidth={1.75} />
+                Secure card checkout
               </p>
             </div>
           </div>

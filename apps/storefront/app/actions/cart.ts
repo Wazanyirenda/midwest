@@ -2,18 +2,22 @@
 
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { CART_COOKIE } from "@/lib/cart"
+import { getUser } from "@/lib/auth"
 
-async function getOrCreateCartId(): Promise<string> {
+export async function getOrCreateCartId(): Promise<string> {
   const cookieStore = await cookies()
   const existing = cookieStore.get(CART_COOKIE)?.value
 
   if (existing) return existing
 
+  // Carts created while signed in are owned immediately, so they follow the
+  // user across devices without waiting for the next sign-in merge.
+  const user = await getUser()
   const { data, error } = await supabase
     .from("carts")
-    .insert({})
+    .insert({ user_id: user?.id ?? null })
     .select("id")
     .single()
   if (error) throw new Error(`Could not create cart: ${error.message}`)

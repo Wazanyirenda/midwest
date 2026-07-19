@@ -2,18 +2,28 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search } from "lucide-react"
 import { getCart } from "@/lib/cart"
-import { AuthButtons } from "./auth-buttons"
+import { getUser, getProfile } from "@/lib/auth"
+import { AuthButtons, type AuthUser } from "./auth-buttons"
 import { MobileNav } from "./mobile-nav"
 
 export async function Header() {
-  const cart = await getCart()
+  const [cart, user] = await Promise.all([getCart(), getUser()])
   const cartCount = cart?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0
+
+  let authUser: AuthUser | null = null
+  if (user) {
+    const profile = await getProfile(user.id)
+    authUser = {
+      email: user.email ?? "",
+      firstName: profile?.first_name ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
+    }
+  }
 
   return (
     <div className="sticky top-0 z-50">
       {/* Research-use notice */}
       <div className="bg-ink text-sand-400 px-4 py-1 text-center font-mono text-[10px] tracking-widest uppercase">
-        50% off all products for a limited time.
       </div>
 
       {/* Main nav */}
@@ -79,9 +89,9 @@ export async function Header() {
               </Link>
 
               {/* Account / Sign in — always visible */}
-              <AuthButtons />
+              <AuthButtons authUser={authUser} />
 
-              <MobileNav />
+              <MobileNav authUser={authUser} />
             </div>
           </div>
         </div>
