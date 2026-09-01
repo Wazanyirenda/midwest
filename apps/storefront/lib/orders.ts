@@ -94,34 +94,81 @@ function paymentMethodLabel(provider: string | null): string {
   return "—"
 }
 
+/**
+ * Orders placed as a guest are linked only by email, so a signed-in user is
+ * allowed to claim them — but ONLY once that email is confirmed. Without this
+ * check, registering as victim@example.com and never confirming would expose
+ * their guest orders.
+ */
+function claimableEmail(user: User): string | null {
+  if (!user.email) return null
+  if (!user.email_confirmed_at) return null
+  return user.email.toLowerCase()
+}
+
 function ownsOrder(order: OrderRow, user: User): boolean {
-  return (
-    order.user_id === user.id ||
-    (!!user.email && order.email.toLowerCase() === user.email.toLowerCase())
-  )
+  if (order.user_id === user.id) return true
+
+  // An order already owned by an account belongs to that account, even if the
+  // email matches. Only unclaimed guest orders are claimable by email — this
+  // must stay in step with the filters in getOrdersForUser.
+  if (order.user_id !== null) return false
+
+  const email = claimableEmail(user)
+  return !!email && order.email.toLowerCase() === email
 }
 
 export async function getOrdersForUser(user: User): Promise<OrderListItem[]> {
-  const email = (user.email ?? "").replace(/"/g, "")
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select(ORDER_FIELDS)
-    .or(`user_id.eq.${user.id},email.eq."${email}"`)
-    .order("created_at", { ascending: false })
+  const email = claimableEmail(user)
 
-  if (error) {
-    console.error("Could not load orders:", error.message)
+  // Two parameterized queries rather than one interpolated .or() filter string.
+  // supabase-js has no parameterized OR, and building the filter by
+  // interpolation puts user-controlled text into a parser — quote-stripping is
+  // a blocklist, and blocklists rot. Values passed to .eq() are sent as
+  // parameters and can never be read as filter syntax.
+  const [byUserId, byEmail] = await Promise.all([
+    supabaseAdmin
+      .from("orders")
+      .select(ORDER_FIELDS)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    email
+      ? supabaseAdmin
+          .from("orders")
+          .select(ORDER_FIELDS)
+          .is("user_id", null) // only unclaimed guest orders
+          .eq("email", email)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  if (byUserId.error || byEmail.error) {
+    console.error(
+      "Could not load orders:",
+      byUserId.error?.message ?? byEmail.error?.message
+    )
     return []
   }
 
-  return ((data ?? []) as unknown as OrderRow[]).map((o) => ({
-    id: o.id,
-    display_id: o.display_id,
-    created_at: o.created_at,
-    status: toDisplayStatus(o.status),
-    total: o.total_cents,
-    items: o.items.map((i) => ({ title: itemTitle(i), quantity: i.quantity })),
-  }))
+  // Merge and de-duplicate; an order could match both filters.
+  const seen = new Map<string, OrderRow>()
+  for (const row of [
+    ...((byUserId.data ?? []) as unknown as OrderRow[]),
+    ...((byEmail.data ?? []) as unknown as OrderRow[]),
+  ]) {
+    seen.set(row.id, row)
+  }
+
+  return [...seen.values()]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .map((o) => ({
+      id: o.id,
+      display_id: o.display_id,
+      created_at: o.created_at,
+      status: toDisplayStatus(o.status),
+      total: o.total_cents,
+      items: o.items.map((i) => ({ title: itemTitle(i), quantity: i.quantity })),
+    }))
 }
 
 export async function getOrderById(

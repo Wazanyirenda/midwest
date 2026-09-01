@@ -54,3 +54,6 @@ supabase/.temp
 
 # TypeScript
 *.tsbuildinfo
+
+.vercel
+.env*

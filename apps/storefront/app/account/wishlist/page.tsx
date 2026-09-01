@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Metadata } from "next"
 import { Heart } from "lucide-react"
 import { requireUser } from "@/lib/auth"
@@ -62,13 +63,14 @@ export default async function WishlistPage() {
             return (
               <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <Link href={`/products/${product.handle}`} className="group block">
-                  <div className="mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-sand-200 bg-[#F0F5F0]">
+                  <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-sand-200 bg-[#F0F5F0]">
                     {product.thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={product.thumbnail}
                         alt={product.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <span className="select-none font-mono text-3xl font-bold text-brand-200">

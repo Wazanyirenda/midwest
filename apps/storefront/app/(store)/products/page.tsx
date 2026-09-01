@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { FlaskConical } from "lucide-react"
 import { listProducts, lowestVariantPrice, CATEGORY_TAGS, type Product } from "@/lib/products"
 import { formatPrice } from "@/lib/utils"
@@ -15,7 +16,6 @@ export const metadata: Metadata = {
 // Wishlist hearts are per-user — render per request.
 export const dynamic = "force-dynamic"
 
-const PURITY_DOTS = 4
 
 export default async function ProductsPage({
   searchParams,
@@ -86,7 +86,7 @@ export default async function ProductsPage({
               ? "Try a different search term or browse all products."
               : "Our catalog is being set up. Check back shortly or "}
             {!hasFilter && (
-              <a href="mailto:orders@midwesternpeptides.com" className="text-brand-600 hover:underline">
+              <a href="mailto:support@midwesternpeptides.com" className="text-brand-600 hover:underline">
                 contact us
               </a>
             )}
@@ -135,11 +135,12 @@ function ProductGrid({
             {/* Image area */}
             <div className="aspect-square w-full rounded-2xl bg-[#F0F5F0] border border-sand-200 group-hover:border-brand-300 flex items-center justify-center overflow-hidden relative transition-colors mb-3">
               {product.thumbnail ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={product.thumbnail}
                   alt={product.title ?? ""}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
                 <span className="font-mono text-4xl font-bold text-brand-200 group-hover:scale-110 transition-transform duration-300 select-none">
@@ -158,18 +159,9 @@ function ProductGrid({
               {product.title}
             </p>
 
-            {/* Purity dots — peptides only */}
+            {/* Purity — peptides only */}
             {product.category === "peptide" && (
-              <div className="flex items-center gap-1 mt-1.5">
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    className="inline-block w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: i < PURITY_DOTS ? "#16a34a" : "#d1d5db" }}
-                  />
-                ))}
-                <span className="font-mono text-[10px] text-sand-400 ml-1">≥99% purity</span>
-              </div>
+              <p className="font-mono text-[10px] text-sand-400 mt-1.5">≥99% purity</p>
             )}
 
             {lowestPrice != null && (

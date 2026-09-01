@@ -40,16 +40,23 @@ export default async function AdminOrdersPage() {
 
   const orders = (data ?? []) as unknown as OrderRow[]
 
-  if (orders.length === 0) {
-    return (
-      <p className="py-16 text-center text-sm text-sand-500">
-        No orders yet — they&apos;ll appear here as soon as customers check out.
-      </p>
-    )
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-5xl space-y-4">
+      <header>
+        <h1 className="text-xl font-semibold text-sand-900">Orders</h1>
+        <p className="mt-0.5 text-sm text-sand-500">
+          {orders.length === 0
+            ? "Nothing yet"
+            : `${orders.length} most recent`}
+        </p>
+      </header>
+
+      {orders.length === 0 && (
+        <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-16 text-center text-sm text-sand-500">
+          No orders yet — they&apos;ll appear here as soon as customers check out.
+        </p>
+      )}
+
       {orders.map((order) => {
         const addr = order.shipping_address
         return (

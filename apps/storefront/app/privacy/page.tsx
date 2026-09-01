@@ -85,8 +85,8 @@ export default function PrivacyPage() {
         </ul>
         <p>
           To exercise any of these rights, email:{" "}
-          <a href="mailto:privacy@midwesternpeptides.com" className="text-brand-600">
-            privacy@midwesternpeptides.com
+          <a href="mailto:support@midwesternpeptides.com" className="text-brand-600">
+            support@midwesternpeptides.com
           </a>
         </p>
 
@@ -115,8 +115,8 @@ export default function PrivacyPage() {
           Midwestern Peptides LLC<br />
           North Dakota, USA<br />
           Email:{" "}
-          <a href="mailto:privacy@midwesternpeptides.com" className="text-brand-600">
-            privacy@midwesternpeptides.com
+          <a href="mailto:support@midwesternpeptides.com" className="text-brand-600">
+            support@midwesternpeptides.com
           </a>
         </p>
       </div>

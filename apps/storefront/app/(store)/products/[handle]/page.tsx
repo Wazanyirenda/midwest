@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import Image from "next/image"
 import { FlaskConical, Lock, Package, FileText } from "lucide-react"
 import { getProductByHandle } from "@/lib/products"
 import { getUser } from "@/lib/auth"
@@ -54,13 +55,15 @@ export default async function ProductPage({ params }: Props) {
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {/* Image */}
-        <div className="aspect-square w-full rounded-3xl bg-[#F0F5F0] border border-sand-200 overflow-hidden flex items-center justify-center">
+        <div className="relative aspect-square w-full rounded-3xl bg-[#F0F5F0] border border-sand-200 overflow-hidden flex items-center justify-center">
           {product.thumbnail ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={product.thumbnail}
               alt={product.title ?? ""}
-              className="h-full w-full object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 608px"
+              className="object-cover"
             />
           ) : (
             <span className="font-mono text-6xl font-bold text-brand-200 select-none">

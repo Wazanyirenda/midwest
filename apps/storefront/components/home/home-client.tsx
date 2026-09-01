@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useRef, useState, useTransition } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Reveal, StaggerReveal, StaggerItem } from "@/components/ui/reveal"
@@ -91,7 +92,7 @@ function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
             >
-              North Dakota · Est. 2024 · Lab-tested research peptides
+              North Dakota · Est. 2026 · Lab-tested research peptides
             </motion.p>
 
             <div className="overflow-hidden mb-6">
@@ -261,11 +262,12 @@ function ProductCard({ product }: { product: FeaturedProduct }) {
           </span>
         )}
         {product.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.thumbnail}
             alt={product.name}
-            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <span className="font-mono text-3xl font-bold text-sand-300 group-hover:scale-110 transition-transform duration-300 select-none">
@@ -282,17 +284,8 @@ function ProductCard({ product }: { product: FeaturedProduct }) {
         {product.category}
       </p>
 
-      {/* Purity dots */}
-      <div className="flex items-center gap-1 mt-1.5">
-        {[...Array(5)].map((_, i) => (
-          <span
-            key={i}
-            className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: i < 4 ? "#16a34a" : "#d9d6cd" }}
-          />
-        ))}
-        <span className="font-mono text-[10px] text-sand-400 ml-1">99%</span>
-      </div>
+      {/* Purity */}
+      <p className="font-mono text-[10px] text-sand-400 mt-1.5">99% purity</p>
 
       <p className="font-semibold text-sand-900 text-sm mt-1.5">{product.price}</p>
     </Link>

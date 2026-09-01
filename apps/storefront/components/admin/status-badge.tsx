@@ -5,6 +5,7 @@ export function StatusBadge({ status }: { status: string }) {
     shipped: "bg-blue-50 text-blue-700 border-blue-200",
     delivered: "bg-sand-100 text-sand-600 border-sand-200",
     canceled: "bg-red-50 text-red-600 border-red-200",
+    refunded: "bg-purple-50 text-purple-700 border-purple-200",
   }
   return (
     <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${styles[status] ?? styles.pending}`}>

@@ -112,8 +112,8 @@ export default function TermsPage() {
         <p>
           Midwestern Peptides LLC — North Dakota, USA<br />
           Email:{" "}
-          <a href="mailto:legal@midwesternpeptides.com" className="text-brand-600">
-            legal@midwesternpeptides.com
+          <a href="mailto:support@midwesternpeptides.com" className="text-brand-600">
+            support@midwesternpeptides.com
           </a>
         </p>
       </div>

@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
       },
     ],
+    // Product masters are 2560px JPEGs; the optimizer serves them re-encoded at
+    // the size actually rendered. AVIF first, WebP for browsers without it.
+    formats: ["image/avif", "image/webp"],
+    // Storage paths are UUID-unique, so an optimized variant never goes stale.
+    minimumCacheTTL: 31536000,
   },
   async headers() {
     return [

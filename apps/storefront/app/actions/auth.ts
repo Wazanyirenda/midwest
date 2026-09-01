@@ -1,9 +1,12 @@
 "use server"
 
+import { cookies } from "next/headers"
+
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { createAuthClient } from "@/lib/supabase/server"
 import { mergeCartOnSignIn } from "@/lib/cart-merge"
+import { CART_COOKIE } from "@/lib/cart"
 
 // Auth actions return { error } for inline form errors instead of throwing;
 // redirect() is always called OUTSIDE any try/catch (it throws NEXT_REDIRECT).
@@ -100,6 +103,13 @@ export async function signInWithGoogle(next?: string): Promise<ActionResult> {
 export async function signOut(): Promise<void> {
   const supabase = await createAuthClient()
   await supabase.auth.signOut()
+
+  // The cart cookie is not an auth cookie, so signOut() leaves it behind. Drop
+  // it too, or the next person on this browser inherits the basket. The cart
+  // row itself is kept — signing back in re-claims it via mergeCartOnSignIn.
+  const cookieStore = await cookies()
+  cookieStore.delete(CART_COOKIE)
+
   revalidatePath("/", "layout")
   redirect("/")
 }

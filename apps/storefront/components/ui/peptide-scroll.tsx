@@ -58,9 +58,9 @@ const PEPTIDES = [
     accent:   "#f97316",
   },
   {
-    name:     "Retatrutide",
+    name:     "GLP-3",
     label:    "06 — GLP-1/GIP/GCG",
-    handle:   "retatrutide",
+    handle:   "glp-3",
     purity:   "≥96%",
     mw:       "4859.5 g/mol",
     sequence: "His-Aib-Glu-Gly-Thr-Phe-Thr-Ser-Asp-Tyr-Ser-Ile-Ala-Met-Asp-Lys-Ile-Gln-Lys-Ala-Phe-Val-Gln-Trp-Leu-Ile-Ala-Gly-Gly-Pro-Ser-Ser-Gly-Ala-Pro-Pro-Pro-Ser",

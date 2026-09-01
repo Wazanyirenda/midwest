@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Metadata } from "next"
 import { Heart } from "lucide-react"
 import { getWishlistByShareToken } from "@/lib/wishlist"
@@ -55,13 +56,14 @@ export default async function SharedWishlistPage({ params }: Props) {
           )[0]
           return (
             <Link key={item.id} href={`/products/${product.handle}`} className="group block">
-              <div className="mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-sand-200 bg-[#F0F5F0] transition-colors group-hover:border-brand-300">
+              <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-sand-200 bg-[#F0F5F0] transition-colors group-hover:border-brand-300">
                 {product.thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={product.thumbnail}
                     alt={product.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <span className="select-none font-mono text-4xl font-bold text-brand-200">

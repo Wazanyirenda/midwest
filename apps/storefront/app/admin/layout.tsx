@@ -1,5 +1,6 @@
-import Link from "next/link"
-import { requireAdminOrRedirect } from "@/lib/admin"
+import { requireStaffOrRedirect } from "@/lib/admin"
+import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
+import { AdminSidebar } from "@/components/admin/sidebar"
 
 export const metadata = {
   title: "Admin",
@@ -11,36 +12,24 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Middleware also gates /admin by email, and every mutation re-checks via
-  // requireAdmin() — this is the layer that protects the order/PII pages.
-  await requireAdminOrRedirect()
+  // Middleware does a coarse role check, and every mutation re-checks via
+  // requireAdmin()/requireStaff() — this is the layer that protects the
+  // order/PII pages. Returns the role so the nav can hide admin-only items.
+  const role = await requireStaffOrRedirect()
+
+  // Badge count for the Inventory nav item. Compared per-variant against its
+  // own reorder_point, so the number matches the alerts panel exactly.
+  const { data: variants } = await supabase
+    .from("product_variants")
+    .select("inventory_quantity,reorder_point")
+  const alertCount = (variants ?? []).filter(
+    (v) => v.inventory_quantity <= v.reorder_point
+  ).length
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
-            Midwestern Peptides
-          </p>
-          <h1 className="text-2xl font-bold text-sand-900">Admin</h1>
-        </div>
-        <nav className="flex gap-2">
-          {[
-            { href: "/admin", label: "Overview" },
-            { href: "/admin/products", label: "Products & Inventory" },
-            { href: "/admin/orders", label: "Orders" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-full border border-sand-300 px-4 py-1.5 text-sm text-sand-700 hover:border-brand-500 hover:text-brand-700 transition-colors"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-      {children}
+    <div className="min-h-screen bg-sand-100 lg:flex">
+      <AdminSidebar alertCount={alertCount} role={role as "staff" | "admin"} />
+      <main className="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
     </div>
   )
 }

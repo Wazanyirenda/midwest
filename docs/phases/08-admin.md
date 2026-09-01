@@ -1,78 +1,93 @@
 # Phase 08 — Admin Dashboard
 
-**Goal:** The Medusa admin panel is fully operational for day-to-day business: managing products, processing orders, managing customers, and viewing basic sales data.
+**Goal:** A self-hosted admin console at `/admin` for day-to-day business:
+creating and editing products, managing images, tracking inventory with alerts,
+and processing orders.
 
-**Prerequisite:** Phase 07 verified ✅
+**Prerequisite:** Phase 01 verified ✅
+
+> **Architecture note:** This phase originally targeted the Medusa admin panel on
+> port 9000. Medusa was retired in favour of Supabase accessed directly from the
+> Next.js app, so the admin is now a set of routes inside `apps/storefront`
+> gated by `requireAdminOrRedirect()` and the `ADMIN_EMAILS` allowlist.
 
 ---
 
 ## Tasks
 
-### 8.1 — Medusa Admin Access
-The admin UI is built into `@medusajs/dashboard` and served at `localhost:9000/app`.
+### 8.1 — Access control
+- [x] `/admin` gated in middleware, in the layout, and again in every server action
+- [x] `ADMIN_EMAILS` allowlist; empty allowlist denies everyone in production
+- [x] Admin pages carry `robots: { index: false, follow: false }`
 
-- [ ] Log in with the admin credentials created in Phase 01
-- [ ] Confirm all menu sections load: Products, Orders, Customers, Inventory, Settings
+### 8.2 — Product management
+- [x] Create a product from the UI (`/admin/products/new`) — saves as draft
+- [x] Edit title, subtitle, description, handle, category, tags
+- [x] Publish / unpublish without deleting
+- [x] Delete a product (removes its storage objects; past orders keep records)
 
-### 8.2 — Product Management
-- [ ] Create a new product through the admin UI (not just seed)
-- [ ] Add product images (uploaded via Medusa admin)
-- [ ] Set up product categories (e.g., "GH Peptides", "Healing Peptides", "Weight Loss Peptides")
-- [ ] Assign products to categories
-- [ ] Add batch/lot number as a product metadata field
-- [ ] Add COA URL as a product metadata field (link to a PDF)
+### 8.3 — Images
+- [x] `product_images` table — multiple images per product, ordered
+- [x] Drag-and-drop / click upload from the product editor, multi-file
+- [x] Reorder and delete; position 0 syncs to `products.thumbnail` via trigger
+- [x] JPEG / PNG / WebP / AVIF, 5 MB cap, stored in the `product-images` bucket
 
-### 8.3 — Inventory Management
-- [ ] Confirm inventory levels show for each variant
-- [ ] Test adjusting inventory manually through admin
-- [ ] Set up low-stock threshold (Medusa doesn't have built-in alerts — note this for Phase 09)
+### 8.4 — Inventory
+- [x] Per-variant `reorder_point` replaces the hardcoded threshold of 10
+- [x] `/admin/inventory` — stock table, ±1 quick adjust, reason-coded adjustments
+- [x] `inventory_adjustments` audit trail with actor, reason, note, resulting qty
+- [x] Checkout sales log to the same trail via `decrement_inventory()`
 
-### 8.4 — Order Processing Workflow
-Define and test the standard workflow:
-- [ ] New order arrives → admin receives notification (email — from Phase 07)
-- [ ] Admin opens order in Medusa admin → reviews items
-- [ ] Admin creates a fulfillment → enters tracking number
-- [ ] Order status updates → customer gets shipped email (from Phase 07)
-- [ ] Practice the full flow with a test order end-to-end
+### 8.5 — Alerts
+- [x] Dashboard banner for out-of-stock variants and pending cancellations
+- [x] Stock alerts panel, out-of-stock listed above low-stock
+- [x] Badge count on the Inventory nav item
+- [ ] Email digest when a variant crosses its reorder point *(deferred — see notes)*
 
-### 8.5 — Customer Management
-- [ ] View customer list in Medusa admin
-- [ ] View individual customer order history
-- [ ] Add internal notes to a customer record (for support)
+### 8.6 — Stats
+- [x] Revenue, orders, average order value, units sold — 30-day window with
+      period-over-period change
+- [x] Daily revenue chart with hover tooltip and a table view
+- [x] Best sellers by units
+- [x] Revenue counts `paid` / `shipped` / `delivered` only — never `pending`
 
-### 8.6 — Admin User Roles (If Multiple Staff)
-- [ ] If you have other staff: go to **Settings → Team** and invite them
-- [ ] Assign appropriate roles (avoid giving full admin access to fulfillment staff)
-
-### 8.7 — Discount Codes
-- [ ] Create a test discount code (e.g., `RESEARCH10` for 10% off)
-- [ ] Test applying it at checkout
-- [ ] Set expiry date and usage limit
+### 8.7 — Orders
+- [x] Order list with status, tracking entry, and per-order line items
+- [x] Status changes email the customer (Phase 07)
+- [ ] Customer lookup / internal notes
+- [ ] Discount codes
 
 ---
 
 ## Verification Checklist
 
-- [ ] Admin login works
-- [ ] Can create, edit, and delete a product through admin UI
-- [ ] Can upload a product image
-- [ ] Can manually adjust inventory
-- [ ] Can process a test order (create fulfillment, add tracking)
-- [ ] Can look up a customer and see their order history
-- [ ] Discount code works at checkout
-- [ ] Admin is not accessible from the public storefront URL (it's on port 9000, not 3000)
+- [ ] Non-admin visiting `/admin` is redirected to `/`
+- [ ] Can create a product, upload images, add a variant, and publish it
+- [ ] The published product appears on `/products` with its image
+- [ ] Reordering images changes the storefront thumbnail
+- [ ] Setting a variant's stock below its reorder point raises an alert
+- [ ] A manual adjustment appears in the adjustment history with the right actor
+- [ ] Placing a test order decrements stock and logs a `sale` adjustment
+- [ ] Revenue on the dashboard matches the sum of paid/shipped/delivered orders
 
 ---
 
 ## Key Files
-- `apps/backend/medusa-config.ts` — `admin.backendUrl` setting
-- `apps/backend/.env` — `MEDUSA_BACKEND_URL`, `DISABLE_MEDUSA_ADMIN`
+- `apps/storefront/app/admin/` — dashboard, products, inventory, orders
+- `apps/storefront/app/actions/admin-products.ts` — product/image/inventory actions
+- `apps/storefront/app/actions/admin.ts` — order actions
+- `apps/storefront/lib/admin.ts` — the `ADMIN_EMAILS` gate
+- `apps/storefront/lib/admin-stats.ts` — dashboard aggregates
+- `supabase/migrations/20260901000014_admin_dashboard.sql` — images, reorder
+  points, adjustment trail
 
 ---
 
 ## Notes
-- In production, you'll want to serve the admin on a subdomain like `admin.midwesternpeptides.com` behind Cloudflare with IP allowlisting
-- Never expose the admin at a public predictable URL without additional auth protection
+- Email alerts were deliberately deferred: they need either a scheduled job or a
+  post-checkout hook, and the in-dashboard banner covers the daily workflow.
+- In production, put `/admin` behind Cloudflare with IP allowlisting on top of
+  the email allowlist.
 
 ---
 

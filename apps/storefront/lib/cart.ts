@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import { getUser } from "@/lib/auth"
 import { supabaseAdmin as supabase } from "./supabase/admin"
 
 export const CART_COOKIE = "cart_id"
@@ -97,6 +98,22 @@ export async function getCartById(cartId: string): Promise<Cart | null> {
 export async function getCart(): Promise<Cart | null> {
   const cartId = await getCartId()
   if (!cartId) return null
+
+  // A cart claimed by an account must never render for anyone else — including
+  // the same browser after sign-out, where the cart_id cookie outlives the
+  // session. Without this, the next person on a shared computer sees the
+  // previous user's basket.
+  const { data: owner } = await supabase
+    .from("carts")
+    .select("user_id")
+    .eq("id", cartId)
+    .maybeSingle()
+
+  if (owner?.user_id) {
+    const user = await getUser()
+    if (!user || user.id !== owner.user_id) return null
+  }
+
   return getCartById(cartId)
 }
 

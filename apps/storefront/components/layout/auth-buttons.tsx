@@ -10,6 +10,8 @@ export type AuthUser = {
   email: string
   firstName: string | null
   avatarUrl: string | null
+  /** staff or admin — shows the link through to the admin area. */
+  isStaff?: boolean
 }
 
 const MENU_LINKS = [
@@ -20,6 +22,11 @@ const MENU_LINKS = [
 ]
 
 export function AuthButtons({ authUser }: { authUser: AuthUser | null }) {
+  // An admin still has a normal customer account; this is the way through to
+  // the admin area, which is otherwise unreachable from the storefront.
+  const links = authUser?.isStaff
+    ? [{ label: "Admin dashboard", href: "/admin" }, ...MENU_LINKS]
+    : MENU_LINKS
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -61,6 +68,8 @@ export function AuthButtons({ authUser }: { authUser: AuthUser | null }) {
         className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-sand-300 bg-brand-50 text-sm font-semibold text-brand-800 transition-colors hover:border-brand-500"
       >
         {authUser.avatarUrl ? (
+          // Avatars can be Google OAuth URLs, not just our bucket, so the host
+          // isn't in next.config remotePatterns. They're a few KB.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={authUser.avatarUrl}
@@ -80,7 +89,7 @@ export function AuthButtons({ authUser }: { authUser: AuthUser | null }) {
             </p>
             <p className="truncate text-xs text-sand-500">{authUser.email}</p>
           </div>
-          {MENU_LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}

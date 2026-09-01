@@ -32,6 +32,8 @@ export function AvatarUploader({
     <div className="flex items-center gap-4">
       <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-sand-300 bg-brand-50 text-xl font-semibold text-brand-800">
         {avatarUrl ? (
+          // Avatars can be Google OAuth URLs, not just our bucket, so the host
+          // isn't in next.config remotePatterns. They're a few KB.
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarUrl} alt="Your avatar" className="h-full w-full object-cover" />
         ) : (

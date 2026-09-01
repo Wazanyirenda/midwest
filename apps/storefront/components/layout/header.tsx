@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Search } from "lucide-react"
 import { getCart } from "@/lib/cart"
 import { getUser, getProfile } from "@/lib/auth"
+import { isStaff } from "@/lib/admin"
 import { AuthButtons, type AuthUser } from "./auth-buttons"
 import { MobileNav } from "./mobile-nav"
 
@@ -12,11 +13,12 @@ export async function Header() {
 
   let authUser: AuthUser | null = null
   if (user) {
-    const profile = await getProfile(user.id)
+    const [profile, staff] = await Promise.all([getProfile(user.id), isStaff()])
     authUser = {
       email: user.email ?? "",
       firstName: profile?.first_name ?? null,
       avatarUrl: profile?.avatar_url ?? null,
+      isStaff: staff,
     }
   }
 

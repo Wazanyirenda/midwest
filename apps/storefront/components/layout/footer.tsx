@@ -18,7 +18,7 @@ const LINKS = {
     { label: "Shipping Policy",      href: "/shipping" },
     { label: "Privacy Policy",       href: "/privacy" },
     { label: "Terms of Service",     href: "/terms" },
-    { label: "Contact",              href: "mailto:orders@midwesternpeptides.com" },
+    { label: "Contact",              href: "mailto:support@midwesternpeptides.com" },
   ],
 }
 

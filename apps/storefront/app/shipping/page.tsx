@@ -102,8 +102,8 @@ export default function ShippingPage() {
           </div>
           <p className="mt-4 text-sm">
             Contact:{" "}
-            <a href="mailto:shipping@midwesternpeptides.com" className="text-brand-600 hover:underline">
-              shipping@midwesternpeptides.com
+            <a href="mailto:support@midwesternpeptides.com" className="text-brand-600 hover:underline">
+              support@midwesternpeptides.com
             </a>
           </p>
         </section>

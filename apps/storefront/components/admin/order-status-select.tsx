@@ -3,7 +3,7 @@
 import { useTransition } from "react"
 import { updateOrderStatus } from "@/app/actions/admin"
 
-const STATUSES = ["pending", "paid", "shipped", "delivered", "canceled"] as const
+const STATUSES = ["pending", "paid", "shipped", "delivered", "canceled", "refunded"] as const
 type Status = (typeof STATUSES)[number]
 
 export function OrderStatusSelect({

@@ -31,6 +31,8 @@ export default async function AccountLayout({
             <div className="mb-5 flex items-center gap-3 rounded-xl border border-sand-200 bg-white p-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sand-200 bg-brand-50 text-sm font-semibold text-brand-800">
                 {profile?.avatar_url ? (
+                  // Avatars can be Google OAuth URLs, not just our bucket, so the
+                  // host isn't in next.config remotePatterns. They're a few KB.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.avatar_url}

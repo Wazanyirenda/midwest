@@ -1,6 +1,9 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Lock, ShoppingCart } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
+import { getSiteSettings } from "@/lib/settings"
+import { PaymentBadges } from "@/components/store/payment-badges"
 import { removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
 import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
@@ -11,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CartPage() {
-  const cart = await getCart()
+  const [cart, settings] = await Promise.all([getCart(), getSiteSettings()])
 
   const items = cart?.items ?? []
   const isEmpty = items.length === 0
@@ -54,10 +57,15 @@ export default async function CartPage() {
                   className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4"
                 >
                   {/* Thumbnail */}
-                  <div className="h-20 w-20 flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                  <div className="relative h-20 w-20 flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden">
                     {thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumbnail} alt={productTitle} className="h-full w-full object-cover" />
+                      <Image
+                        src={thumbnail}
+                        alt={productTitle}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center text-xs font-bold text-gray-300">
                         {productTitle.slice(0, 3).toUpperCase()}
@@ -190,6 +198,14 @@ export default async function CartPage() {
                 <Lock size={12} strokeWidth={1.75} />
                 Secure card checkout
               </p>
+
+              {settings.showPaymentBadges && (
+                <PaymentBadges
+                  className="mt-3"
+                  showApplePay={settings.showApplePayBadge}
+                  showAmazonPay={settings.showAmazonPayBadge}
+                />
+              )}
             </div>
           </div>
         </div>

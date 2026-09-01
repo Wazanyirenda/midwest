@@ -9,7 +9,7 @@ import { Check } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { updateCartContact } from "@/app/actions/cart"
-import { initiatePaymentSession, addShippingMethod, listShippingOptions, completeCart } from "@/app/actions/checkout"
+import { initiatePaymentSession, addShippingMethod, listShippingOptions, finalizeCheckout } from "@/app/actions/checkout"
 import { saveAddressFromCheckout } from "@/app/actions/addresses"
 import { Field, inputCls } from "@/components/ui/form-field"
 import { US_STATES } from "@/lib/us-states"
@@ -198,10 +198,12 @@ function Step1({
 
 function StripePaymentForm({
   cartId,
+  orderId,
   onSuccess,
   onBack,
 }: {
   cartId: string
+  orderId: string | null
   onSuccess: (orderId: string) => void
   onBack: () => void
 }) {
@@ -216,9 +218,16 @@ function StripePaymentForm({
     setSubmitting(true)
     setError(null)
 
+    // The order already exists as pending, so the return_url can name it. When
+    // Stripe redirects (3DS, bank auth) the code below never runs — the success
+    // page picks it up from here and waits on the webhook.
+    const returnUrl = orderId
+      ? `${window.location.origin}/checkout/success?order_id=${orderId}`
+      : `${window.location.origin}/checkout/success`
+
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: `${window.location.origin}/checkout/success` },
+      confirmParams: { return_url: returnUrl },
       redirect: "if_required",
     })
 
@@ -228,11 +237,13 @@ function StripePaymentForm({
       return
     }
 
-    const result = await completeCart(cartId)
-    if (result.type === "order") {
-      onSuccess(result.order.id)
+    // Payment is authorised. The webhook decides when it counts as paid; this
+    // only retires the cart and moves the browser along.
+    await finalizeCheckout(cartId)
+    if (orderId) {
+      onSuccess(orderId)
     } else {
-      setError("Order could not be completed. Please try again.")
+      setError("Payment went through, but we couldn't find your order. Contact support.")
       setSubmitting(false)
     }
   }
@@ -273,11 +284,13 @@ function ReviewStep({
   contact,
   cart,
   stripeClientSecret,
+  orderId,
   onBack,
 }: {
   contact: ContactData
   cart: CartSummary
   stripeClientSecret: string | null
+  orderId: string | null
   onBack: () => void
 }) {
   const router = useRouter()
@@ -319,7 +332,7 @@ function ReviewStep({
 
       {stripeClientSecret && stripePromise ? (
         <Elements stripe={stripePromise} options={{ clientSecret: stripeClientSecret, appearance: { theme: "stripe" } }}>
-          <StripePaymentForm cartId={cart.id} onSuccess={handleOrderSuccess} onBack={onBack} />
+          <StripePaymentForm cartId={cart.id} orderId={orderId} onSuccess={handleOrderSuccess} onBack={onBack} />
         </Elements>
       ) : (
         <div className="flex gap-3">
@@ -361,6 +374,7 @@ export function CheckoutForm({
   const [step, setStep] = useState(1)
   const [contactData, setContactData] = useState<ContactData | null>(null)
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null)
+  const [orderId, setOrderId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function handleStep1(data: ContactData) {
@@ -411,6 +425,7 @@ export function CheckoutForm({
       const session = collection?.payment_sessions?.[0]
       const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
       setStripeClientSecret(sessionData.client_secret ?? null)
+      setOrderId(collection?.order_id ?? null)
     } catch (e) {
       setError((e as Error).message ?? "Could not initiate payment. Try again.")
     }
@@ -442,6 +457,7 @@ export function CheckoutForm({
           contact={contactData}
           cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, items }}
           stripeClientSecret={stripeClientSecret}
+          orderId={orderId}
           onBack={() => setStep(1)}
         />
       )}
