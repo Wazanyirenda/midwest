@@ -15,7 +15,7 @@ type Product = {
 }
 
 const field =
-  "w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+  "w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
 const label = "block text-xs font-medium text-sand-600 mb-1.5"
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -69,7 +69,7 @@ export function ProductForm({ product }: { product?: Product }) {
             placeholder="bpc-157"
             className={`${field} font-mono`}
           />
-          <p className="mt-1 text-xs text-sand-400">
+          <p className="mt-1 text-xs text-sand-600">
             Leave blank to generate from the title.
           </p>
         </div>
@@ -100,7 +100,7 @@ export function ProductForm({ product }: { product?: Product }) {
             placeholder="healing, recovery, coa"
             className={field}
           />
-          <p className="mt-1 text-xs text-sand-400">
+          <p className="mt-1 text-xs text-sand-600">
             Comma-separated. Drives the category filters on the storefront —
             healing, gh, glp1, recovery, nootropic, anti-aging, coa, new, supplies.
           </p>

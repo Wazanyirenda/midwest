@@ -142,7 +142,7 @@ function VariantRow({
               onClick={remove}
               disabled={pending}
               aria-label={`Delete variant ${variant.title}`}
-              className="rounded-md p-1.5 text-sand-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+              className="rounded-md p-1.5 text-sand-600 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
             >
               <Trash2 size={14} strokeWidth={1.75} />
             </button>
@@ -182,7 +182,7 @@ export function VariantManager({
     <div className="space-y-3">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="text-left text-xs uppercase tracking-wide text-sand-500">
+          <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
             <tr>
               <th className="pb-1.5 pr-2 font-medium">Variant</th>
               <th className="pb-1.5 pr-2 font-medium">SKU</th>
@@ -206,7 +206,7 @@ export function VariantManager({
       </div>
 
       {variants.length === 0 && !adding && (
-        <p className="text-sm text-sand-500">
+        <p className="text-sm text-sand-600">
           This product has no variants yet — customers can&apos;t buy it until you add
           one.
         </p>
@@ -263,7 +263,7 @@ export function VariantManager({
             <button
               type="button"
               onClick={() => setAdding(false)}
-              className="rounded-md px-2 py-1.5 text-xs text-sand-500 hover:text-sand-800"
+              className="rounded-md px-2 py-1.5 text-xs text-sand-600 hover:text-sand-800"
             >
               Cancel
             </button>

@@ -51,7 +51,7 @@ export default async function AdminCampaignsPage() {
     <div className="mx-auto max-w-4xl space-y-5">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Campaigns</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           Promotional email to opted-in customers. Around {recipientCount}{" "}
           {recipientCount === 1 ? "address" : "addresses"} eligible.
         </p>

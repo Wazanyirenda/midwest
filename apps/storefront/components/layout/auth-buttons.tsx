@@ -87,7 +87,7 @@ export function AuthButtons({ authUser }: { authUser: AuthUser | null }) {
             <p className="truncate text-sm font-medium text-ink">
               {authUser.firstName ?? "Researcher"}
             </p>
-            <p className="truncate text-xs text-sand-500">{authUser.email}</p>
+            <p className="truncate text-xs text-sand-600">{authUser.email}</p>
           </div>
           {links.map((link) => (
             <Link

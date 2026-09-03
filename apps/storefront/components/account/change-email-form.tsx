@@ -32,7 +32,7 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-600">
         Current email: <span className="font-medium text-gray-700">{currentEmail}</span>
       </p>
       <Field label="New email address" error={errors.newEmail?.message}>

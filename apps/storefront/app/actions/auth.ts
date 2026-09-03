@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache"
 import { createAuthClient } from "@/lib/supabase/server"
 import { mergeCartOnSignIn } from "@/lib/cart-merge"
 import { CART_COOKIE } from "@/lib/cart"
+import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
 
 // Auth actions return { error } for inline form errors instead of throwing;
 // redirect() is always called OUTSIDE any try/catch (it throws NEXT_REDIRECT).
@@ -22,6 +23,11 @@ export async function signIn(data: {
   password: string
   next?: string
 }): Promise<ActionResult> {
+  // Keyed on the email so one attacker can't lock out a whole shared IP, and
+  // one account can't be brute-forced from many IPs.
+  const gate = await rateLimit("signIn", data.email)
+  if (!gate.allowed) return { error: rateLimitMessage(gate.retryAfter) }
+
   const supabase = await createAuthClient()
   const { data: result, error } = await supabase.auth.signInWithPassword({
     email: data.email,
@@ -52,6 +58,10 @@ export async function signUp(data: {
   lastName: string
   marketingOptIn: boolean
 }): Promise<ActionResult> {
+  // By IP: signup abuse comes from one source creating many accounts.
+  const gate = await rateLimit("signUp")
+  if (!gate.allowed) return { error: rateLimitMessage(gate.retryAfter) }
+
   const supabase = await createAuthClient()
   const { data: result, error } = await supabase.auth.signUp({
     email: data.email,
@@ -115,6 +125,18 @@ export async function signOut(): Promise<void> {
 }
 
 export async function forgotPassword(data: { email: string }): Promise<ActionResult> {
+  // Limited because it sends mail — otherwise it's a free way to flood someone's
+  // inbox. The generic success response below is preserved either way, so this
+  // still reveals nothing about whether the account exists.
+  const gate = await rateLimit("passwordReset", data.email)
+  if (!gate.allowed) {
+    return {
+      ok: true,
+      message:
+        "If an account exists for that email, a reset link is on its way.",
+    }
+  }
+
   const supabase = await createAuthClient()
   await supabase.auth.resetPasswordForEmail(data.email, {
     redirectTo: `${appUrl()}/auth/confirm?next=/reset-password`,

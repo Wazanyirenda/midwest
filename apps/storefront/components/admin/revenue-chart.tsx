@@ -47,13 +47,13 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
       <div className="mb-4 flex items-baseline justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold text-sand-900">Revenue</h2>
-          <p className="mt-0.5 text-xs text-sand-500">
+          <p className="mt-0.5 text-xs text-sand-600">
             Paid, shipped, and delivered orders · last {series.length} days
           </p>
         </div>
         <button
           onClick={() => setShowTable((v) => !v)}
-          className="shrink-0 text-xs text-sand-500 underline-offset-2 hover:text-sand-800 hover:underline"
+          className="shrink-0 text-xs text-sand-600 underline-offset-2 hover:text-sand-800 hover:underline"
         >
           {showTable ? "Show chart" : "Show table"}
         </button>
@@ -62,7 +62,7 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
       {showTable ? (
         <div className="max-h-64 overflow-y-auto rounded-lg border border-sand-200">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-sand-50 text-left text-xs uppercase tracking-wide text-sand-500">
+            <thead className="sticky top-0 bg-sand-50 text-left text-xs uppercase tracking-wide text-sand-600">
               <tr>
                 <th className="px-3 py-2 font-medium">Date</th>
                 <th className="px-3 py-2 text-right font-medium">Orders</th>
@@ -110,7 +110,7 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
                     x={PAD.left - 8}
                     y={y + 3.5}
                     textAnchor="end"
-                    className="fill-sand-400 text-[10px] tabular-nums"
+                    className="fill-sand-400 text-2xs tabular-nums"
                   >
                     {money(t)}
                   </text>
@@ -181,7 +181,7 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
                 x={PAD.left + peakIndex * band + band / 2}
                 y={PAD.top + plotH - (peak / yMax) * plotH - 6}
                 textAnchor="middle"
-                className="fill-sand-700 text-[10px] font-semibold"
+                className="fill-sand-700 text-2xs font-semibold"
               >
                 {money(peak)}
               </text>
@@ -191,7 +191,7 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
             <text
               x={PAD.left}
               y={H - 8}
-              className="fill-sand-400 text-[10px]"
+              className="fill-sand-400 text-2xs"
             >
               {series[0]?.date.slice(5)}
             </text>
@@ -199,7 +199,7 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
               x={W - PAD.right}
               y={H - 8}
               textAnchor="end"
-              className="fill-sand-400 text-[10px]"
+              className="fill-sand-400 text-2xs"
             >
               {series[series.length - 1]?.date.slice(5)}
             </text>
@@ -213,11 +213,11 @@ export function RevenueChart({ series }: { series: DaySlice[] }) {
                 transform: "translateX(-50%)",
               }}
             >
-              <p className="text-[10px] text-sand-500">{active.date}</p>
+              <p className="text-2xs text-sand-600">{active.date}</p>
               <p className="text-sm font-semibold tabular-nums text-sand-900">
                 ${(active.revenue_cents / 100).toFixed(2)}
               </p>
-              <p className="text-[10px] text-sand-500">
+              <p className="text-2xs text-sand-600">
                 {active.orders} order{active.orders === 1 ? "" : "s"}
               </p>
             </div>

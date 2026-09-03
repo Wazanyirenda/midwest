@@ -62,7 +62,7 @@ export default async function AdminInventoryPage() {
     <div className="mx-auto max-w-6xl space-y-5">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Inventory</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           {totalUnits} units across {variants.length} variants
           {flagged.length > 0 && (
             <>
@@ -77,7 +77,7 @@ export default async function AdminInventoryPage() {
 
       <div className="overflow-x-auto rounded-xl border border-sand-200 bg-white">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="text-left text-xs uppercase tracking-wide text-sand-500">
+          <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
             <tr className="border-b border-sand-100">
               <th className="px-4 py-2.5 font-medium">Product</th>
               <th className="px-4 py-2.5 font-medium">Variant</th>
@@ -105,13 +105,13 @@ export default async function AdminInventoryPage() {
                       {v.product?.title ?? "—"}
                     </Link>
                     {v.product?.status === "draft" && (
-                      <span className="ml-1.5 rounded bg-sand-100 px-1.5 py-0.5 text-[10px] text-sand-500">
+                      <span className="ml-1.5 rounded bg-sand-100 px-1.5 py-0.5 text-2xs text-sand-600">
                         draft
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-sand-600">{v.title}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-sand-500">{v.sku}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-sand-600">{v.sku}</td>
                   <td className="px-4 py-3 text-right">
                     <span
                       className={`font-semibold tabular-nums ${
@@ -131,7 +131,7 @@ export default async function AdminInventoryPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-sand-500">
+                  <td className="px-4 py-3 text-right tabular-nums text-sand-600">
                     {v.reorder_point}
                   </td>
                   <td className="px-4 py-3">
@@ -150,13 +150,13 @@ export default async function AdminInventoryPage() {
       <section className="rounded-xl border border-sand-200 bg-white">
         <header className="border-b border-sand-100 px-4 py-3">
           <h2 className="text-sm font-semibold text-sand-900">Recent adjustments</h2>
-          <p className="mt-0.5 text-xs text-sand-500">
+          <p className="mt-0.5 text-xs text-sand-600">
             Every stock change, newest first.
           </p>
         </header>
 
         {history.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-sand-500">
+          <p className="px-4 py-6 text-sm text-sand-600">
             No adjustments recorded yet.
           </p>
         ) : (
@@ -174,18 +174,18 @@ export default async function AdminInventoryPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sand-800">
                     {h.variant?.product?.title ?? "Deleted product"}
-                    <span className="text-sand-500"> · {h.variant?.title}</span>
+                    <span className="text-sand-600"> · {h.variant?.title}</span>
                   </p>
-                  <p className="truncate text-xs text-sand-400">
+                  <p className="truncate text-xs text-sand-600">
                     {REASON_LABELS[h.reason] ?? h.reason}
                     {h.note ? ` — ${h.note}` : ""}
                     {h.actor_email ? ` · ${h.actor_email}` : ""}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs tabular-nums text-sand-400">
+                <span className="shrink-0 text-xs tabular-nums text-sand-600">
                   → {h.resulting_quantity}
                 </span>
-                <span className="hidden shrink-0 text-xs text-sand-400 sm:block">
+                <span className="hidden shrink-0 text-xs text-sand-600 sm:block">
                   {new Date(h.created_at).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",

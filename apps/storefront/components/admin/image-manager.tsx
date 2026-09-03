@@ -95,7 +95,7 @@ export function ImageManager({
               </div>
 
               {index === 0 && (
-                <span className="absolute left-1.5 top-1.5 rounded bg-ink/75 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <span className="absolute left-1.5 top-1.5 rounded bg-ink/75 px-1.5 py-0.5 text-2xs font-medium text-white">
                   Primary
                 </span>
               )}
@@ -144,11 +144,11 @@ export function ImageManager({
         }}
         className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-sand-300 bg-sand-50 px-4 py-7 text-center transition-colors hover:border-brand-500 hover:bg-brand-50"
       >
-        <Upload size={18} strokeWidth={1.75} className="text-sand-500" />
+        <Upload size={18} strokeWidth={1.75} className="text-sand-600" />
         <span className="text-sm font-medium text-sand-700">
           {pending ? "Uploading…" : "Drop images here, or click to browse"}
         </span>
-        <span className="text-xs text-sand-400">
+        <span className="text-xs text-sand-600">
           JPEG, PNG, WebP, or AVIF · up to 5 MB each
         </span>
         <input
@@ -168,7 +168,7 @@ export function ImageManager({
         </p>
       )}
 
-      <p className="text-xs text-sand-400">
+      <p className="text-xs text-sand-600">
         The first image is the product thumbnail shown across the storefront.
       </p>
     </div>

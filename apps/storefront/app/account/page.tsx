@@ -60,7 +60,7 @@ function StatTile({
       className="group rounded-xl border border-sand-200 bg-white p-5 transition-colors hover:border-brand-300"
     >
       <div className="mb-3 flex items-center justify-between">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sand-50 text-sand-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand-600">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sand-50 text-sand-600 transition-colors group-hover:bg-brand-50 group-hover:text-brand-600">
           <Icon size={17} strokeWidth={1.75} />
         </span>
         <ArrowUpRight
@@ -70,7 +70,7 @@ function StatTile({
       </div>
       <p className="text-2xl font-semibold tabular-nums text-ink">{value}</p>
       <p className="mt-0.5 text-sm font-medium text-sand-700">{label}</p>
-      <p className="mt-0.5 text-xs text-sand-500">{hint}</p>
+      <p className="mt-0.5 text-xs text-sand-600">{hint}</p>
     </Link>
   )
 }
@@ -96,7 +96,7 @@ export default async function AccountPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-sand-500">
+        <p className="mb-1 font-mono text-2xs uppercase tracking-widest text-sand-600">
           My account
         </p>
         <h1 className="text-2xl font-bold text-ink">Welcome back, {firstName}</h1>
@@ -161,11 +161,11 @@ export default async function AccountPage() {
 
           {summary.recentOrders.length === 0 ? (
             <div className="flex flex-col items-center px-5 py-12 text-center">
-              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-sand-50 text-sand-600">
                 <Package size={20} strokeWidth={1.5} />
               </span>
               <p className="text-sm font-medium text-sand-800">No orders yet</p>
-              <p className="mt-1 max-w-xs text-xs text-sand-500">
+              <p className="mt-1 max-w-xs text-xs text-sand-600">
                 Your orders will appear here with tracking and invoices once you
                 place one.
               </p>
@@ -191,7 +191,7 @@ export default async function AccountPage() {
                         </span>
                         <StatusPill status={order.status} />
                       </div>
-                      <p className="mt-1 truncate text-xs text-sand-500">
+                      <p className="mt-1 truncate text-xs text-sand-600">
                         {formatDate(order.created_at)} ·{" "}
                         {order.items
                           .map((i) => `${i.title} × ${i.quantity}`)
@@ -260,7 +260,7 @@ export default async function AccountPage() {
 
           {/* Support */}
           <section className="rounded-xl border border-sand-200 bg-white px-5 py-5">
-            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sand-50 text-sand-500">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sand-50 text-sand-600">
               <LifeBuoy size={17} strokeWidth={1.75} />
             </span>
             <h2 className="text-sm font-semibold text-ink">Need a hand?</h2>

@@ -7,6 +7,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getCartById, CART_COOKIE } from "@/lib/cart"
 import { getShippingOptions } from "@/lib/shipping"
 import { getUser } from "@/lib/auth"
+import { rateLimit } from "@/lib/rate-limit"
 // Confirmation mail is sent by the Stripe webhook, not from here — see
 // app/api/webhooks/stripe/route.ts.
 
@@ -59,6 +60,13 @@ export async function initiatePaymentSession(
   cartId: string,
   providerId: "stripe" | "nowpayments"
 ) {
+  // Payment attempts are limited per cart: card testing works by hammering
+  // intent creation, and each attempt costs a Stripe API call.
+  const gate = await rateLimit("payment", cartId)
+  if (!gate.allowed) {
+    throw new Error("Too many payment attempts. Please wait a moment.")
+  }
+
   const cart = await getCartById(cartId)
   if (!cart) throw new Error("Cart not found")
   if (!cart.email) throw new Error("Cart is missing contact information")

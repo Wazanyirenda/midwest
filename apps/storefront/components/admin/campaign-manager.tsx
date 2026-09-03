@@ -65,7 +65,7 @@ export function CampaignManager({
   }
 
   const field =
-    "w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+    "w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
 
   return (
     <div className="space-y-4">
@@ -97,7 +97,7 @@ export function CampaignManager({
               Body
             </label>
             <textarea id="body" name="body" rows={8} required className={field} />
-            <p className="mt-1 text-xs text-sand-400">
+            <p className="mt-1 text-xs text-sand-600">
               Basic HTML is allowed. The layout, unsubscribe link, and postal
               address are added automatically.
             </p>
@@ -130,7 +130,7 @@ export function CampaignManager({
       )}
 
       {campaigns.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-12 text-center text-sm text-sand-500">
+        <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-12 text-center text-sm text-sand-600">
           No campaigns yet.
         </p>
       ) : (
@@ -140,7 +140,7 @@ export function CampaignManager({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sand-900">{c.subject}</p>
-                  <p className="mt-0.5 text-xs text-sand-500">
+                  <p className="mt-0.5 text-xs text-sand-600">
                     {c.status === "sent"
                       ? `Sent to ${c.sent_count} of ${c.recipients} · ${
                           c.sent_at
@@ -166,7 +166,7 @@ export function CampaignManager({
                         </button>
                         <button
                           onClick={() => setConfirmId(null)}
-                          className="px-2 py-1.5 text-xs text-sand-500 hover:text-sand-900"
+                          className="px-2 py-1.5 text-xs text-sand-600 hover:text-sand-900"
                         >
                           Cancel
                         </button>
@@ -192,7 +192,7 @@ export function CampaignManager({
                           onClick={() => remove(c.id)}
                           disabled={pending}
                           aria-label="Delete campaign"
-                          className="rounded-lg p-1.5 text-sand-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                          className="rounded-lg p-1.5 text-sand-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                         >
                           <Trash2 size={14} strokeWidth={1.75} />
                         </button>

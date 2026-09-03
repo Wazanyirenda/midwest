@@ -44,7 +44,7 @@ export default async function AdminOrdersPage() {
     <div className="mx-auto max-w-5xl space-y-4">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Orders</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           {orders.length === 0
             ? "Nothing yet"
             : `${orders.length} most recent`}
@@ -52,7 +52,7 @@ export default async function AdminOrdersPage() {
       </header>
 
       {orders.length === 0 && (
-        <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-16 text-center text-sm text-sand-500">
+        <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-16 text-center text-sm text-sand-600">
           No orders yet — they&apos;ll appear here as soon as customers check out.
         </p>
       )}
@@ -74,13 +74,13 @@ export default async function AdminOrdersPage() {
                         <AlertTriangle size={12} strokeWidth={2} className="mr-1 inline" />Cancellation requested
                       </span>
                     )}
-                  <span className="text-xs text-sand-400">
+                  <span className="text-xs text-sand-600">
                     {new Date(order.created_at).toLocaleString("en-US")}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-sand-600">{order.email}</p>
                 {addr && (
-                  <p className="mt-0.5 text-xs text-sand-400">
+                  <p className="mt-0.5 text-xs text-sand-600">
                     {addr.first_name} {addr.last_name} · {addr.address_1}
                     {addr.address_2 ? `, ${addr.address_2}` : ""}, {addr.city},{" "}
                     {addr.province} {addr.postal_code}
@@ -110,7 +110,7 @@ export default async function AdminOrdersPage() {
                   <span className="text-sand-700">
                     {item.product_title}
                     {item.variant_title ? ` — ${item.variant_title}` : ""}
-                    <span className="text-sand-400"> × {item.quantity}</span>
+                    <span className="text-sand-600"> × {item.quantity}</span>
                   </span>
                   <span className="font-medium text-sand-800">
                     {formatCartTotal(item.unit_price_cents * item.quantity)}

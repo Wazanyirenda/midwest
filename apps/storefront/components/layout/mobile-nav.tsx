@@ -66,7 +66,7 @@ export function MobileNav({ authUser }: { authUser: AuthUser | null }) {
                 className="flex items-center justify-between py-3.5 text-base text-sand-700 hover:text-ink transition-colors"
               >
                 {link.label}
-                <svg className="h-4 w-4 text-sand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="h-4 w-4 text-sand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                 </svg>
               </Link>

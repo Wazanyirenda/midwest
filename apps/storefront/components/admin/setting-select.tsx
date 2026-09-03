@@ -41,7 +41,7 @@ export function SettingSelect({
       <label htmlFor={`setting-${field}`} className="block text-sm font-medium text-sand-900">
         {label}
       </label>
-      {description && <p className="mt-0.5 text-xs text-sand-500">{description}</p>}
+      {description && <p className="mt-0.5 text-xs text-sand-600">{description}</p>}
 
       <select
         id={`setting-${field}`}
@@ -58,7 +58,7 @@ export function SettingSelect({
       </select>
 
       {selected?.note && (
-        <p className="mt-1.5 text-xs text-sand-500">{selected.note}</p>
+        <p className="mt-1.5 text-xs text-sand-600">{selected.note}</p>
       )}
       {error && (
         <p role="alert" className="mt-1.5 text-xs font-medium text-red-600">

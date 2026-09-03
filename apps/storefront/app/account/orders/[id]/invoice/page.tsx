@@ -46,7 +46,7 @@ export default async function InvoicePage({ params }: Props) {
       <div className="mb-6 flex items-center justify-between print:hidden">
         <Link
           href={`/account/orders/${o.id}`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-gray-600 hover:text-gray-700"
         >
           ← Back to order
         </Link>
@@ -58,12 +58,12 @@ export default async function InvoicePage({ params }: Props) {
         <div className="mb-8 flex items-start justify-between border-b border-gray-200 pb-6">
           <div>
             <p className="text-lg font-bold text-gray-900">Midwestern Peptides</p>
-            <p className="text-xs text-gray-500">orders@midwesternpeptides.com</p>
+            <p className="text-xs text-gray-600">orders@midwesternpeptides.com</p>
           </div>
           <div className="text-right">
             <p className="text-lg font-semibold text-gray-900">Invoice</p>
-            <p className="text-sm text-gray-500">Order #{o.display_id}</p>
-            <p className="text-sm text-gray-500">{formatDate(o.created_at)}</p>
+            <p className="text-sm text-gray-600">Order #{o.display_id}</p>
+            <p className="text-sm text-gray-600">{formatDate(o.created_at)}</p>
           </div>
         </div>
 
@@ -112,11 +112,11 @@ export default async function InvoicePage({ params }: Props) {
 
         {/* Totals */}
         <div className="ml-auto w-56 space-y-1 text-sm">
-          <div className="flex justify-between text-gray-500">
+          <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
             <span>{formatAmount(o.subtotal)}</span>
           </div>
-          <div className="flex justify-between text-gray-500">
+          <div className="flex justify-between text-gray-600">
             <span>Shipping</span>
             <span>{formatAmount(o.shipping_total)}</span>
           </div>
@@ -124,10 +124,10 @@ export default async function InvoicePage({ params }: Props) {
             <span>Total</span>
             <span>{formatAmount(o.total)}</span>
           </div>
-          <p className="pt-1 text-right text-xs text-gray-400">Paid via {o.payment_method}</p>
+          <p className="pt-1 text-right text-xs text-gray-600">Paid via {o.payment_method}</p>
         </div>
 
-        <p className="mt-10 border-t border-gray-200 pt-4 text-center text-xs text-gray-400">
+        <p className="mt-10 border-t border-gray-200 pt-4 text-center text-xs text-gray-600">
           All products are sold for laboratory research use only.
           Not for human or veterinary use.
         </p>

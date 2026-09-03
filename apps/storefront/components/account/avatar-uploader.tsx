@@ -57,7 +57,7 @@ export function AvatarUploader({
         >
           {pending ? "Uploading…" : avatarUrl ? "Change photo" : "Upload photo"}
         </button>
-        <p className="mt-1 text-xs text-gray-400">JPEG, PNG, or WebP — max 2 MB.</p>
+        <p className="mt-1 text-xs text-gray-600">JPEG, PNG, or WebP — max 2 MB.</p>
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
     </div>

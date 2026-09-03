@@ -87,7 +87,7 @@ export default async function UnsubscribePage({ searchParams }: Props) {
         {ok ? (
           <CheckCircle2 className="h-8 w-8 text-brand-600" strokeWidth={2} />
         ) : (
-          <AlertCircle className="h-8 w-8 text-sand-500" strokeWidth={2} />
+          <AlertCircle className="h-8 w-8 text-sand-600" strokeWidth={2} />
         )}
       </div>
 

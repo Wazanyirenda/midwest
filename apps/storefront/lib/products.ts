@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from "./supabase/admin"
+import { getSiteSettings } from "@/lib/settings"
 
 export type ProductVariant = {
   id: string
@@ -55,7 +56,18 @@ export async function listProducts(
     console.error("listProducts:", error.message)
     return []
   }
-  return (data ?? []) as unknown as Product[]
+
+  const products = (data ?? []) as unknown as Product[]
+
+  // Filtered here rather than in SQL: stock lives on variants, and a product is
+  // only sold out when every variant is. PostgREST can't express that in the
+  // embedded select without dropping products that have one empty variant.
+  const { hideOutOfStock } = await getSiteSettings()
+  if (!hideOutOfStock) return products
+
+  return products.filter((p) =>
+    p.variants.some((v) => v.inventory_quantity > 0)
+  )
 }
 
 export async function getProductByHandle(handle: string): Promise<Product | null> {

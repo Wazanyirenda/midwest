@@ -23,7 +23,7 @@ function Section({
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+      {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
       <div className="mt-4">{children}</div>
     </section>
   )
@@ -39,7 +39,7 @@ export default async function ProfilePage() {
     <main className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Profile & Settings</h1>
-        <p className="mt-1 text-gray-500">Manage how you appear and sign in.</p>
+        <p className="mt-1 text-gray-600">Manage how you appear and sign in.</p>
       </div>
 
       <Section title="Profile photo">

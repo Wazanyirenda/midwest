@@ -7,6 +7,8 @@ import { motion, useScroll, useTransform } from "framer-motion"
 import { Reveal, StaggerReveal, StaggerItem } from "@/components/ui/reveal"
 import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck, Check } from "lucide-react"
 import { subscribeToNewsletter } from "@/app/actions/newsletter"
+import { SpecBadges } from "@/components/store/spec-badges"
+import { CardAddToCart } from "@/components/store/card-add-to-cart"
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,9 @@ export type FeaturedProduct = {
   price: string
   badge: string | null
   thumbnail: string | null
+  /** Set only when the product has exactly one size, so the card can add it. */
+  onlyVariantId: string | null
+  inStock: boolean
 }
 
 const HOW_IT_WORKS = [
@@ -87,7 +92,7 @@ function Hero() {
           {/* Left: text */}
           <div>
             <motion.p
-              className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-6"
+              className="font-mono text-2xs tracking-widest text-sand-500 uppercase mb-6"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
@@ -116,7 +121,7 @@ function Hero() {
               {TRUST_BADGES.map((badge) => (
                 <span
                   key={badge}
-                  className="font-mono text-[10px] tracking-wide text-sand-400 border border-sand-700 px-3 py-1 rounded-full"
+                  className="font-mono text-2xs tracking-wide text-sand-400 border border-sand-700 px-3 py-1 rounded-full"
                 >
                   {badge}
                 </span>
@@ -179,7 +184,7 @@ function CategoriesStrip() {
           <Link
             key={cat.slug}
             href={`/products?category=${cat.slug}`}
-            className="whitespace-nowrap text-xs font-mono text-sand-500 border border-white/10 px-4 py-2 rounded-full hover:border-brand-600 hover:text-brand-400 transition-colors"
+            className="whitespace-nowrap text-xs font-mono text-sand-600 border border-white/10 px-4 py-2 rounded-full hover:border-brand-600 hover:text-brand-400 transition-colors"
           >
             {cat.label}
           </Link>
@@ -203,7 +208,7 @@ function StatsBar() {
           ].map((item) => (
             <div key={item.value} className="px-6 py-4 first:pl-0">
               <p className="font-semibold text-white text-sm">{item.value}</p>
-              <p className="font-mono text-[10px] text-sand-500 mt-0.5 max-w-56">{item.detail}</p>
+              <p className="font-mono text-2xs text-sand-600 mt-0.5 max-w-56">{item.detail}</p>
             </div>
           ))}
         </div>
@@ -222,7 +227,7 @@ function ProductGrid({ products }: { products: FeaturedProduct[] }) {
         <Reveal direction="none">
           <div className="flex items-baseline justify-between mb-10">
             <div>
-              <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
+              <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
                 Available now
               </p>
               <h2 className="text-xl font-bold text-sand-900">Featured peptides</h2>
@@ -253,42 +258,49 @@ function ProductGrid({ products }: { products: FeaturedProduct[] }) {
 
 function ProductCard({ product }: { product: FeaturedProduct }) {
   return (
-    <Link href={`/products/${product.handle}`} className="group block">
-      {/* Image placeholder */}
-      <div className="aspect-square w-full rounded-2xl bg-sand-100 border border-sand-200 group-hover:border-brand-400 flex items-center justify-center overflow-hidden relative transition-colors">
-        {product.badge && (
-          <span className="absolute top-2 right-2 font-mono text-[9px] tracking-widest uppercase text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
-            {product.badge}
-          </span>
-        )}
-        {product.thumbnail ? (
-          <Image
-            src={product.thumbnail}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <span className="font-mono text-3xl font-bold text-sand-300 group-hover:scale-110 transition-transform duration-300 select-none">
-            {product.name.slice(0, 3).toUpperCase()}
-          </span>
-        )}
+    <div className="group flex flex-col rounded-2xl border border-sand-200 bg-white p-3 transition-colors hover:border-brand-300">
+      <Link href={`/products/${product.handle}`} className="block">
+        <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-sand-200 bg-sand-100">
+          {product.badge && (
+            <span className="absolute right-2 top-2 z-10 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-2xs uppercase tracking-widest text-brand-700">
+              {product.badge}
+            </span>
+          )}
+          {product.thumbnail ? (
+            <Image
+              src={product.thumbnail}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <span className="select-none font-mono text-3xl font-bold text-sand-600 transition-transform duration-300 group-hover:scale-110">
+              {product.name.slice(0, 3).toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        <p className="text-center text-sm font-semibold leading-tight text-sand-900 transition-colors group-hover:text-brand-700">
+          {product.name}
+        </p>
+      </Link>
+
+      <div className="mt-2.5 flex justify-center">
+        <SpecBadges purity="≥99% purity" />
       </div>
 
-      {/* Info */}
-      <p className="font-medium text-sand-900 group-hover:text-brand-700 transition-colors text-sm leading-tight mt-3">
-        {product.name}
-      </p>
-      <p className="font-mono text-[10px] text-sand-400 uppercase tracking-wider mt-0.5">
-        {product.category}
-      </p>
-
-      {/* Purity */}
-      <p className="font-mono text-[10px] text-sand-400 mt-1.5">99% purity</p>
-
-      <p className="font-semibold text-sand-900 text-sm mt-1.5">{product.price}</p>
-    </Link>
+      <div className="mt-auto pt-3">
+        <p className="mb-2.5 text-center text-sm font-semibold text-sand-900">
+          {product.price}
+        </p>
+        <CardAddToCart
+          variantId={product.onlyVariantId}
+          handle={product.handle}
+          inStock={product.inStock}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -302,7 +314,7 @@ function HowItWorks() {
         <Reveal direction="none">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-14">
             <div>
-              <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
+              <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
                 Why researchers choose us
               </p>
               <h2 className="text-xl font-bold text-sand-900">Quality standards</h2>
@@ -325,7 +337,7 @@ function HowItWorks() {
                     <item.icon size={18} className="text-brand-600" />
                   </div>
                   <h3 className="font-semibold text-sand-900 mb-2">{item.title}</h3>
-                  <p className="text-sm text-sand-500 leading-relaxed">{item.description}</p>
+                  <p className="text-sm text-sand-600 leading-relaxed">{item.description}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -360,7 +372,7 @@ function Newsletter() {
         <Reveal>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-8">
             <div>
-              <p className="font-mono text-[10px] tracking-widest text-sand-600 uppercase mb-2">
+              <p className="font-mono text-2xs tracking-widest text-sand-400 uppercase mb-2">
                 Research updates
               </p>
               <h2 className="text-2xl font-bold text-white mb-2">Join the lab list.</h2>

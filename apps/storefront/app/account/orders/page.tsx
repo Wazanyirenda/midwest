@@ -51,11 +51,11 @@ export default async function OrdersPage() {
 
       {orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-dashed border-gray-300 bg-white">
-          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <Package size={22} strokeWidth={1.5} />
           </span>
           <h2 className="text-lg font-semibold text-gray-700">No orders yet</h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-600">
             Your order history will appear here after your first purchase.
           </p>
           <Link
@@ -81,7 +81,7 @@ export default async function OrdersPage() {
                     </span>
                     <StatusBadge status={order.status} />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-600">
                     Placed {formatDate(order.created_at)}
                   </p>
                   <p className="mt-1 text-sm text-gray-600">

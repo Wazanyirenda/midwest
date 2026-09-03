@@ -43,7 +43,13 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-playfair)", "Georgia", "serif"],
         mono: ["var(--font-jetbrains-mono)", "Menlo", "monospace"],
+      },
+      fontSize: {
+        // Mono data labels. In rem, not px, so it scales with the larger root
+        // size we set on small screens.
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
       letterSpacing: {
         widest2: "0.2em",

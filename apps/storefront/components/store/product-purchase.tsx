@@ -23,7 +23,7 @@ export function ProductPurchase({ variants, children }: Props) {
     return (
       <button
         disabled
-        className="w-full rounded-full bg-sand-200 px-6 py-3.5 text-base font-semibold text-sand-400 cursor-not-allowed"
+        className="w-full rounded-full bg-sand-200 px-6 py-3.5 text-base font-semibold text-sand-600 cursor-not-allowed"
       >
         Out of Stock
       </button>
@@ -53,7 +53,7 @@ export function ProductPurchase({ variants, children }: Props) {
                 }`}
               >
                 {v.title}
-                <span className="ml-1 text-sand-400">
+                <span className="ml-1 text-sand-600">
                   — {formatPrice(v.price_cents)}
                 </span>
               </button>

@@ -44,7 +44,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
         <Link href="/blog" className="hover:text-gray-700">Research Library</Link>
         <span>/</span>
         <span className="text-gray-900 truncate max-w-xs">{post.title}</span>
@@ -52,7 +52,7 @@ export default async function BlogPostPage({ params }: Props) {
 
       {/* Post header */}
       <header className="mb-8">
-        <div className="mb-3 flex items-center gap-3 text-sm text-gray-500">
+        <div className="mb-3 flex items-center gap-3 text-sm text-gray-600">
           <span className="rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-700">
             {getCategoryLabel(post.category)}
           </span>
@@ -61,7 +61,7 @@ export default async function BlogPostPage({ params }: Props) {
           <time dateTime={post.date}>{formatDate(post.date)}</time>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 leading-tight">{post.title}</h1>
-        <p className="mt-3 text-lg text-gray-500">{post.excerpt}</p>
+        <p className="mt-3 text-lg text-gray-600">{post.excerpt}</p>
       </header>
 
       {/* Article body */}
@@ -83,7 +83,7 @@ export default async function BlogPostPage({ params }: Props) {
                 >
                   <div className="flex-1">
                     <p className="font-medium text-gray-900 group-hover:text-brand-700 transition-colors">{p.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{p.readingTime} min read · {formatDate(p.date)}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{p.readingTime} min read · {formatDate(p.date)}</p>
                   </div>
                   <span className="text-brand-600 text-sm">→</span>
                 </Link>

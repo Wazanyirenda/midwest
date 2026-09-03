@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/admin"
 import { getUser } from "@/lib/auth"
 import { deliver, verifyTransport, transportStatus } from "@/lib/email-transport"
+import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
 
 type Result = { error?: string; message?: string }
 
@@ -13,6 +14,9 @@ type Result = { error?: string; message?: string }
  */
 export async function sendTestEmail(): Promise<Result> {
   await requireAdmin()
+
+  const gate = await rateLimit("testEmail")
+  if (!gate.allowed) return { error: rateLimitMessage(gate.retryAfter) }
 
   const status = transportStatus()
   if (!status.ready) {

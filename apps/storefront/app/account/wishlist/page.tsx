@@ -24,7 +24,7 @@ export default async function WishlistPage() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Wishlist</h1>
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-gray-600">
             Saved products — move them to your cart whenever you&apos;re ready.
           </p>
         </div>
@@ -35,11 +35,11 @@ export default async function WishlistPage() {
 
       {wishlist.items.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-24 text-center">
-          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <Heart size={22} strokeWidth={1.5} />
           </span>
           <h2 className="text-lg font-semibold text-gray-700">Your wishlist is empty</h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-600">
             Tap the heart on any product to save it here.
           </p>
           <Link
@@ -83,7 +83,7 @@ export default async function WishlistPage() {
                   </p>
                 </Link>
                 {savedVariant && (
-                  <p className="mt-0.5 text-xs text-gray-500">{savedVariant.title}</p>
+                  <p className="mt-0.5 text-xs text-gray-600">{savedVariant.title}</p>
                 )}
                 <div className="mt-1 mb-3 flex items-center justify-between">
                   {price != null && (
@@ -93,7 +93,7 @@ export default async function WishlistPage() {
                     </p>
                   )}
                   {!inStock && (
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                       Out of stock
                     </span>
                   )}

@@ -13,12 +13,12 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-600">
             Track orders, save addresses, and check out faster.
           </p>
         </div>
         <SignUpForm />
-        <p className="mt-4 text-center text-xs text-gray-400">
+        <p className="mt-4 text-center text-xs text-gray-600">
           By creating an account you confirm you are 21+ years of age and are
           purchasing for legitimate research purposes only.
         </p>

@@ -45,7 +45,7 @@ export function AccountNav() {
                 <Icon
                   size={16}
                   strokeWidth={1.75}
-                  className={active ? "text-brand-600" : "text-sand-400"}
+                  className={active ? "text-brand-600" : "text-sand-600"}
                 />
                 {link.label}
               </Link>
@@ -59,7 +59,7 @@ export function AccountNav() {
               type="submit"
               className="flex w-full items-center gap-2.5 rounded-lg border border-sand-200 px-3 py-2 text-sm text-sand-600 transition-colors hover:bg-sand-50 hover:text-ink lg:border-transparent"
             >
-              <LogOut size={16} strokeWidth={1.75} className="text-sand-400" />
+              <LogOut size={16} strokeWidth={1.75} className="text-sand-600" />
               Sign out
             </button>
           </form>

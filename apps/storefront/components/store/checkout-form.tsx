@@ -64,11 +64,11 @@ function StepIndicator({ current }: { current: number }) {
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold border-2 transition-colors
                   ${done ? "bg-brand-600 border-brand-600 text-white"
                     : active ? "border-brand-600 text-brand-600 bg-white"
-                    : "border-gray-300 text-gray-400 bg-white"}`}
+                    : "border-gray-300 text-gray-600 bg-white"}`}
               >
                 {done ? <Check size={14} strokeWidth={2.5} /> : num}
               </div>
-              <span className={`mt-1 hidden sm:block text-xs ${active ? "font-semibold text-gray-900" : "text-gray-400"}`}>
+              <span className={`mt-1 hidden sm:block text-xs ${active ? "font-semibold text-gray-900" : "text-gray-600"}`}>
                 {label}
               </span>
             </div>
@@ -308,7 +308,7 @@ function ReviewStep({
         <p className="text-gray-900">{contact.firstName} {contact.lastName}</p>
         <p className="text-gray-600">{contact.address1}{contact.address2 ? `, ${contact.address2}` : ""}</p>
         <p className="text-gray-600">{contact.city}, {contact.state} {contact.zip}</p>
-        <p className="text-gray-500">{contact.email}</p>
+        <p className="text-gray-600">{contact.email}</p>
       </div>
 
       <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
@@ -341,7 +341,7 @@ function ReviewStep({
             ← Back
           </button>
           <button disabled
-            className="flex-1 rounded-lg bg-gray-200 py-3 text-sm font-semibold text-gray-400 cursor-not-allowed">
+            className="flex-1 rounded-lg bg-gray-200 py-3 text-sm font-semibold text-gray-600 cursor-not-allowed">
             Payment not available
           </button>
         </div>

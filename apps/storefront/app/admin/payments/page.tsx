@@ -46,7 +46,7 @@ function ProviderTag({ provider }: { provider: string | null }) {
       </span>
     )
   }
-  return <span className="text-xs text-sand-400">—</span>
+  return <span className="text-xs text-sand-600">—</span>
 }
 
 export default async function AdminPaymentsPage() {
@@ -85,7 +85,7 @@ export default async function AdminPaymentsPage() {
     <div className="mx-auto max-w-6xl space-y-5">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Payments</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           Every transaction across card and crypto, plus the raw webhook log.
         </p>
       </header>
@@ -98,9 +98,9 @@ export default async function AdminPaymentsPage() {
           { label: "Awaiting payment", value: String(awaiting.length), hint: "Not yet confirmed" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-sand-200 bg-white p-4">
-            <p className="text-xs font-medium text-sand-500">{s.label}</p>
+            <p className="text-xs font-medium text-sand-600">{s.label}</p>
             <p className="mt-1.5 text-2xl font-semibold text-sand-900">{s.value}</p>
-            <p className="mt-1 text-xs text-sand-400">{s.hint}</p>
+            <p className="mt-1 text-xs text-sand-600">{s.hint}</p>
           </div>
         ))}
       </div>
@@ -118,13 +118,13 @@ export default async function AdminPaymentsPage() {
           <h2 className="text-sm font-semibold text-sand-900">Transactions</h2>
         </header>
         {orders.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-sand-500">
+          <p className="px-4 py-10 text-center text-sm text-sand-600">
             No transactions yet.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
-              <thead className="text-left text-xs uppercase tracking-wide text-sand-500">
+              <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
                 <tr className="border-b border-sand-100">
                   <th className="px-4 py-2.5 font-medium">Order</th>
                   <th className="px-4 py-2.5 font-medium">Customer</th>
@@ -154,12 +154,12 @@ export default async function AdminPaymentsPage() {
                       {o.payment_reference ? (
                         <span
                           title={o.payment_reference}
-                          className="font-mono text-xs text-sand-400"
+                          className="font-mono text-xs text-sand-600"
                         >
                           {o.payment_reference.slice(0, 18)}…
                         </span>
                       ) : (
-                        <span className="text-xs text-sand-300">none</span>
+                        <span className="text-xs text-sand-500">none</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">
@@ -168,7 +168,7 @@ export default async function AdminPaymentsPage() {
                     <td className="px-4 py-2.5 text-right font-medium tabular-nums text-sand-900">
                       {formatCartTotal(o.total_cents)}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-sand-500">
+                    <td className="px-4 py-2.5 text-xs text-sand-600">
                       {new Date(o.created_at).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -187,7 +187,7 @@ export default async function AdminPaymentsPage() {
       <section className="rounded-xl border border-sand-200 bg-white">
         <header className="border-b border-sand-100 px-4 py-3">
           <h2 className="text-sm font-semibold text-sand-900">Webhook log</h2>
-          <p className="mt-0.5 text-xs text-sand-500">
+          <p className="mt-0.5 text-xs text-sand-600">
             Signed callbacks received from payment providers. Each is processed
             exactly once; repeat deliveries are ignored.
           </p>
@@ -202,7 +202,7 @@ export default async function AdminPaymentsPage() {
             <p className="text-sm font-medium text-sand-700">
               No webhooks received yet
             </p>
-            <p className="mx-auto mt-1 max-w-md text-xs text-sand-500">
+            <p className="mx-auto mt-1 max-w-md text-xs text-sand-600">
               Until a provider webhook arrives, no payment can be marked paid.
               Check that STRIPE_WEBHOOK_SECRET is set and the endpoint is
               registered in the Stripe dashboard.
@@ -228,11 +228,11 @@ export default async function AdminPaymentsPage() {
                 </span>
                 <span
                   title={e.event_id}
-                  className="hidden shrink-0 font-mono text-xs text-sand-400 sm:block"
+                  className="hidden shrink-0 font-mono text-xs text-sand-600 sm:block"
                 >
                   {e.event_id.slice(0, 20)}…
                 </span>
-                <span className="shrink-0 text-xs text-sand-400">
+                <span className="shrink-0 text-xs text-sand-600">
                   {new Date(e.received_at).toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",

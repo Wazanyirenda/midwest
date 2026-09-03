@@ -40,7 +40,7 @@ export default async function AdminTeamPage() {
     <div className="mx-auto max-w-4xl space-y-5">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Team &amp; roles</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           {staff.length} with admin access · {customers.length} customers
         </p>
       </header>
@@ -68,7 +68,7 @@ export default async function AdminTeamPage() {
             <h2 className="text-sm font-semibold text-sand-900">{group.title}</h2>
           </header>
           {group.rows.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-sand-500">{group.empty}</p>
+            <p className="px-4 py-6 text-sm text-sand-600">{group.empty}</p>
           ) : (
             <ul className="divide-y divide-sand-100">
               {group.rows.map((p) => {
@@ -82,7 +82,7 @@ export default async function AdminTeamPage() {
                       <p className="truncate text-sm font-medium text-sand-900">
                         {name || "(no name)"}
                       </p>
-                      <p className="truncate text-xs text-sand-500">
+                      <p className="truncate text-xs text-sand-600">
                         {emailById.get(p.id) ?? "—"}
                       </p>
                     </div>

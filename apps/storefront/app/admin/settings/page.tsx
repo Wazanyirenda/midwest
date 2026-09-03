@@ -22,7 +22,7 @@ function Section({
   return (
     <section className="rounded-xl border border-sand-200 bg-white p-5">
       <h2 className="text-sm font-semibold text-sand-900">{title}</h2>
-      {description && <p className="mt-0.5 text-xs text-sand-500">{description}</p>}
+      {description && <p className="mt-0.5 text-xs text-sand-600">{description}</p>}
       <div className="mt-2 divide-y divide-sand-100">{children}</div>
     </section>
   )
@@ -40,7 +40,7 @@ export default async function AdminSettingsPage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Settings</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           Show or hide parts of the storefront. Changes take effect immediately.
         </p>
       </header>
@@ -79,20 +79,10 @@ export default async function AdminSettingsPage() {
                 showAmazonPay={settings.showAmazonPayBadge}
               />
             ) : (
-              <p className="text-center text-xs text-sand-400">Badges hidden</p>
+              <p className="text-center text-xs text-sand-600">Badges hidden</p>
             )}
           </div>
         </div>
-      </Section>
-
-      <Section title="Checkout">
-        <SettingToggle
-          field="showCryptoPayment"
-          label="Offer crypto payment"
-          description="Shows the crypto option at checkout. The NOWPayments integration is not built yet — selecting it currently errors."
-          warning="Crypto checkout is not implemented. Customers choosing it will hit an error."
-          initial={settings.showCryptoPayment}
-        />
       </Section>
 
       <Section title="Catalog">
@@ -191,6 +181,26 @@ export default async function AdminSettingsPage() {
           initial={settings.showAnnouncement}
         />
         <AnnouncementField initial={settings.announcementText} />
+      </Section>
+
+      <Section
+        title="Research use disclaimer"
+        description="Shown in full on /disclaimer and summarised in the footer of every page."
+      >
+        <SettingToggle
+          field="showDisclaimerStrip"
+          label="Show disclaimer in the footer"
+          description="A short research-use notice above the copyright line, linking to the full page."
+          initial={settings.showDisclaimerStrip}
+        />
+        <SettingField
+          field="disclaimerBody"
+          label="Disclaimer text"
+          description="Blank lines separate paragraphs. The first paragraph is emphasised on the page."
+          initial={settings.disclaimerBody}
+          rows={12}
+          maxLength={8000}
+        />
       </Section>
     </div>
   )

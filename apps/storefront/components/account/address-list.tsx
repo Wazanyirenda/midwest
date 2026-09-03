@@ -115,11 +115,11 @@ export function AddressList({ addresses }: { addresses: Address[] }) {
     <div className="space-y-6">
       {addresses.length === 0 && !adding && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center">
-          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <MapPin size={22} strokeWidth={1.5} />
           </span>
           <h2 className="text-lg font-semibold text-gray-700">No saved addresses</h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-600">
             Save an address to check out faster next time.
           </p>
         </div>

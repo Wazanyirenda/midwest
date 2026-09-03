@@ -31,10 +31,12 @@ export default async function HomePage() {
       category: p.subtitle ?? "Research peptide",
       handle: p.handle,
       price: lowest != null
-        ? `${p.variants.length > 1 ? "From " : ""}${formatPrice(lowest)}`
+        ? `${p.variants.length > 1 ? "From " : ""}${formatPrice(lowest)} USD`
         : "—",
       badge,
       thumbnail: p.thumbnail,
+      onlyVariantId: p.variants.length === 1 ? (p.variants[0]?.id ?? null) : null,
+      inStock: p.variants.some((v) => v.inventory_quantity > 0),
     }]
   })
 

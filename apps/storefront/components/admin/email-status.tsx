@@ -36,7 +36,7 @@ export function EmailStatus({
           )}
           <div>
             <p className="text-sm font-medium text-sand-900">Delivery</p>
-            <p className="mt-0.5 text-xs text-sand-500">{detail}</p>
+            <p className="mt-0.5 text-xs text-sand-600">{detail}</p>
           </div>
         </div>
 

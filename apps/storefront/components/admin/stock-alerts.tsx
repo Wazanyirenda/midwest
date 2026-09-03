@@ -18,7 +18,7 @@ function AlertRow({ row, critical }: { row: LowStockRow; critical: boolean }) {
         >
           {row.product_title}
         </Link>
-        <p className="truncate text-xs text-sand-500">
+        <p className="truncate text-xs text-sand-600">
           {row.title} · <span className="font-mono">{row.sku}</span>
         </p>
       </div>
@@ -30,7 +30,7 @@ function AlertRow({ row, critical }: { row: LowStockRow; critical: boolean }) {
         >
           {critical ? "Out of stock" : `${row.inventory_quantity} left`}
         </p>
-        <p className="text-xs text-sand-400">reorder at {row.reorder_point}</p>
+        <p className="text-xs text-sand-600">reorder at {row.reorder_point}</p>
       </div>
     </li>
   )
@@ -51,7 +51,7 @@ export function StockAlerts({
         <h2 className="text-sm font-semibold text-sand-900">
           Stock alerts
           {total > 0 && (
-            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-800">
+            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 font-mono text-2xs font-semibold text-amber-800">
               {total}
             </span>
           )}
@@ -65,7 +65,7 @@ export function StockAlerts({
       </header>
 
       {total === 0 ? (
-        <p className="flex items-center gap-2 px-4 py-6 text-sm text-sand-500">
+        <p className="flex items-center gap-2 px-4 py-6 text-sm text-sand-600">
           <CheckCircle2 size={16} strokeWidth={2} className="text-brand-600" />
           Every variant is above its reorder point.
         </p>

@@ -46,7 +46,7 @@ export function SettingToggle({
         >
           {label}
         </label>
-        <p className="mt-0.5 text-xs text-sand-500">{description}</p>
+        <p className="mt-0.5 text-xs text-sand-600">{description}</p>
 
         {on && warning && (
           <p className="mt-1.5 flex items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-800">

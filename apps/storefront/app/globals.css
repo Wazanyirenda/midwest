@@ -22,9 +22,17 @@
     font-feature-settings: "ss01", "cv01";
   }
 
-  /* Tighter heading tracking */
+  /* Headings carry the brand serif from the wordmark; body stays Inter. */
   h1, h2, h3, h4 {
-    @apply tracking-tight;
+    @apply font-display tracking-tight;
+  }
+
+  /* Phone screens read at arm's length. Bumping the root scales every
+     rem-based size at once rather than sprinkling responsive variants. */
+  @media (max-width: 640px) {
+    html {
+      font-size: 17px;
+    }
   }
 
   /* Clean prose for legal pages */

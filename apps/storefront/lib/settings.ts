@@ -6,10 +6,11 @@ export type SiteSettings = {
   showPaymentBadges: boolean
   showApplePayBadge: boolean
   showAmazonPayBadge: boolean
-  showCryptoPayment: boolean
   hideOutOfStock: boolean
   showAnnouncement: boolean
   announcementText: string
+  showDisclaimerStrip: boolean
+  disclaimerBody: string
   abandonedCartEmails: boolean
   marketingEmails: boolean
   abandonedCartDelayHours: number
@@ -19,6 +20,16 @@ export type SiteSettings = {
   marketingTransport: "same" | "resend"
   marketingDailyCap: number
 }
+
+const DEFAULT_DISCLAIMER = `All products sold by Midwestern Peptides are intended strictly for laboratory research use. They are not designed or approved for human or animal consumption, and must not be used for any diagnostic, therapeutic, or medical application.
+
+Midwestern Peptides does not provide instructions relating to preparation, reconstitution, administration, dosage, or any form of usage.
+
+No product sold on this site is a drug, dietary supplement, or medical device, and none has been evaluated by the Food and Drug Administration for safety or efficacy.
+
+All items are labeled "For Research Use Only — Not for Human or Veterinary Use."
+
+By purchasing, you confirm that you are at least 21 years of age, that you are acquiring these materials for lawful research purposes, and that you are qualified to handle them safely. Any misuse, diversion, or resale for human consumption is prohibited and may violate federal, state, or international law.`
 
 /**
  * Mirrors the seeded rows in 20260901000016_site_settings.sql. These apply when
@@ -30,10 +41,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showPaymentBadges: true,
   showApplePayBadge: false,
   showAmazonPayBadge: false,
-  showCryptoPayment: false,
   hideOutOfStock: false,
   showAnnouncement: false,
   announcementText: "",
+  showDisclaimerStrip: true,
+  // Mirrors the seeded row in 20260901000021. A settings outage must still
+  // render a complete research-use notice, never an empty one.
+  disclaimerBody: DEFAULT_DISCLAIMER,
   // Both default off: no marketing goes out until you deliberately enable it.
   abandonedCartEmails: false,
   marketingEmails: false,
@@ -51,10 +65,11 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   showPaymentBadges: "show_payment_badges",
   showApplePayBadge: "show_apple_pay_badge",
   showAmazonPayBadge: "show_amazon_pay_badge",
-  showCryptoPayment: "show_crypto_payment",
   hideOutOfStock: "hide_out_of_stock",
   showAnnouncement: "show_announcement",
   announcementText: "announcement_text",
+  showDisclaimerStrip: "show_disclaimer_strip",
+  disclaimerBody: "disclaimer_body",
   abandonedCartEmails: "abandoned_cart_emails",
   marketingEmails: "marketing_emails",
   abandonedCartDelayHours: "abandoned_cart_delay_hours",

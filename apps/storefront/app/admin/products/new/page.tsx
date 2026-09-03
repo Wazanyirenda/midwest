@@ -11,13 +11,13 @@ export default async function NewProductPage() {
       <div>
         <Link
           href="/admin/products"
-          className="inline-flex items-center gap-1 text-xs text-sand-500 hover:text-sand-800"
+          className="inline-flex items-center gap-1 text-xs text-sand-600 hover:text-sand-800"
         >
           <ArrowLeft size={13} strokeWidth={2} />
           Products
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-sand-900">New product</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           Saves as a draft — you&apos;ll add images and variants next, then publish.
         </p>
       </div>

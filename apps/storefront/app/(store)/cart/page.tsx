@@ -25,11 +25,11 @@ export default async function CartPage() {
 
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <ShoppingCart size={26} strokeWidth={1.5} />
           </span>
           <h2 className="text-xl font-semibold text-gray-700">Your cart is empty</h2>
-          <p className="mt-2 text-gray-500">Browse our catalog to add research peptides.</p>
+          <p className="mt-2 text-gray-600">Browse our catalog to add research peptides.</p>
           <Link
             href="/products"
             className="mt-6 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
@@ -82,7 +82,7 @@ export default async function CartPage() {
                       {productTitle}
                     </Link>
                     {variantTitle && (
-                      <p className="text-sm text-gray-500">{variantTitle}</p>
+                      <p className="text-sm text-gray-600">{variantTitle}</p>
                     )}
                     <p className="text-sm font-medium text-brand-600">
                       {formatCartTotal(item.unit_price)}
@@ -95,7 +95,7 @@ export default async function CartPage() {
                       <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
                         <button
                           type="submit"
-                          className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+                          className="text-xs text-gray-600 hover:text-brand-600 transition-colors"
                         >
                           Save for later
                         </button>
@@ -105,7 +105,7 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-xs text-gray-600 hover:text-red-500 transition-colors"
                         >
                           Remove
                         </button>
@@ -165,7 +165,7 @@ export default async function CartPage() {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span className="text-gray-400">Calculated at checkout</span>
+                  <span className="text-gray-600">Calculated at checkout</span>
                 </div>
                 {(cart?.discount_total ?? 0) > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -194,7 +194,7 @@ export default async function CartPage() {
                 Continue Shopping
               </Link>
 
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-400">
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-600">
                 <Lock size={12} strokeWidth={1.75} />
                 Secure card checkout
               </p>

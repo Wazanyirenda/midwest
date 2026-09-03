@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: Props) {
         {/* Details */}
         <div className="flex flex-col gap-6">
           <div>
-            <p className="font-mono text-[10px] tracking-widest text-sand-400 uppercase mb-2">
+            <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-2">
               Research peptide
             </p>
             <div className="flex items-start justify-between gap-4">
@@ -103,7 +103,7 @@ export default async function ProductPage({ params }: Props) {
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between">
                   <span className="font-medium text-sand-700">{row.label}</span>
-                  <span className={row.link ? "text-brand-600 cursor-pointer hover:underline" : row.muted ? "text-sand-400 italic" : "text-sand-600"}>
+                  <span className={row.link ? "text-brand-600 cursor-pointer hover:underline" : row.muted ? "text-sand-600 italic" : "text-sand-600"}>
                     {row.value}
                   </span>
                 </div>
@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: Props) {
           </ProductPurchase>
 
           {/* Trust badges */}
-          <div className="flex flex-wrap gap-2 text-xs text-sand-500">
+          <div className="flex flex-wrap gap-2 text-xs text-sand-600">
             {[
               { label: "Third-party tested", icon: FlaskConical },
               { label: "Secure checkout",    icon: Lock },

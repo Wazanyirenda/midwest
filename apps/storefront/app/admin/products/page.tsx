@@ -41,7 +41,7 @@ export default async function AdminProductsPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-sand-900">Products</h1>
-          <p className="mt-0.5 text-sm text-sand-500">
+          <p className="mt-0.5 text-sm text-sand-600">
             {products.length} product{products.length === 1 ? "" : "s"} · click one to
             edit details, images, and variants
           </p>
@@ -57,7 +57,7 @@ export default async function AdminProductsPage() {
 
       {products.length === 0 ? (
         <div className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-16 text-center">
-          <p className="text-sm text-sand-500">No products yet.</p>
+          <p className="text-sm text-sand-600">No products yet.</p>
           <Link
             href="/admin/products/new"
             className="mt-3 inline-block text-sm font-medium text-brand-600 hover:underline"
@@ -68,7 +68,7 @@ export default async function AdminProductsPage() {
       ) : (
         <div className="overflow-hidden rounded-xl border border-sand-200 bg-white">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-sand-500">
+            <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
               <tr className="border-b border-sand-100">
                 <th className="px-4 py-2.5 font-medium">Product</th>
                 <th className="px-4 py-2.5 font-medium">Category</th>
@@ -104,14 +104,14 @@ export default async function AdminProductsPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <ImageOff size={14} strokeWidth={1.75} className="text-sand-400" />
+                            <ImageOff size={14} strokeWidth={1.75} className="text-sand-600" />
                           )}
                         </div>
                         <div className="min-w-0">
                           <p className="truncate font-medium text-sand-900 group-hover:text-brand-700">
                             {p.title}
                           </p>
-                          <p className="truncate font-mono text-xs text-sand-400">
+                          <p className="truncate font-mono text-xs text-sand-600">
                             /{p.handle}
                           </p>
                         </div>

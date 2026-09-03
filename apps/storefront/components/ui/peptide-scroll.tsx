@@ -165,7 +165,7 @@ function PeptideSlide({
           {/* Left — text */}
           <motion.div style={{ y }}>
             {/* Label */}
-            <p className="font-mono text-[10px] tracking-widest uppercase mb-5"
+            <p className="font-mono text-2xs tracking-widest uppercase mb-5"
                style={{ color: peptide.accent }}>
               {peptide.label}
             </p>
@@ -212,10 +212,10 @@ function PeptideSlide({
           {/* Right — sequence / spec panel */}
           <motion.div style={{ y }} className="hidden lg:block">
             <div className="border border-white/10 p-8">
-              <p className="font-mono text-[9px] tracking-widest uppercase text-sand-600 mb-4">
+              <p className="font-mono text-2xs tracking-widest uppercase text-sand-400 mb-4">
                 Amino acid sequence
               </p>
-              <p className="font-mono text-[11px] text-sand-400 leading-7 break-all">
+              <p className="font-mono text-2xs text-sand-400 leading-7 break-all">
                 {peptide.sequence}
               </p>
               <div className="mt-8 pt-6 border-t border-white/10">
@@ -240,7 +240,7 @@ function PeptideSlide({
 function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
     <div>
-      <p className="font-mono text-[9px] tracking-widest uppercase text-sand-600 mb-1">{label}</p>
+      <p className="font-mono text-2xs tracking-widest uppercase text-sand-400 mb-1">{label}</p>
       <p className="font-mono text-lg font-bold" style={{ color: accent }}>{value}</p>
     </div>
   )
@@ -249,7 +249,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent: 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="font-mono text-[9px] tracking-widest uppercase text-sand-600">{label}</p>
+      <p className="font-mono text-2xs tracking-widest uppercase text-sand-400">{label}</p>
       <p className="font-mono text-xs text-sand-300 mt-0.5">{value}</p>
     </div>
   )
@@ -277,7 +277,7 @@ function ScrollHint({ smooth }: { smooth: ReturnType<typeof useSpring> }) {
       className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       style={{ opacity }}
     >
-      <span className="font-mono text-[9px] tracking-widest uppercase text-sand-600">scroll</span>
+      <span className="font-mono text-2xs tracking-widest uppercase text-sand-400">scroll</span>
       <motion.div
         className="w-px h-8 bg-sand-600 origin-top"
         animate={{ scaleY: [0.3, 1, 0.3] }}

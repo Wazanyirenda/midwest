@@ -54,7 +54,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         <>
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-sand-100">
             <svg
-              className="h-10 w-10 text-sand-500"
+              className="h-10 w-10 text-sand-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

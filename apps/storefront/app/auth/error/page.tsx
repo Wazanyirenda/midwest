@@ -11,7 +11,7 @@ export default function AuthErrorPage() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center bg-gray-50 px-4 py-16">
       <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 text-center shadow-md">
-        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
           <TimerOff size={22} strokeWidth={1.5} />
         </span>
         <h1 className="mb-2 text-xl font-semibold text-gray-900">

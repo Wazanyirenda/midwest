@@ -23,7 +23,7 @@ export default async function SharedWishlistPage({ params }: Props) {
   if (!wishlist || wishlist.items.length === 0) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6">
-        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
           <Heart size={22} strokeWidth={1.5} />
         </span>
         <h1 className="text-xl font-semibold text-gray-700">
@@ -42,7 +42,7 @@ export default async function SharedWishlistPage({ params }: Props) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-10">
-        <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-sand-500">
+        <p className="mb-1 font-mono text-2xs uppercase tracking-widest text-sand-600">
           Shared wishlist
         </p>
         <h1 className="text-3xl font-bold text-sand-900">A researcher&apos;s picks</h1>

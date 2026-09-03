@@ -58,7 +58,7 @@ export default async function EditProductPage({ params }: Params) {
         <div>
           <Link
             href="/admin/products"
-            className="inline-flex items-center gap-1 text-xs text-sand-500 hover:text-sand-800"
+            className="inline-flex items-center gap-1 text-xs text-sand-600 hover:text-sand-800"
           >
             <ArrowLeft size={13} strokeWidth={2} />
             Products
@@ -78,7 +78,7 @@ export default async function EditProductPage({ params }: Params) {
               <Link
                 href={`/products/${p.handle}`}
                 target="_blank"
-                className="inline-flex items-center gap-1 text-sand-500 hover:text-brand-700"
+                className="inline-flex items-center gap-1 text-sand-600 hover:text-brand-700"
               >
                 View on store
                 <ExternalLink size={11} strokeWidth={2} />

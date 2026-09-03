@@ -6,6 +6,8 @@ import { formatPrice } from "@/lib/utils"
 import { getUser } from "@/lib/auth"
 import { getWishlistedProductIds } from "@/lib/wishlist"
 import { WishlistButton } from "@/components/store/wishlist-button"
+import { SpecBadges } from "@/components/store/spec-badges"
+import { CardAddToCart } from "@/components/store/card-add-to-cart"
 import Link from "next/link"
 
 export const metadata: Metadata = {
@@ -37,7 +39,7 @@ export default async function ProductsPage({
 
       {/* Page title */}
       <div className="mb-6">
-        <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
+        <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
           Available now
         </p>
         <div className="flex items-baseline justify-between">
@@ -81,7 +83,7 @@ export default async function ProductsPage({
                 ? `Nothing in ${CATEGORY_TAGS[tag]} right now`
                 : "Products coming soon"}
           </h2>
-          <p className="mt-2 text-sm text-sand-500 max-w-sm">
+          <p className="mt-2 text-sm text-sand-600 max-w-sm">
             {hasFilter
               ? "Try a different search term or browse all products."
               : "Our catalog is being set up. Check back shortly or "}
@@ -102,7 +104,7 @@ export default async function ProductsPage({
       {equipment.length > 0 && (
         <>
           <div className="mt-14 mb-8">
-            <p className="font-mono text-[10px] tracking-widest text-sand-500 uppercase mb-1">
+            <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
               For your lab
             </p>
             <h2 className="text-2xl font-bold text-sand-900">Lab Supplies</h2>
@@ -122,54 +124,69 @@ function ProductGrid({
   wishlisted: Set<string>
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => {
         const lowestPrice = lowestVariantPrice(product)
+        const inStock = product.variants.some((v) => v.inventory_quantity > 0)
+        // Only offer a one-click add when there is nothing to choose between.
+        const onlyVariant = product.variants.length === 1 ? product.variants[0] : null
 
         return (
-          <Link
+          <div
             key={product.id}
-            href={`/products/${product.handle}`}
-            className="group block"
+            className="group flex flex-col rounded-2xl border border-sand-200 bg-white p-3 transition-colors hover:border-brand-300"
           >
-            {/* Image area */}
-            <div className="aspect-square w-full rounded-2xl bg-[#F0F5F0] border border-sand-200 group-hover:border-brand-300 flex items-center justify-center overflow-hidden relative transition-colors mb-3">
-              {product.thumbnail ? (
-                <Image
-                  src={product.thumbnail}
-                  alt={product.title ?? ""}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+            <Link href={`/products/${product.handle}`} className="block">
+              {/* Image area */}
+              <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-[#F0F5F0]">
+                {product.thumbnail ? (
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title ?? ""}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <span className="select-none font-mono text-4xl font-bold text-brand-200 transition-transform duration-300 group-hover:scale-110">
+                    {product.title?.slice(0, 3).toUpperCase()}
+                  </span>
+                )}
+                <WishlistButton
+                  productId={product.id}
+                  initial={wishlisted.has(product.id)}
+                  className="absolute right-2 top-2"
                 />
-              ) : (
-                <span className="font-mono text-4xl font-bold text-brand-200 group-hover:scale-110 transition-transform duration-300 select-none">
-                  {product.title?.slice(0, 3).toUpperCase()}
-                </span>
+              </div>
+
+              <p className="text-center text-sm font-semibold leading-tight text-sand-900 transition-colors group-hover:text-brand-700">
+                {product.title}
+              </p>
+            </Link>
+
+            {product.category === "peptide" && (
+              <div className="mt-2.5 flex justify-center">
+                <SpecBadges purity="≥99% purity" />
+              </div>
+            )}
+
+            {/* Price and action pinned to the bottom so cards line up. */}
+            <div className="mt-auto pt-3">
+              {lowestPrice != null && (
+                <p className="mb-2.5 text-center text-sm font-semibold text-sand-900">
+                  {product.variants.length > 1 && (
+                    <span className="font-normal text-sand-600">From </span>
+                  )}
+                  {formatPrice(lowestPrice)} USD
+                </p>
               )}
-              <WishlistButton
-                productId={product.id}
-                initial={wishlisted.has(product.id)}
-                className="absolute right-2 top-2"
+              <CardAddToCart
+                variantId={onlyVariant?.id ?? null}
+                handle={product.handle}
+                inStock={inStock}
               />
             </div>
-
-            {/* Info */}
-            <p className="font-medium text-sand-900 group-hover:text-brand-700 transition-colors text-sm leading-tight">
-              {product.title}
-            </p>
-
-            {/* Purity — peptides only */}
-            {product.category === "peptide" && (
-              <p className="font-mono text-[10px] text-sand-400 mt-1.5">≥99% purity</p>
-            )}
-
-            {lowestPrice != null && (
-              <p className="mt-1 text-sm font-semibold text-sand-800">
-                From {formatPrice(lowestPrice)}
-              </p>
-            )}
-          </Link>
+          </div>
         )
       })}
     </div>

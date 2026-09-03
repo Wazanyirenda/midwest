@@ -14,6 +14,12 @@ const NUMERIC_BOUNDS: Partial<Record<keyof SiteSettings, [number, number]>> = {
   marketingDailyCap: [1, 50000],
 }
 
+// Longer-form copy needs more room than the 300-character default. Still
+// capped — an unbounded textarea is a denial-of-service on the settings row.
+const STRING_MAX: Partial<Record<keyof SiteSettings, number>> = {
+  disclaimerBody: 8000,
+}
+
 // Settings whose value must be one of a fixed set.
 const ENUM_VALUES: Partial<Record<keyof SiteSettings, readonly string[]>> = {
   marketingTransport: ["same", "resend"],
@@ -48,7 +54,7 @@ export async function updateSetting(
 
   const stored =
     typeof value === "string"
-      ? value.slice(0, 300)
+      ? value.slice(0, STRING_MAX[field] ?? 300)
       : typeof value === "number"
         ? Math.round(value)
         : value

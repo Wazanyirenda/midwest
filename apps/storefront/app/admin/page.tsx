@@ -29,7 +29,7 @@ export default async function AdminOverviewPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Dashboard</h1>
-        <p className="mt-0.5 text-sm text-sand-500">
+        <p className="mt-0.5 text-sm text-sand-600">
           Trailing {WINDOW_DAYS} days
         </p>
       </header>
@@ -108,7 +108,7 @@ export default async function AdminOverviewPage() {
             <h2 className="text-sm font-semibold text-sand-900">Best sellers</h2>
           </header>
           {topProducts.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-sand-500">
+            <p className="px-4 py-6 text-sm text-sand-600">
               No sales in this window yet.
             </p>
           ) : (
@@ -121,7 +121,7 @@ export default async function AdminOverviewPage() {
                   <span className="min-w-0 flex-1 truncate text-sm text-sand-800">
                     {p.title}
                   </span>
-                  <span className="shrink-0 text-xs tabular-nums text-sand-500">
+                  <span className="shrink-0 text-xs tabular-nums text-sand-600">
                     {p.units} units
                   </span>
                   <span className="w-20 shrink-0 text-right text-sm font-medium tabular-nums text-sand-900">
@@ -142,11 +142,11 @@ export default async function AdminOverviewPage() {
           </Link>
         </header>
         {recent.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-sand-500">No orders yet.</p>
+          <p className="px-4 py-6 text-sm text-sand-600">No orders yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wide text-sand-500">
+              <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
                 <tr className="border-b border-sand-100">
                   <th className="px-4 py-2 font-medium">Order</th>
                   <th className="px-4 py-2 font-medium">Email</th>
@@ -168,7 +168,7 @@ export default async function AdminOverviewPage() {
                     <td className="px-4 py-2.5 text-right font-medium tabular-nums text-sand-900">
                       {formatCartTotal(o.total_cents)}
                     </td>
-                    <td className="px-4 py-2.5 text-sand-500">
+                    <td className="px-4 py-2.5 text-sand-600">
                       {new Date(o.created_at).toLocaleDateString("en-US")}
                     </td>
                   </tr>

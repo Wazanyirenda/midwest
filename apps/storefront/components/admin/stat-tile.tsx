@@ -19,14 +19,14 @@ export function StatTile({
 
   return (
     <div className="rounded-xl border border-sand-200 bg-white p-4">
-      <p className="text-xs font-medium text-sand-500">{label}</p>
+      <p className="text-xs font-medium text-sand-600">{label}</p>
       {/* Proportional figures: tabular-nums looks loose at display sizes */}
       <p className="mt-1.5 text-2xl font-semibold text-sand-900">{value}</p>
 
       {delta !== undefined && (
         <p className="mt-1 flex items-center gap-1 text-xs">
           {delta === null ? (
-            <span className="text-sand-400">No prior data</span>
+            <span className="text-sand-600">No prior data</span>
           ) : (
             <>
               <span
@@ -37,12 +37,12 @@ export function StatTile({
                 <Arrow size={13} strokeWidth={2} />
                 {Math.abs(delta)}%
               </span>
-              <span className="text-sand-400">{deltaLabel}</span>
+              <span className="text-sand-600">{deltaLabel}</span>
             </>
           )}
         </p>
       )}
-      {hint && <p className="mt-1 text-xs text-sand-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-sand-600">{hint}</p>}
     </div>
   )
 }

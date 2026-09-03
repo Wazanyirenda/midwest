@@ -13,7 +13,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Choose a new password</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-600">
             You followed a reset link — set your new password below.
           </p>
         </div>

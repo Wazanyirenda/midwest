@@ -31,7 +31,7 @@ export function CommunicationPrefs({ optedIn }: { optedIn: boolean }) {
         <span className="text-gray-700">
           <span className="font-medium">Marketing emails</span>
           <br />
-          <span className="text-gray-500">
+          <span className="text-gray-600">
             New products, restocks, and research updates. Order and shipping
             emails are always sent.
           </span>

@@ -44,7 +44,7 @@ export default async function BlogPage({
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900">Research Library</h1>
-        <p className="mt-3 max-w-2xl text-gray-500">
+        <p className="mt-3 max-w-2xl text-gray-600">
           Educational articles and research overviews for scientists and researchers.
           All content is for informational purposes only.{" "}
           <strong>Not medical advice.</strong>
@@ -69,7 +69,7 @@ export default async function BlogPage({
       </div>
 
       {posts.length === 0 && (
-        <p className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-sm text-gray-500">
+        <p className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-sm text-gray-600">
           No articles in this category yet.
         </p>
       )}
@@ -88,7 +88,7 @@ export default async function BlogPage({
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-700"}`}>
                 {getCategoryLabel(post.category)}
               </span>
-              <span className="text-xs text-gray-400">{post.readingTime} min read</span>
+              <span className="text-xs text-gray-600">{post.readingTime} min read</span>
             </div>
 
             {/* Title */}
@@ -97,13 +97,13 @@ export default async function BlogPage({
             </h2>
 
             {/* Excerpt */}
-            <p className="mt-2 text-sm text-gray-500 line-clamp-3">
+            <p className="mt-2 text-sm text-gray-600 line-clamp-3">
               {post.excerpt}
             </p>
 
             {/* Date */}
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-gray-400">{formatDate(post.date)}</span>
+              <span className="text-xs text-gray-600">{formatDate(post.date)}</span>
               <span className="text-xs font-medium text-brand-600 group-hover:underline">
                 Read more →
               </span>

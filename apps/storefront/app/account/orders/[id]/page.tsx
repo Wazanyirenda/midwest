@@ -45,7 +45,7 @@ export default async function OrderDetailPage({ params }: Props) {
   if (!o) {
     return (
       <main>
-        <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+        <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
           <Link href="/account" className="hover:text-gray-700">Account</Link>
           <span>/</span>
           <Link href="/account/orders" className="hover:text-gray-700">Orders</Link>
@@ -53,11 +53,11 @@ export default async function OrderDetailPage({ params }: Props) {
           <span className="text-gray-900">Details</span>
         </nav>
         <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-dashed border-gray-300 bg-white">
-          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-400">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <PackageSearch size={22} strokeWidth={1.5} />
           </span>
           <h1 className="text-xl font-semibold text-gray-700">We couldn&apos;t find that order</h1>
-          <p className="mt-2 text-sm text-gray-500 max-w-sm">
+          <p className="mt-2 text-sm text-gray-600 max-w-sm">
             The order may belong to a different account, or the link is out of
             date. For order support, please contact us.
           </p>
@@ -89,7 +89,7 @@ export default async function OrderDetailPage({ params }: Props) {
 
   return (
     <main>
-      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+      <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
         <Link href="/account" className="hover:text-gray-700">Account</Link>
         <span>/</span>
         <Link href="/account/orders" className="hover:text-gray-700">Orders</Link>
@@ -101,7 +101,7 @@ export default async function OrderDetailPage({ params }: Props) {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Order #{o.display_id}</h1>
-          <p className="mt-1 text-sm text-gray-500">Placed {formatDate(o.created_at)}</p>
+          <p className="mt-1 text-sm text-gray-600">Placed {formatDate(o.created_at)}</p>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle.cls}`}>
           {statusStyle.label}
@@ -125,10 +125,10 @@ export default async function OrderDetailPage({ params }: Props) {
               <div key={s} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold
-                    ${i <= currentStep ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+                    ${i <= currentStep ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-600"}`}>
                     {i < currentStep ? <Check size={13} strokeWidth={2.5} /> : i + 1}
                   </div>
-                  <span className={`mt-1 text-xs capitalize hidden sm:block ${i <= currentStep ? "text-brand-700 font-medium" : "text-gray-400"}`}>
+                  <span className={`mt-1 text-xs capitalize hidden sm:block ${i <= currentStep ? "text-brand-700 font-medium" : "text-gray-600"}`}>
                     {s}
                   </span>
                 </div>
@@ -179,8 +179,8 @@ export default async function OrderDetailPage({ params }: Props) {
               </div>
             ))}
             <div className="px-5 py-3 space-y-1 bg-gray-50 text-sm">
-              <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatAmount(o.subtotal)}</span></div>
-              <div className="flex justify-between text-gray-500"><span>Shipping</span><span>{formatAmount(o.shipping_total)}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{formatAmount(o.subtotal)}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Shipping</span><span>{formatAmount(o.shipping_total)}</span></div>
               <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t border-gray-200"><span>Total</span><span>{formatAmount(o.total)}</span></div>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default async function OrderDetailPage({ params }: Props) {
               <p>{o.shipping_address.city}, {o.shipping_address.province} {o.shipping_address.postal_code}</p>
             </address>
           ) : (
-            <p className="text-sm text-gray-400">—</p>
+            <p className="text-sm text-gray-600">—</p>
           )}
         </div>
 

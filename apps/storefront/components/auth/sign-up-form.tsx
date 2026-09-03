@@ -48,7 +48,7 @@ export function SignUpForm() {
         <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600"><MailCheck size={22} strokeWidth={1.5} /></span>
         <h2 className="mb-2 text-lg font-semibold text-gray-900">Confirm your email</h2>
         <p className="text-sm text-gray-600">{sent}</p>
-        <p className="mt-4 text-xs text-gray-400">
+        <p className="mt-4 text-xs text-gray-600">
           Already confirmed?{" "}
           <Link href="/sign-in" className="text-brand-700 hover:underline">
             Sign in
@@ -117,7 +117,7 @@ export function SignUpForm() {
         {isSubmitting ? "Creating account…" : "Create account"}
       </button>
 
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm text-gray-600">
         Already have an account?{" "}
         <Link href="/sign-in" className="text-brand-700 hover:underline">
           Sign in

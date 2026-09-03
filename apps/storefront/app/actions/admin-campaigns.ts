@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth"
 import { getSiteSettings } from "@/lib/settings"
 import { sendCampaignEmail } from "@/lib/email"
 import { transportStatus } from "@/lib/email-transport"
+import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
 
 type Result = { error?: string; sent?: number }
 
@@ -103,6 +104,11 @@ export async function deleteCampaign(campaignId: string): Promise<Result> {
  */
 export async function sendCampaign(campaignId: string): Promise<Result> {
   await requireAdmin()
+
+  // A campaign send is the highest-consequence action in the admin: it mails the
+  // entire list and cannot be recalled.
+  const gate = await rateLimit("campaignSend")
+  if (!gate.allowed) return { error: rateLimitMessage(gate.retryAfter) }
 
   const settings = await getSiteSettings()
   if (!settings.marketingEmails) {

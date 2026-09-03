@@ -14,7 +14,7 @@ export default function SignInPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-600">
             Sign in to view your orders and manage your account.
           </p>
         </div>

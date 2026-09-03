@@ -1,5 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
+import { getSiteSettings } from "@/lib/settings"
 
 const LINKS = {
   Shop: [
@@ -15,14 +16,21 @@ const LINKS = {
     { label: "Understanding COAs",   href: "/blog/understanding-certificates-of-analysis" },
   ],
   Company: [
+    { label: "FAQ",                  href: "/faq" },
     { label: "Shipping Policy",      href: "/shipping" },
     { label: "Privacy Policy",       href: "/privacy" },
     { label: "Terms of Service",     href: "/terms" },
+    { label: "Disclaimer",           href: "/disclaimer" },
     { label: "Contact",              href: "mailto:support@midwesternpeptides.com" },
   ],
 }
 
-export function Footer() {
+export async function Footer() {
+  const { showDisclaimerStrip, disclaimerBody } = await getSiteSettings()
+
+  // The footer carries the opening paragraph only; the rest lives on /disclaimer.
+  const summary = disclaimerBody.split(/\n{2,}/)[0]?.trim() ?? ""
+
   return (
     <footer className="bg-ink text-sand-400">
 
@@ -46,7 +54,7 @@ export function Footer() {
               Third-party tested, batch-verified.
               North Dakota, USA.
             </p>
-            <div className="mt-4 space-y-1 font-mono text-[10px] text-sand-600">
+            <div className="mt-4 space-y-1 font-mono text-2xs text-sand-400">
               <p>≥98% purity by HPLC</p>
               <p>Mass spec verified</p>
               <p>COA on every lot</p>
@@ -57,7 +65,7 @@ export function Footer() {
           {/* Link cols */}
           {Object.entries(LINKS).map(([group, links]) => (
             <div key={group}>
-              <p className="font-mono text-[10px] tracking-widest text-sand-600 uppercase mb-4">
+              <p className="font-mono text-2xs tracking-widest text-sand-400 uppercase mb-4">
                 {group}
               </p>
               <ul className="space-y-2.5">
@@ -80,16 +88,29 @@ export function Footer() {
       {/* Disclaimer + copyright */}
       <div className="border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-xs text-sand-600 leading-relaxed max-w-3xl">
-            By purchasing you confirm you are
-            21+ and acquiring these products for lawful research purposes only.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-sand-600">
+          {showDisclaimerStrip && summary && (
+            <div className="max-w-3xl">
+              <p className="font-mono text-2xs uppercase tracking-widest text-sand-400">
+                Research use only
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-sand-400">
+                {summary}{" "}
+                <Link
+                  href="/disclaimer"
+                  className="font-medium text-sand-200 underline underline-offset-2 hover:text-white"
+                >
+                  Read the full disclaimer
+                </Link>
+              </p>
+            </div>
+          )}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-sand-400">
             <p>© {new Date().getFullYear()} Midwestern Peptides — North Dakota</p>
             <div className="flex gap-4">
               <Link href="/privacy"  className="hover:text-sand-300 transition-colors">Privacy</Link>
               <Link href="/terms"    className="hover:text-sand-300 transition-colors">Terms</Link>
               <Link href="/shipping" className="hover:text-sand-300 transition-colors">Shipping</Link>
+              <Link href="/disclaimer" className="hover:text-sand-300 transition-colors">Disclaimer</Link>
             </div>
           </div>
         </div>

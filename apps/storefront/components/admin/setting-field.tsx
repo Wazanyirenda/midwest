@@ -18,6 +18,8 @@ export function SettingField({
   min,
   max,
   suffix,
+  rows,
+  maxLength,
 }: {
   field: keyof SiteSettings
   label: string
@@ -28,6 +30,9 @@ export function SettingField({
   min?: number
   max?: number
   suffix?: string
+  /** Renders a textarea instead of a single-line input. */
+  rows?: number
+  maxLength?: number
 }) {
   const [value, setValue] = useState(String(initial))
   const [saved, setSaved] = useState(false)
@@ -57,27 +62,39 @@ export function SettingField({
       <label htmlFor={`setting-${field}`} className="block text-sm font-medium text-sand-900">
         {label}
       </label>
-      {description && <p className="mt-0.5 text-xs text-sand-500">{description}</p>}
+      {description && <p className="mt-0.5 text-xs text-sand-600">{description}</p>}
 
-      <div className="mt-2 flex items-center gap-2">
-        <input
-          id={`setting-${field}`}
-          type={type}
-          value={value}
-          min={min}
-          max={max}
-          maxLength={type === "text" ? 300 : undefined}
-          placeholder={placeholder}
-          onChange={(e) => setValue(e.target.value)}
-          className={`rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
-            type === "number" ? "w-24 tabular-nums" : "flex-1"
-          }`}
-        />
-        {suffix && <span className="text-xs text-sand-500">{suffix}</span>}
+      <div className={`mt-2 gap-2 ${rows ? "flex flex-col items-end" : "flex items-center"}`}>
+        {rows ? (
+          <textarea
+            id={`setting-${field}`}
+            value={value}
+            rows={rows}
+            maxLength={maxLength ?? 300}
+            placeholder={placeholder}
+            onChange={(e) => setValue(e.target.value)}
+            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm leading-relaxed text-sand-900 placeholder:text-sand-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        ) : (
+          <input
+            id={`setting-${field}`}
+            type={type}
+            value={value}
+            min={min}
+            max={max}
+            maxLength={type === "text" ? (maxLength ?? 300) : undefined}
+            placeholder={placeholder}
+            onChange={(e) => setValue(e.target.value)}
+            className={`rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
+              type === "number" ? "w-24 tabular-nums" : "flex-1"
+            }`}
+          />
+        )}
+        {suffix && <span className="text-xs text-sand-600">{suffix}</span>}
         <button
           onClick={save}
           disabled={pending || !dirty}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {pending ? "Saving…" : saved ? "Saved" : "Save"}
         </button>

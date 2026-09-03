@@ -29,7 +29,7 @@ export function AnnouncementField({ initial }: { initial: string }) {
       <label htmlFor="announcement" className="block text-sm font-medium text-sand-900">
         Announcement text
       </label>
-      <p className="mt-0.5 text-xs text-sand-500">
+      <p className="mt-0.5 text-xs text-sand-600">
         Shown in the banner when the toggle above is on. Keep it short.
       </p>
       <div className="mt-2 flex gap-2">
@@ -39,7 +39,7 @@ export function AnnouncementField({ initial }: { initial: string }) {
           maxLength={300}
           onChange={(e) => setText(e.target.value)}
           placeholder="Free shipping on orders over $200"
-          className="flex-1 rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="flex-1 rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm text-sand-900 placeholder:text-sand-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
         <button
           onClick={save}

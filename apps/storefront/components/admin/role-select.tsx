@@ -44,7 +44,7 @@ export function RoleSelect({
         <option value="staff">Staff</option>
         <option value="admin">Admin</option>
       </select>
-      {isSelf && <p className="mt-1 text-xs text-sand-400">This is you</p>}
+      {isSelf && <p className="mt-1 text-xs text-sand-600">This is you</p>}
       {error && (
         <p role="alert" className="mt-1 max-w-48 text-xs font-medium text-red-600">
           {error}

@@ -11,6 +11,7 @@ import {
   Mail,
   Users,
   Settings,
+  HelpCircle,
   ExternalLink,
 } from "lucide-react"
 
@@ -23,6 +24,7 @@ const NAV = [
   { href: "/admin/products", label: "Products", icon: Package, adminOnly: true },
   { href: "/admin/payments", label: "Payments", icon: Wallet, adminOnly: true },
   { href: "/admin/campaigns", label: "Campaigns", icon: Mail, adminOnly: true },
+  { href: "/admin/faq", label: "FAQ", icon: HelpCircle, adminOnly: true },
   { href: "/admin/team", label: "Team", icon: Users, adminOnly: true },
   { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ]
@@ -40,7 +42,7 @@ export function AdminSidebar({
   return (
     <aside className="flex shrink-0 flex-row gap-1 overflow-x-auto border-b border-ink-muted bg-ink px-3 py-3 lg:h-screen lg:w-60 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-b-0 lg:border-r lg:px-0 lg:py-6 lg:sticky lg:top-0">
       <div className="hidden px-5 lg:block">
-        <p className="font-mono text-[10px] uppercase tracking-widest2 text-sand-500">
+        <p className="font-mono text-2xs uppercase tracking-widest2 text-sand-500">
           Midwestern Peptides
         </p>
         <p className="mt-1 text-lg font-semibold text-sand-50">Console</p>
@@ -68,7 +70,7 @@ export function AdminSidebar({
               <Icon size={16} strokeWidth={1.75} className="shrink-0" />
               {item.label}
               {badge > 0 && (
-                <span className="ml-auto rounded-full bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-400">
+                <span className="ml-auto rounded-full bg-amber-500/15 px-1.5 py-0.5 font-mono text-2xs font-semibold text-amber-400">
                   {badge}
                 </span>
               )}

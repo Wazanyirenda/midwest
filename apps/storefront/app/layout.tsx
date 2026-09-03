@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
+import { AnnouncementBanner } from "@/components/layout/announcement-banner"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { SmoothScroll } from "@/components/providers/smooth-scroll"
@@ -9,6 +10,14 @@ import "./globals.css"
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+})
+
+// Headings only. The wordmark in logo.png is a high-contrast serif; Inter
+// never matched it.
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
   display: "swap",
 })
 
@@ -38,10 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable}`}
     >
       <body>
         <SmoothScroll>
+          <AnnouncementBanner />
           <Header />
           <div className="min-h-[calc(100vh-var(--header-height))]">
             {children}

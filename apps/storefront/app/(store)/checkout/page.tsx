@@ -88,7 +88,7 @@ export default async function CheckoutPage() {
                 <div key={item.id} className="flex justify-between text-sm">
                   <span className="text-gray-700 flex-1 pr-2">
                     {item.title}
-                    <span className="ml-1 text-gray-400">× {item.quantity}</span>
+                    <span className="ml-1 text-gray-600">× {item.quantity}</span>
                   </span>
                   <span className="font-medium text-gray-900">
                     {formatCartTotal((item.unit_price ?? 0) * (item.quantity ?? 1))}
@@ -102,7 +102,7 @@ export default async function CheckoutPage() {
                 <span>Subtotal</span>
                 <span>{formatCartTotal(cart.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
                 <span>TBD</span>
               </div>
@@ -113,7 +113,7 @@ export default async function CheckoutPage() {
               <span>{formatCartTotal(cart.total)}</span>
             </div>
 
-            <div className="mt-4 space-y-1.5 text-xs text-gray-400">
+            <div className="mt-4 space-y-1.5 text-xs text-gray-600">
               <p className="flex items-center gap-1.5">
                 <Lock size={12} strokeWidth={1.75} />
                 256-bit SSL encryption

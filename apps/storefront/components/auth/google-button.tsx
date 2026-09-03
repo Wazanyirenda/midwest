@@ -25,7 +25,7 @@ export function GoogleButton({ next, label }: { next?: string; label?: string })
 
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs uppercase tracking-wide text-gray-400">or</span>
+        <span className="text-xs uppercase tracking-wide text-gray-600">or</span>
         <span className="h-px flex-1 bg-gray-200" />
       </div>
     </div>
