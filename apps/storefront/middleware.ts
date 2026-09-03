@@ -9,6 +9,31 @@ const PROTECTED_PREFIXES = ["/account", "/checkout", "/admin"]
 const IDLE_TIMEOUT_MS = 10 * 60 * 1000
 const ACTIVITY_COOKIE = "mw_last_seen"
 
+/**
+ * Optional network-level restriction on /admin, on top of the role check.
+ * Comma-separated IPs or CIDR-style /24 and /16 prefixes in ADMIN_IP_ALLOWLIST.
+ * Unset means no IP restriction — the role check still applies, so this is
+ * defence in depth rather than the control itself.
+ *
+ * Deliberately an env var, not a site setting: locking yourself out via the
+ * admin UI would be unrecoverable, and "off" here means less secure (AGENTS.md §2).
+ */
+function ipAllowed(request: NextRequest): boolean {
+  const raw = process.env.ADMIN_IP_ALLOWLIST?.trim()
+  if (!raw) return true
+
+  const forwarded = request.headers.get("x-forwarded-for")
+  const ip = (forwarded?.split(",")[0] ?? request.headers.get("x-real-ip") ?? "").trim()
+  if (!ip) return false
+
+  return raw.split(",").map((e) => e.trim()).filter(Boolean).some((entry) => {
+    if (entry === ip) return true
+    // Prefix match for a trailing-dot entry like "203.0.113." — simpler to get
+    // right than full CIDR maths, and enough for a small office allowlist.
+    return entry.endsWith(".") && ip.startsWith(entry)
+  })
+}
+
 // Any redirect must carry the refreshed session cookies from updateSession.
 function redirectWithCookies(url: URL, sessionResponse: NextResponse) {
   const redirect = NextResponse.redirect(url)
@@ -81,6 +106,12 @@ export async function middleware(request: NextRequest) {
   // and again inside every mutation (lib/admin.ts) — this just avoids rendering
   // the area for someone with no business there. Reads the caller's own profile
   // under RLS, so it can't be used to look up anyone else's role.
+  if (path.startsWith("/admin") && !ipAllowed(request)) {
+    // 404 rather than 403: an unexpected visitor learns nothing about whether
+    // an admin area exists here.
+    return new NextResponse("Not Found", { status: 404 })
+  }
+
   if (path.startsWith("/admin") && user) {
     const { createServerClient } = await import("@supabase/ssr")
     const supabase = createServerClient(

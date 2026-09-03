@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth"
 import { getWishlistedProductIds } from "@/lib/wishlist"
 import { ProductPurchase } from "@/components/store/product-purchase"
 import { WishlistButton } from "@/components/store/wishlist-button"
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -51,6 +52,13 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <ProductJsonLd product={product} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Products", path: "/products" },
+          { name: product.title, path: `/products/${product.handle}` },
+        ]}
+      />
     
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">

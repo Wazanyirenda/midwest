@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
 // abuse control, and "off" would mean one run could mail the entire list.
 const BATCH_LIMIT = 50
 
-export async function POST(request: Request) {
+async function handler(request: Request) {
   // Vercel Cron sends the secret as a Bearer token. Without this the endpoint
   // is a public "email all my customers" button.
   const secret = process.env.CRON_SECRET
@@ -116,3 +116,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ considered: carts?.length ?? 0, sent, skipped })
 }
+
+// Vercel Cron calls this with GET and injects `Authorization: Bearer
+// $CRON_SECRET` itself. POST is kept so the job can be triggered by hand with
+// the same header.
+export const GET = handler
+export const POST = handler
