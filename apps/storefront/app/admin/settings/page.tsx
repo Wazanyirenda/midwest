@@ -85,6 +85,36 @@ export default async function AdminSettingsPage() {
         </div>
       </Section>
 
+      <Section
+        title="Payments"
+        description="Which payment methods checkout offers. Both default to off — nothing takes money until you deliberately enable it."
+      >
+        <SettingToggle
+          field="cardPaymentsEnabled"
+          label="Card payments (Stripe)"
+          description="The integration is built and tested, but Stripe's Restricted Businesses policy prohibits peptides."
+          warning="Stripe closes accounts that process peptide sales and holds funds for 90–180 days. Leave this off until you have a processor that permits this category."
+          initial={settings.cardPaymentsEnabled}
+        />
+        <SettingToggle
+          field="cryptoPaymentsEnabled"
+          label="Crypto payments (NOWPayments)"
+          description="No underwriting and no chargebacks. Requires NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET."
+          warning="Crypto payments cannot be reversed — refunds must be issued manually."
+          initial={settings.cryptoPaymentsEnabled}
+        />
+        <SettingField
+          field="cryptoTolerancePercent"
+          label="Underpayment tolerance"
+          description="Network fees mean crypto rarely lands on the exact amount. A shortfall within this much is accepted; anything larger is held for your review instead of shipping."
+          initial={settings.cryptoTolerancePercent}
+          type="number"
+          min={0}
+          max={10}
+          suffix="%"
+        />
+      </Section>
+
       <Section title="Catalog">
         <SettingToggle
           field="hideOutOfStock"

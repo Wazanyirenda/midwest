@@ -8,6 +8,8 @@ import { getCartById, CART_COOKIE } from "@/lib/cart"
 import { getShippingOptions } from "@/lib/shipping"
 import { getUser } from "@/lib/auth"
 import { rateLimit } from "@/lib/rate-limit"
+import { getSiteSettings } from "@/lib/settings"
+import { createInvoice, isConfigured as isCryptoConfigured } from "@/lib/nowpayments"
 // Confirmation mail is sent by the Stripe webhook, not from here — see
 // app/api/webhooks/stripe/route.ts.
 
@@ -72,13 +74,24 @@ export async function initiatePaymentSession(
   if (!cart.email) throw new Error("Cart is missing contact information")
   if (cart.items.length === 0) throw new Error("Cart is empty")
 
+  const settings = await getSiteSettings()
+  const user = await getUser()
+
   if (providerId === "nowpayments") {
-    // Wired up in the crypto payments phase.
-    throw new Error("Crypto payments are not available yet. Please pay by card.")
+    if (!settings.cryptoPaymentsEnabled || !isCryptoConfigured()) {
+      throw new Error("Crypto payments are not available right now.")
+    }
+    return createCryptoSession(cart, user?.id ?? null)
+  }
+
+  // Card is gated by a setting rather than by code so it can be switched on the
+  // moment a processor that permits this category is live — but never by
+  // accident. See lib/settings.ts for why the default is off.
+  if (!settings.cardPaymentsEnabled) {
+    throw new Error("Card payments are not available right now.")
   }
 
   const stripe = getStripe()
-  const user = await getUser()
 
   const { data: existing } = await supabase
     .from("orders")
@@ -230,4 +243,102 @@ export async function getOrderPaymentStatus(orderId: string) {
 
   if (!data) return { status: "unknown" as const }
   return { status: data.status as string, displayId: data.display_id }
+}
+
+/**
+ * Crypto session: create the order first (pending), then the invoice, then
+ * store its id as the payment reference.
+ *
+ * Order-before-invoice is deliberate — the IPN can arrive within seconds of the
+ * customer paying, and it raises (returning 500 for a retry) if no order matches
+ * the reference. Creating the invoice first would open a window where a fast
+ * payment has nothing to attach to.
+ */
+async function createCryptoSession(
+  cart: Awaited<ReturnType<typeof getCartById>>,
+  userId: string | null
+) {
+  if (!cart) throw new Error("Cart not found")
+
+  const { data: existing } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("cart_id", cart.id)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const orderFields = {
+    cart_id: cart.id,
+    user_id: userId,
+    email: cart.email,
+    shipping_address: cart.shipping_address,
+    subtotal_cents: cart.subtotal,
+    shipping_cents: cart.shipping_total,
+    total_cents: cart.total,
+    status: "pending" as const,
+    payment_provider: "nowpayments" as const,
+    updated_at: new Date().toISOString(),
+  }
+
+  let orderId: string
+  if (existing) {
+    const { data, error } = await supabase
+      .from("orders")
+      .update(orderFields)
+      .eq("id", existing.id)
+      .select("id")
+      .single()
+    if (error) throw new Error(`Could not update order: ${error.message}`)
+    orderId = data.id
+    await supabase.from("order_items").delete().eq("order_id", orderId)
+  } else {
+    const { data, error } = await supabase
+      .from("orders")
+      .insert(orderFields)
+      .select("id")
+      .single()
+    if (error) throw new Error(`Could not create order: ${error.message}`)
+    orderId = data.id
+  }
+
+  const { error: itemsError } = await supabase.from("order_items").insert(
+    cart.items.map((i) => ({
+      order_id: orderId,
+      variant_id: i.variant.id,
+      product_title: i.variant.product.title,
+      variant_title: i.variant.title,
+      quantity: i.quantity,
+      unit_price_cents: i.unit_price,
+    }))
+  )
+  if (itemsError) throw new Error(`Could not save order items: ${itemsError.message}`)
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  // Amount comes from the server-side cart total, never from the client.
+  const invoice = await createInvoice({
+    orderId,
+    amountCents: cart.total,
+    successUrl: `${appUrl}/checkout/success?order_id=${orderId}`,
+    cancelUrl: `${appUrl}/checkout`,
+  })
+
+  // NOWPayments reports payment_id in the IPN, not invoice id, so the reference
+  // is set by the first IPN. Store the invoice id meanwhile for support lookups.
+  const { error } = await supabase
+    .from("orders")
+    .update({ payment_reference: String(invoice.id) })
+    .eq("id", orderId)
+  if (error) throw new Error(`Could not save invoice reference: ${error.message}`)
+
+  return {
+    order_id: orderId,
+    payment_sessions: [
+      {
+        provider_id: "nowpayments",
+        data: { invoice_url: invoice.invoice_url, invoice_id: invoice.id },
+      },
+    ],
+  }
 }

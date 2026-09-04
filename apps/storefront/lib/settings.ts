@@ -19,6 +19,9 @@ export type SiteSettings = {
   /** Which configured transport bulk mail uses. Never holds a credential. */
   marketingTransport: "same" | "resend"
   marketingDailyCap: number
+  cardPaymentsEnabled: boolean
+  cryptoPaymentsEnabled: boolean
+  cryptoTolerancePercent: number
 }
 
 const DEFAULT_DISCLAIMER = `All products sold by Midwestern Peptides are intended strictly for laboratory research use. They are not designed or approved for human or animal consumption, and must not be used for any diagnostic, therapeutic, or medical application.
@@ -58,6 +61,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   businessPostalAddress: "",
   marketingTransport: "same",
   marketingDailyCap: 200,
+  // Card is off by default: Stripe's Restricted Businesses policy prohibits
+  // peptides, and processing them gets the account closed with a 90-180 day
+  // fund hold. Do not enable until a processor that permits this category is in
+  // place. Crypto is off until NOWPayments credentials exist.
+  cardPaymentsEnabled: false,
+  cryptoPaymentsEnabled: false,
+  cryptoTolerancePercent: 2,
 }
 
 /** DB key ↔ camelCase field. The DB key is the stable name. */
@@ -77,6 +87,9 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   businessPostalAddress: "business_postal_address",
   marketingTransport: "marketing_transport",
   marketingDailyCap: "marketing_daily_cap",
+  cardPaymentsEnabled: "card_payments_enabled",
+  cryptoPaymentsEnabled: "crypto_payments_enabled",
+  cryptoTolerancePercent: "crypto_tolerance_percent",
 }
 
 /**

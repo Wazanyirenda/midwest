@@ -3,10 +3,6 @@ import { NextResponse } from "next/server"
 import { deliver } from "@/lib/email-transport"
 import { renderAuthEmail, type AuthEmailAction } from "@/lib/email-auth"
 
-// Supabase's Send Email hook. Registered in the dashboard under
-// Authentication → Hooks, which makes Supabase POST here instead of sending its
-// own generic template — so confirmation and reset mail carries the store's
-// branding and leaves from the store's own address.
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -20,13 +16,7 @@ type HookPayload = {
   }
 }
 
-/**
- * Standard Webhooks verification (the format Supabase uses here).
- *
- * The signature covers `{id}.{timestamp}.{rawBody}`, so the body must be read
- * as text — parsing it first re-serialises and breaks the check, exactly as
- * with the Stripe webhook.
- */
+
 function verify(
   secret: string,
   id: string,
@@ -34,8 +24,7 @@ function verify(
   rawBody: string,
   header: string
 ): boolean {
-  // Supabase presents the secret as `v1,whsec_<base64>`; the signing key is the
-  // decoded base64 that follows the prefix.
+
   const base64Key = secret.replace(/^v1,\s*/, "").replace(/^whsec_/, "")
   const key = Buffer.from(base64Key, "base64")
 
@@ -43,7 +32,6 @@ function verify(
     .update(`${id}.${timestamp}.${rawBody}`)
     .digest("base64")
 
-  // The header carries one or more space-delimited `v1,<sig>` entries.
   for (const entry of header.split(" ")) {
     const sig = entry.split(",")[1]
     if (!sig) continue
@@ -54,12 +42,12 @@ function verify(
   return false
 }
 
+
+
 export async function POST(request: Request) {
   const secret = process.env.SEND_EMAIL_HOOK_SECRET
   if (!secret) {
     console.error("[auth-email] SEND_EMAIL_HOOK_SECRET not set")
-    // Config fault, not a bad request — 500 so Supabase surfaces it rather than
-    // silently falling back to no mail at all.
     return NextResponse.json({ error: "not configured" }, { status: 500 })
   }
 
@@ -116,8 +104,6 @@ export async function POST(request: Request) {
   })
 
   if (!result.ok) {
-    // 500 tells Supabase the mail did not go out, rather than reporting success
-    // for a message the customer never received.
     console.error("[auth-email] send failed:", result.error)
     return NextResponse.json({ error: "send failed" }, { status: 500 })
   }

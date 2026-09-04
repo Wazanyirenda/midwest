@@ -12,6 +12,7 @@ const NUMERIC_BOUNDS: Partial<Record<keyof SiteSettings, [number, number]>> = {
   abandonedCartDelayHours: [1, 72],
   abandonedCartWindowHours: [2, 336],
   marketingDailyCap: [1, 50000],
+  cryptoTolerancePercent: [0, 10],
 }
 
 // Longer-form copy needs more room than the 300-character default. Still
