@@ -13,12 +13,17 @@ const NUMERIC_BOUNDS: Partial<Record<keyof SiteSettings, [number, number]>> = {
   abandonedCartWindowHours: [2, 336],
   marketingDailyCap: [1, 50000],
   cryptoTolerancePercent: [0, 10],
+  printLabelCopies: [1, 5],
 }
 
 // Longer-form copy needs more room than the 300-character default. Still
 // capped — an unbounded textarea is a denial-of-service on the settings row.
 const STRING_MAX: Partial<Record<keyof SiteSettings, number>> = {
   disclaimerBody: 8000,
+  emailWelcomeBody: 2000,
+  emailOrderConfirmationBody: 2000,
+  emailOrderShippedBody: 2000,
+  emailAbandonedCartBody: 2000,
 }
 
 // Settings whose value must be one of a fixed set.

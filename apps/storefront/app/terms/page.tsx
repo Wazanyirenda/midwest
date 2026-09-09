@@ -63,11 +63,14 @@ export default function TermsPage() {
           See our <a href="/shipping" className="text-brand-600">Shipping Policy</a> for full details.
         </p>
 
-        <h2>6. Returns & Refunds</h2>
+        <h2>6. Returns &amp; Refunds</h2>
         <p>
           Due to the nature of research chemicals, we do not accept returns of opened products.
           If you receive a damaged or incorrect product, contact us within 7 days of delivery.
-          Card payment refunds are processed within 5–10 business days if approved.
+          Card refunds are returned to the original card; cryptocurrency orders are refunded as
+          store credit, because a confirmed blockchain payment cannot be reversed.
+          See our <a href="/refunds" className="text-brand-700">Refund Policy</a> for the full
+          terms, including cancellations and underpaid crypto orders.
         </p>
 
         <h2>7. Prohibited Uses</h2>

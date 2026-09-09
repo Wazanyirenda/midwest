@@ -8,6 +8,7 @@ import { createAuthClient } from "@/lib/supabase/server"
 import { mergeCartOnSignIn } from "@/lib/cart-merge"
 import { CART_COOKIE } from "@/lib/cart"
 import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
+import { sendWelcomeEmail } from "@/lib/email"
 
 // Auth actions return { error } for inline form errors instead of throwing;
 // redirect() is always called OUTSIDE any try/catch (it throws NEXT_REDIRECT).
@@ -82,6 +83,15 @@ export async function signUp(data: {
   // returns a fake user with no identities instead of an error.
   if (result.user && result.user.identities?.length === 0) {
     return { error: "An account with this email already exists. Try signing in." }
+  }
+
+  // Welcome mail is best-effort and deliberately not awaited into the result:
+  // a mail outage must not make a successful signup look like a failure. It
+  // carries no credential — Supabase stores only a password hash.
+  if (result.user) {
+    sendWelcomeEmail({ email: data.email, firstName: data.firstName }).catch((e) => {
+      console.error("[auth] welcome email failed:", e)
+    })
   }
 
   return {

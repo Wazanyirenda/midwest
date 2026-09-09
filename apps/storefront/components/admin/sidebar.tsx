@@ -12,6 +12,7 @@ import {
   Users,
   Settings,
   HelpCircle,
+  Printer,
   ExternalLink,
 } from "lucide-react"
 
@@ -21,6 +22,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/inventory", label: "Inventory", icon: Boxes },
+  { href: "/admin/printing", label: "Printing", icon: Printer },
   { href: "/admin/products", label: "Products", icon: Package, adminOnly: true },
   { href: "/admin/payments", label: "Payments", icon: Wallet, adminOnly: true },
   { href: "/admin/campaigns", label: "Campaigns", icon: Mail, adminOnly: true },
@@ -31,9 +33,11 @@ const NAV = [
 
 export function AdminSidebar({
   alertCount,
+  printFailureCount,
   role,
 }: {
   alertCount: number
+  printFailureCount: number
   role: "staff" | "admin"
 }) {
   const pathname = usePathname()
@@ -54,7 +58,12 @@ export function AdminSidebar({
             ? pathname === item.href
             : pathname.startsWith(item.href)
           const Icon = item.icon
-          const badge = item.href === "/admin/inventory" ? alertCount : 0
+          const badge =
+            item.href === "/admin/inventory"
+              ? alertCount
+              : item.href === "/admin/printing"
+                ? printFailureCount
+                : 0
 
           return (
             <Link

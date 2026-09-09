@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { HomeClient, type FeaturedProduct } from "@/components/home/home-client"
-import { listProducts, lowestVariantPrice } from "@/lib/products"
-import { formatPrice } from "@/lib/utils"
+import { listProducts, lowestVariantPrice, categoryLabel } from "@/lib/products"
 
 export const metadata: Metadata = {
   title: "Midwestern Peptides — Research Peptides",
@@ -10,6 +9,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600
 
+// Eight, so the grid fills two even rows of four.
 const FEATURED = [
   { handle: "bpc-157",      badge: "Best seller" },
   { handle: "tb-500",       badge: null },
@@ -17,6 +17,8 @@ const FEATURED = [
   { handle: "cjc-1295-dac", badge: null },
   { handle: "nad-plus",     badge: null },
   { handle: "glp-3",        badge: "New" },
+  { handle: "ghk-cu",       badge: null },
+  { handle: "tesamorelin",  badge: null },
 ]
 
 export default async function HomePage() {
@@ -25,16 +27,15 @@ export default async function HomePage() {
   const featured: FeaturedProduct[] = FEATURED.flatMap(({ handle, badge }) => {
     const p = products.find((prod) => prod.handle === handle)
     if (!p) return []
-    const lowest = lowestVariantPrice(p)
     return [{
-      name: p.title,
-      category: p.subtitle ?? "Research peptide",
       handle: p.handle,
-      price: lowest != null
-        ? `${p.variants.length > 1 ? "From " : ""}${formatPrice(lowest)} USD`
-        : "—",
-      badge,
+      title: p.title,
+      label: categoryLabel(p),
+      priceCents: lowestVariantPrice(p),
+      variantCount: p.variants.length,
       thumbnail: p.thumbnail,
+      badge,
+      showSpecs: p.category === "peptide",
       onlyVariantId: p.variants.length === 1 ? (p.variants[0]?.id ?? null) : null,
       inStock: p.variants.some((v) => v.inventory_quantity > 0),
     }]

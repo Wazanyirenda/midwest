@@ -14,6 +14,40 @@ import { Resend } from "resend"
 
 export type TransportKind = "smtp" | "resend" | "none"
 
+/**
+ * Which mailbox a message goes out from. Porkbun authenticates per mailbox, so
+ * sending as orders@ requires orders@ credentials — the From header alone is
+ * not enough. Order mail and support mail also land in different inboxes, so
+ * replies reach whoever can actually answer them.
+ */
+export type Mailbox = "orders" | "support"
+
+/** Credentials for one mailbox, falling back to the shared pair. */
+function mailboxCredentials(mailbox: Mailbox): {
+  user?: string
+  pass?: string
+  from?: string
+} {
+  if (mailbox === "orders" && process.env.SMTP_ORDERS_USER) {
+    return {
+      user: process.env.SMTP_ORDERS_USER,
+      pass: process.env.SMTP_ORDERS_PASSWORD,
+      from: process.env.EMAIL_FROM_ORDERS,
+    }
+  }
+  return {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+    from: process.env.EMAIL_FROM,
+  }
+}
+
+/** The From header for a mailbox, so callers do not each rebuild it. */
+export function mailboxFrom(mailbox: Mailbox): string {
+  const { from, user } = mailboxCredentials(mailbox)
+  return from ?? user ?? "Midwestern Peptides <no-reply@midwesternpeptides.com>"
+}
+
 export type SendResult = { ok: true } | { ok: false; error: string }
 
 /**
@@ -61,24 +95,26 @@ export function transportStatus(prefer?: "resend" | "smtp"): {
   }
 }
 
-let cachedSmtp: nodemailer.Transporter | null = null
+// One pooled connection per mailbox — reconnecting for every message is slow,
+// and mailbox hosts rate-limit new sessions.
+const cachedSmtp = new Map<Mailbox, nodemailer.Transporter>()
 
-function smtpTransport(): nodemailer.Transporter {
-  if (cachedSmtp) return cachedSmtp
+function smtpTransport(mailbox: Mailbox): nodemailer.Transporter {
+  const cached = cachedSmtp.get(mailbox)
+  if (cached) return cached
 
   const port = Number(process.env.SMTP_PORT ?? 587)
-  cachedSmtp = nodemailer.createTransport({
+  const { user, pass } = mailboxCredentials(mailbox)
+  const transport = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port,
     // 465 is implicit TLS; 587 upgrades via STARTTLS. Never plaintext.
     secure: port === 465,
     requireTLS: port !== 465,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
+    auth: { user, pass },
   })
-  return cachedSmtp
+  cachedSmtp.set(mailbox, transport)
+  return transport
 }
 
 /**
@@ -95,7 +131,11 @@ export async function deliver(input: {
   html: string
   headers?: Record<string, string>
   prefer?: "resend" | "smtp"
+  /** Which mailbox authenticates and sends. Defaults to support. */
+  mailbox?: Mailbox
+  attachments?: Array<{ filename: string; content: Buffer; contentType: string }>
 }): Promise<SendResult> {
+  const mailbox: Mailbox = input.mailbox ?? "support"
   const kind = activeTransport(input.prefer)
 
   if (kind === "none") {
@@ -104,12 +144,13 @@ export async function deliver(input: {
 
   try {
     if (kind === "smtp") {
-      await smtpTransport().sendMail({
+      await smtpTransport(mailbox).sendMail({
         from: input.from,
         to: input.to,
         subject: input.subject,
         html: input.html,
         headers: input.headers,
+        attachments: input.attachments,
       })
       return { ok: true }
     }
@@ -121,6 +162,14 @@ export async function deliver(input: {
       subject: input.subject,
       html: input.html,
       ...(input.headers ? { headers: input.headers } : {}),
+      ...(input.attachments
+        ? {
+            attachments: input.attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content,
+            })),
+          }
+        : {}),
     })
     if (error) return { ok: false, error: error.message }
     return { ok: true }
@@ -136,7 +185,7 @@ export async function verifyTransport(): Promise<SendResult> {
   if (kind === "resend") return { ok: true }
 
   try {
-    await smtpTransport().verify()
+    await smtpTransport("support").verify()
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }

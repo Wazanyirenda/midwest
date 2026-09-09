@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react"
 import { addToCart } from "@/app/actions/cart"
 
 const BUTTON_CLS =
-  "flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 " +
+  "flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-3 " +
   "text-sm font-semibold text-white transition-all hover:bg-brand-700 active:scale-[0.98] " +
   "disabled:cursor-not-allowed disabled:opacity-40"
 
@@ -27,7 +27,7 @@ export function CardAddToCart({ variantId, handle, inStock }: Props) {
 
   if (!inStock) {
     return (
-      <span className="flex w-full items-center justify-center rounded-full border border-sand-200 bg-sand-50 px-4 py-2.5 text-sm font-medium text-sand-600">
+      <span className="flex w-full items-center justify-center rounded-full border border-sand-200 bg-sand-50 px-4 py-3 text-sm font-medium text-sand-600">
         Out of stock
       </span>
     )

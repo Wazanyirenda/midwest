@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { getSiteSettings } from "@/lib/settings"
+import { CookieSettingsLink } from "@/components/layout/cookie-settings-link"
 
 const LINKS = {
   Shop: [
@@ -18,9 +19,11 @@ const LINKS = {
   Company: [
     { label: "FAQ",                  href: "/faq" },
     { label: "Shipping Policy",      href: "/shipping" },
+    { label: "Refund Policy",        href: "/refunds" },
     { label: "Privacy Policy",       href: "/privacy" },
     { label: "Terms of Service",     href: "/terms" },
     { label: "Disclaimer",           href: "/disclaimer" },
+    { label: "Accessibility",        href: "/accessibility" },
     { label: "Contact",              href: "mailto:support@midwesternpeptides.com" },
   ],
 }
@@ -57,7 +60,7 @@ export async function Footer() {
             <div className="mt-4 space-y-1 font-mono text-2xs text-sand-400">
               <p>≥98% purity by HPLC</p>
               <p>Mass spec verified</p>
-              <p>COA on every lot</p>
+              <p>COA available on request</p>
             </div>
 
           </div>
@@ -109,8 +112,10 @@ export async function Footer() {
             <div className="flex gap-4">
               <Link href="/privacy"  className="hover:text-sand-300 transition-colors">Privacy</Link>
               <Link href="/terms"    className="hover:text-sand-300 transition-colors">Terms</Link>
+              <Link href="/refunds"  className="hover:text-sand-300 transition-colors">Refunds</Link>
               <Link href="/shipping" className="hover:text-sand-300 transition-colors">Shipping</Link>
               <Link href="/disclaimer" className="hover:text-sand-300 transition-colors">Disclaimer</Link>
+              <CookieSettingsLink className="hover:text-sand-300 transition-colors" />
             </div>
           </div>
         </div>

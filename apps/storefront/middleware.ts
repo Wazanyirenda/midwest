@@ -151,8 +151,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // api/webhooks is excluded: provider callbacks carry no session cookie, and
-    // running updateSession on them is pointless work on a latency-sensitive path.
-    "/((?!api/webhooks|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // api/webhooks and api/print are excluded: provider callbacks and the print
+    // agent carry no session cookie, and running updateSession on them is
+    // pointless work on a latency-sensitive path. Both authenticate themselves.
+    "/((?!api/webhooks|api/print|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

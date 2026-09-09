@@ -1,8 +1,9 @@
 import "server-only"
 import { carrierTrackingUrl } from "@/lib/orders"
-import { deliver } from "@/lib/email-transport"
+import { deliver, mailboxFrom, type Mailbox } from "@/lib/email-transport"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { getSiteSettings } from "@/lib/settings"
+import { buildReceiptPdf, type ReceiptOrder } from "@/lib/receipt-pdf"
 
 // Templates and the consent gate. Delivery itself is in lib/email-transport.ts,
 // which picks SMTP or Resend from the environment. A failed send must NEVER
@@ -35,6 +36,9 @@ type SendOptions = {
   entityId?: string
   /** Appended to marketing mail; required for CAN-SPAM. */
   unsubscribeToken?: string
+  /** Which mailbox sends. Order mail goes from orders@ so replies land there. */
+  mailbox?: Mailbox
+  attachments?: Array<{ filename: string; content: Buffer; contentType: string }>
 }
 
 /**
@@ -109,12 +113,14 @@ async function send(
       : "same"
 
   const result = await deliver({
-    from: fromAddress(),
+    from: options.mailbox ? mailboxFrom(options.mailbox) : fromAddress(),
     to,
     subject,
     html,
     headers,
     prefer: marketingTransport === "resend" ? "resend" : undefined,
+    mailbox: options.mailbox,
+    attachments: options.attachments,
   })
 
   if (!result.ok) {
@@ -128,6 +134,44 @@ async function send(
   }
 
   await logEmail({ to, template, category, entityId, subject, status: "sent" })
+}
+
+/**
+ * Owner-written copy goes into an HTML email, so it is escaped rather than
+ * trusted. The settings row is admin-only, but "admin-only" is not "safe to
+ * inject" — a stray angle bracket would silently break every client's rendering.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+/** Substitutes {{placeholders}} and drops any the caller did not supply. */
+function fillTemplate(text: string, vars: Record<string, string>): string {
+  return text.replace(/\{\{(\w+)\}\}/g, (_m, key: string) => vars[key] ?? "")
+}
+
+/** Owner copy → paragraphs. Blank lines separate them, as in the disclaimer. */
+function copyToParagraphs(text: string, vars: Record<string, string> = {}): string {
+  return fillTemplate(text, vars)
+    .split(/\n{2,}/)
+    .map((para) => para.trim())
+    .filter(Boolean)
+    .map(
+      (para) =>
+        `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">${escapeHtml(
+          para
+        ).replace(/\n/g, "<br/>")}</p>`
+    )
+    .join("")
+}
+
+/** Subject lines are plain text — escaping here would show &amp; in the inbox. */
+function subjectLine(text: string, vars: Record<string, string> = {}): string {
+  return fillTemplate(text, vars)
 }
 
 /** Logging must never throw — a log failure can't be allowed to break a send. */
@@ -230,7 +274,13 @@ export async function sendOrderConfirmationEmail(order: {
   subtotal_cents: number
   shipping_cents: number
   total_cents: number
+  created_at?: string
+  status?: string
+  payment_provider?: string | null
+  shipping_address?: ReceiptOrder["shippingAddress"]
 }): Promise<void> {
+  const settings = await getSiteSettings()
+  const vars = { order_number: `#${order.display_id}` }
   const rows = order.items
     .map(
       (i) => `<tr>
@@ -245,10 +295,7 @@ export async function sendOrderConfirmationEmail(order: {
     .join("")
 
   const body = `
-    <p style="font-size:14px;color:#514e48;line-height:1.6;">
-      Thanks for your order! We've received it and will start preparing it right away.
-      You'll get another email with tracking once it ships.
-    </p>
+    ${copyToParagraphs(settings.emailOrderConfirmationBody, vars)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-top:1px solid #ebe9e3;border-bottom:1px solid #ebe9e3;">
       ${rows}
       <tr>
@@ -266,16 +313,88 @@ export async function sendOrderConfirmationEmail(order: {
     </table>
     <p style="margin:24px 0 0;">
       <a href="${appUrl()}/account/orders/${order.id}"
-         style="display:inline-block;background-color:#16a34a;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+         style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
         View your order
       </a>
     </p>`
 
+  // The receipt is generated per send and never stored — regenerating it is
+  // cheap, and a PDF of someone's address is not something to keep lying around.
+  let attachments: Array<{ filename: string; content: Buffer; contentType: string }> | undefined
+  try {
+    const pdf = await buildReceiptPdf({
+      displayId: order.display_id,
+      createdAt: order.created_at ?? new Date().toISOString(),
+      email: order.email,
+      status: order.status ?? "paid",
+      paymentProvider: order.payment_provider ?? null,
+      subtotalCents: order.subtotal_cents,
+      shippingCents: order.shipping_cents,
+      totalCents: order.total_cents,
+      shippingAddress: order.shipping_address ?? null,
+      items: order.items.map((i) => ({
+        productTitle: i.product_title,
+        variantTitle: i.variant_title ?? null,
+        quantity: i.quantity,
+        unitPriceCents: i.unit_price_cents,
+      })),
+    })
+    attachments = [
+      {
+        filename: `receipt-${order.display_id}.pdf`,
+        content: pdf,
+        contentType: "application/pdf",
+      },
+    ]
+  } catch (e) {
+    // A receipt that fails to draw must not cost the customer their
+    // confirmation email — send it without the attachment.
+    console.error("[email] receipt PDF failed:", e)
+  }
+
   await send(
     order.email,
-    `Order #${order.display_id} confirmed — Midwestern Peptides`,
-    renderLayout(`Order #${order.display_id} confirmed`, body),
-    { category: "transactional", template: "order_confirmation", entityId: order.id }
+    subjectLine(settings.emailOrderConfirmationSubject, vars),
+    renderLayout(subjectLine(settings.emailOrderConfirmationHeading, vars), body),
+    {
+      category: "transactional",
+      template: "order_confirmation",
+      entityId: order.id,
+      mailbox: "orders",
+      attachments,
+    }
+  )
+}
+
+/**
+ * Sent once, when the account is created.
+ *
+ * It deliberately contains no password: Supabase stores only a hash, so the
+ * plaintext does not exist to send, and mailing one would leave a permanent
+ * credential in an inbox. Confirming the address and resetting a password both
+ * go through the signed links in lib/email-auth.ts.
+ */
+export async function sendWelcomeEmail(input: {
+  email: string
+  firstName?: string | null
+}): Promise<void> {
+  const settings = await getSiteSettings()
+  const vars = { customer_name: input.firstName?.trim() || "there" }
+
+  const body = `
+    ${copyToParagraphs(settings.emailWelcomeBody, vars)}
+    <p style="margin:24px 0 0;">
+      <a href="${appUrl()}/account"
+         style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+        Go to your account
+      </a>
+    </p>`
+
+  await send(
+    input.email,
+    subjectLine(settings.emailWelcomeSubject, vars),
+    renderLayout(subjectLine(settings.emailWelcomeHeading, vars), body),
+    { category: "transactional", template: "welcome", mailbox: "support" }
   )
 }
 
@@ -305,13 +424,22 @@ export async function sendOrderStatusEmail(order: {
   const copy = STATUS_COPY[order.status]
   if (!copy) return // only ship/deliver/cancel notify customers
 
+  const settings = await getSiteSettings()
+  const vars = { order_number: `#${order.display_id}` }
+  // Shipped is the one customers read most, so it is the one made editable.
+  const shipped = order.status === "shipped"
+
   const trackingUrl = carrierTrackingUrl(
     order.tracking_carrier ?? null,
     order.tracking_number ?? null
   )
 
   const body = `
-    <p style="font-size:14px;color:#514e48;line-height:1.6;">${copy.body}</p>
+    ${
+      shipped
+        ? copyToParagraphs(settings.emailOrderShippedBody, vars)
+        : `<p style="font-size:14px;color:#514e48;line-height:1.6;">${copy.body}</p>`
+    }
     ${
       order.status === "shipped" && order.tracking_number
         ? `<p style="font-size:14px;color:#514e48;line-height:1.6;">
@@ -322,7 +450,7 @@ export async function sendOrderStatusEmail(order: {
              trackingUrl
                ? `<p style="margin:20px 0 0;">
                     <a href="${trackingUrl}"
-                       style="display:inline-block;background-color:#16a34a;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+                       style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
                       Track your shipment
                     </a>
                   </p>`
@@ -331,14 +459,24 @@ export async function sendOrderStatusEmail(order: {
         : ""
     }
     <p style="margin:24px 0 0;font-size:13px;">
-      <a href="${appUrl()}/account/orders/${order.id}" style="color:#16a34a;">View order details</a>
+      <a href="${appUrl()}/account/orders/${order.id}" style="color:#15803d;">View order details</a>
     </p>`
 
   await send(
     order.email,
-    `Order #${order.display_id}: ${copy.subject}`,
-    renderLayout(copy.subject, body),
-    { category: "transactional", template: `order_${order.status}`, entityId: order.id }
+    shipped
+      ? subjectLine(settings.emailOrderShippedSubject, vars)
+      : `Order #${order.display_id}: ${copy.subject}`,
+    renderLayout(
+      shipped ? subjectLine(settings.emailOrderShippedHeading, vars) : copy.subject,
+      body
+    ),
+    {
+      category: "transactional",
+      template: `order_${order.status}`,
+      entityId: order.id,
+      mailbox: "orders",
+    }
   )
 }
 
@@ -369,10 +507,10 @@ export async function sendAbandonedCartEmail(input: {
     )
     .join("")
 
+  const settings = await getSiteSettings()
+
   const body = `
-    <p style="font-size:14px;color:#514e48;line-height:1.6;">
-      You left these in your cart. They're still here whenever you're ready.
-    </p>
+    ${copyToParagraphs(settings.emailAbandonedCartBody)}
     <table role="presentation" width="100%" style="margin:16px 0;border-top:1px solid #ebe9e3;">
       ${rows}
       <tr><td style="padding:12px 0 0;border-top:1px solid #ebe9e3;font-size:14px;font-weight:bold;color:#1c1b18;">Total</td>
@@ -380,17 +518,22 @@ export async function sendAbandonedCartEmail(input: {
           ${formatAmount(input.total_cents)}</td></tr>
     </table>
     <p style="margin:24px 0 0;">
-      <a href="${appUrl()}/cart" style="background-color:#16a34a;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">
+      <a href="${appUrl()}/cart" style="background-color:#15803d;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">
         Return to cart
       </a>
     </p>`
 
-  await send(input.email, "You left something in your cart", renderLayout("Still interested?", body), {
-    category: "marketing",
-    template: "abandoned_cart",
-    entityId: input.cartId,
-    unsubscribeToken: input.unsubscribeToken,
-  })
+  await send(
+    input.email,
+    subjectLine(settings.emailAbandonedCartSubject),
+    renderLayout(subjectLine(settings.emailAbandonedCartHeading), body),
+    {
+      category: "marketing",
+      template: "abandoned_cart",
+      entityId: input.cartId,
+      unsubscribeToken: input.unsubscribeToken,
+    }
+  )
 }
 
 export async function sendCampaignEmail(input: {

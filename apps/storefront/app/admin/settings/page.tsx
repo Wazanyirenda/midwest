@@ -125,6 +125,45 @@ export default async function AdminSettingsPage() {
       </Section>
 
       <Section
+        title="Order label printing"
+        description="Prints a 4×6 packing label on the Zebra as soon as an order is paid. Setup steps are in tools/print-agent/README.md."
+      >
+        <SettingToggle
+          field="autoPrintOrderLabels"
+          label="Print a label for every paid order"
+          description="Labels queue the moment payment clears, whether or not anyone is at the computer. A label that can't print now stays queued and prints when the printer is back."
+          warning="Leave this off until a test label has printed. Nothing prints while it is off, and you can still print any order by hand from the Orders page."
+          initial={settings.autoPrintOrderLabels}
+        />
+        <SettingField
+          field="printLabelCopies"
+          label="Copies per order"
+          description="Two is useful if one goes on the box and one goes inside it."
+          initial={settings.printLabelCopies}
+          type="number"
+          min={1}
+          max={5}
+          suffix="labels"
+        />
+        <SettingField
+          field="labelPrinterSerial"
+          label="Printer serial number"
+          description="On the sticker underneath the Zebra, and on the configuration label it prints at startup. This is how Zebra's cloud knows which printer is yours — leave it empty if you are using the local print agent instead."
+          initial={settings.labelPrinterSerial}
+          placeholder="XXZJJ174600974"
+          maxLength={40}
+        />
+        <SettingField
+          field="labelPrinterHost"
+          label="Printer address on the shop network"
+          description="Only used by the local print agent. Change it here if the printer's address moves — no need to touch the computer it runs on."
+          initial={settings.labelPrinterHost}
+          placeholder="192.168.1.74"
+          maxLength={60}
+        />
+      </Section>
+
+      <Section
         title="Email"
         description="Marketing email only ever goes to addresses with recorded opt-in — these switches control whether it sends at all."
       >
@@ -211,6 +250,126 @@ export default async function AdminSettingsPage() {
           initial={settings.showAnnouncement}
         />
         <AnnouncementField initial={settings.announcementText} />
+      </Section>
+
+      <Section
+        title="Welcome email"
+        description="Sent once when someone creates an account. Never contains a password — we only store a hash, and mailing a credential would leave it sitting in an inbox. Available placeholder: {{customer_name}}."
+      >
+        <SettingField
+          field="emailWelcomeSubject"
+          label="Subject line"
+          initial={settings.emailWelcomeSubject}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailWelcomeHeading"
+          label="Heading"
+          description="The large line at the top of the email body."
+          initial={settings.emailWelcomeHeading}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailWelcomeBody"
+          label="Body text"
+          description="Blank lines separate paragraphs. Plain text only — the branded layout, order table and buttons are added automatically."
+          initial={settings.emailWelcomeBody}
+          rows={6}
+          maxLength={2000}
+        />
+      </Section>
+
+      <Section
+        title="Order confirmation"
+        description="Sent from orders@ the moment payment is confirmed, with the itemised PDF receipt attached. Available placeholder: {{order_number}}."
+      >
+        <SettingField
+          field="emailOrderConfirmationSubject"
+          label="Subject line"
+          initial={settings.emailOrderConfirmationSubject}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderConfirmationHeading"
+          label="Heading"
+          description="The large line at the top of the email body."
+          initial={settings.emailOrderConfirmationHeading}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderConfirmationBody"
+          label="Body text"
+          description="Blank lines separate paragraphs. Plain text only — the branded layout, order table and buttons are added automatically."
+          initial={settings.emailOrderConfirmationBody}
+          rows={6}
+          maxLength={2000}
+        />
+      </Section>
+
+      <Section
+        title="Order shipped"
+        description="Sent from orders@ when you mark an order shipped. Tracking details are added automatically when present. Available placeholder: {{order_number}}."
+      >
+        <SettingField
+          field="emailOrderShippedSubject"
+          label="Subject line"
+          initial={settings.emailOrderShippedSubject}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderShippedHeading"
+          label="Heading"
+          description="The large line at the top of the email body."
+          initial={settings.emailOrderShippedHeading}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderShippedBody"
+          label="Body text"
+          description="Blank lines separate paragraphs. Plain text only — the branded layout, order table and buttons are added automatically."
+          initial={settings.emailOrderShippedBody}
+          rows={6}
+          maxLength={2000}
+        />
+      </Section>
+
+      <Section
+        title="Abandoned cart"
+        description="Marketing mail — only reaches customers who opted in, and always carries an unsubscribe link."
+      >
+        <SettingField
+          field="emailAbandonedCartSubject"
+          label="Subject line"
+          initial={settings.emailAbandonedCartSubject}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailAbandonedCartHeading"
+          label="Heading"
+          description="The large line at the top of the email body."
+          initial={settings.emailAbandonedCartHeading}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailAbandonedCartBody"
+          label="Body text"
+          description="Blank lines separate paragraphs. Plain text only — the branded layout, order table and buttons are added automatically."
+          initial={settings.emailAbandonedCartBody}
+          rows={6}
+          maxLength={2000}
+        />
+      </Section>
+
+      <Section
+        title="Privacy and analytics"
+        description="Google Analytics only loads for visitors who accept. Turning the banner off means nobody can accept, so nothing is tracked at all."
+      >
+        <SettingToggle
+          field="showCookieBanner"
+          label="Show cookie consent banner"
+          description="A bar at the bottom of the storefront asking to accept analytics cookies. Required for analytics to run — with this off, no analytics cookie is ever set."
+          initial={settings.showCookieBanner}
+        />
       </Section>
 
       <Section

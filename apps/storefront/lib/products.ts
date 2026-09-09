@@ -39,6 +39,19 @@ export const CATEGORY_TAGS: Record<string, string> = {
   supplies: "Lab Supplies",
 }
 
+// Tags every peptide carries regardless of what it is — they make a poor
+// category chip, and the COA claim is already a spec badge on the card.
+const GENERIC_TAGS = new Set(["coa", "new"])
+
+/** Short marketing label for the chip on a product card. */
+export function categoryLabel(product: Product): string {
+  for (const tag of product.tags) {
+    const label = CATEGORY_TAGS[tag]
+    if (label && !GENERIC_TAGS.has(tag)) return label
+  }
+  return product.category === "equipment" ? "Lab Supplies" : "Research Peptide"
+}
+
 export async function listProducts(
   filters: { q?: string; tag?: string } = {}
 ): Promise<Product[]> {

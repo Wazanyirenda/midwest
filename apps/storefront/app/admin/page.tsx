@@ -2,7 +2,10 @@ import Link from "next/link"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { formatCartTotal } from "@/lib/cart"
 import { getDashboardStats, getTopProducts, percentChange } from "@/lib/admin-stats"
+import { getPrintJobs, getPrintSummary } from "@/lib/print-log"
+import { getSiteSettings } from "@/lib/settings"
 import { StatusBadge } from "@/components/admin/status-badge"
+import { PrintStatusBadge } from "@/components/admin/print-status-badge"
 import { StatTile } from "@/components/admin/stat-tile"
 import { StockAlerts } from "@/components/admin/stock-alerts"
 import { RevenueChart } from "@/components/admin/revenue-chart"
@@ -12,18 +15,26 @@ export const dynamic = "force-dynamic"
 const WINDOW_DAYS = 30
 
 export default async function AdminOverviewPage() {
-  const [stats, topProducts, recentRes] = await Promise.all([
-    getDashboardStats(WINDOW_DAYS),
-    getTopProducts(WINDOW_DAYS),
-    supabase
-      .from("orders")
-      .select("id,display_id,email,total_cents,status,created_at")
-      .order("created_at", { ascending: false })
-      .limit(8),
-  ])
+  const [stats, topProducts, recentRes, printSummary, printJobs, settings] =
+    await Promise.all([
+      getDashboardStats(WINDOW_DAYS),
+      getTopProducts(WINDOW_DAYS),
+      supabase
+        .from("orders")
+        .select("id,display_id,email,total_cents,status,created_at")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      getPrintSummary(),
+      getPrintJobs("all", 6),
+      getSiteSettings(),
+    ])
 
   const recent = recentRes.data ?? []
   const vs = `vs prior ${WINDOW_DAYS} days`
+
+  // Hidden entirely on a store that doesn't print, rather than sitting there
+  // permanently empty.
+  const showPrinting = settings.autoPrintOrderLabels || printSummary.total > 0
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -37,8 +48,18 @@ export default async function AdminOverviewPage() {
       {/* Attention first: anything out of stock is actively losing sales */}
       {(stats.outOfStock.length > 0 ||
         stats.cancellationRequests > 0 ||
-        stats.stalePendingCount > 0) && (
+        stats.stalePendingCount > 0 ||
+        printSummary.failed > 0) && (
         <div className="flex flex-wrap gap-2">
+          {printSummary.failed > 0 && (
+            <Link
+              href="/admin/printing?status=failed"
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 hover:bg-red-100"
+            >
+              <strong>{printSummary.failed}</strong> label
+              {printSummary.failed === 1 ? "" : "s"} failed to print →
+            </Link>
+          )}
           {stats.outOfStock.length > 0 && (
             <Link
               href="/admin/inventory"
@@ -178,6 +199,53 @@ export default async function AdminOverviewPage() {
           </div>
         )}
       </section>
+
+      {showPrinting && (
+        <section className="rounded-xl border border-sand-200 bg-white">
+          <header className="flex items-center justify-between border-b border-sand-100 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-sand-900">Labels printed</h2>
+              <p className="mt-0.5 text-xs text-sand-600">
+                {printSummary.printedLast24h} in the last 24 hours
+                {printSummary.pending > 0 && `, ${printSummary.pending} on the way`}
+              </p>
+            </div>
+            <Link
+              href="/admin/printing"
+              className="text-xs text-brand-600 hover:underline"
+            >
+              View all →
+            </Link>
+          </header>
+          {printJobs.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-sand-600">
+              Nothing printed yet — a label is queued for every paid order.
+            </p>
+          ) : (
+            <ul className="divide-y divide-sand-100">
+              {printJobs.map((job) => (
+                <li
+                  key={job.id}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5"
+                >
+                  <span className="font-mono text-xs text-sand-700">
+                    {job.display_id ? `#${job.display_id}` : "—"}
+                  </span>
+                  <PrintStatusBadge status={job.status} />
+                  <span className="ml-auto text-xs text-sand-600">
+                    {new Date(job.printed_at ?? job.created_at).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   )
 }

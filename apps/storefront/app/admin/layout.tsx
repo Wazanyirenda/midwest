@@ -19,16 +19,26 @@ export default async function AdminLayout({
 
   // Badge count for the Inventory nav item. Compared per-variant against its
   // own reorder_point, so the number matches the alerts panel exactly.
-  const { data: variants } = await supabase
-    .from("product_variants")
-    .select("inventory_quantity,reorder_point")
+  const [{ data: variants }, { count: printFailureCount }] = await Promise.all([
+    supabase.from("product_variants").select("inventory_quantity,reorder_point"),
+    // A label that gave up needs someone to notice, so it gets a nav badge of
+    // its own rather than waiting to be found on the Printing page.
+    supabase
+      .from("print_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "failed"),
+  ])
   const alertCount = (variants ?? []).filter(
     (v) => v.inventory_quantity <= v.reorder_point
   ).length
 
   return (
     <div className="min-h-screen bg-sand-100 lg:flex">
-      <AdminSidebar alertCount={alertCount} role={role as "staff" | "admin"} />
+      <AdminSidebar
+        alertCount={alertCount}
+        printFailureCount={printFailureCount ?? 0}
+        role={role as "staff" | "admin"}
+      />
       <main className="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
     </div>
   )

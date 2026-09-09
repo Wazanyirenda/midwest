@@ -1,30 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { useRef, useState, useTransition } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Reveal, StaggerReveal, StaggerItem } from "@/components/ui/reveal"
 import { ArrowRight, Send, FlaskConical, Truck, ClipboardCheck, Check } from "lucide-react"
 import { subscribeToNewsletter } from "@/app/actions/newsletter"
-import { SpecBadges } from "@/components/store/spec-badges"
-import { CardAddToCart } from "@/components/store/card-add-to-cart"
+import { ProductCard, PRODUCT_GRID_CLS, type CardProduct } from "@/components/store/product-card"
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 
 const IMAGE_BASE = "https://jcwoamyegoizodxfqhjn.supabase.co/storage/v1/object/public/product-images"
 
-export type FeaturedProduct = {
-  name: string
-  category: string
-  handle: string
-  price: string
-  badge: string | null
-  thumbnail: string | null
-  /** Set only when the product has exactly one size, so the card can add it. */
-  onlyVariantId: string | null
-  inStock: boolean
-}
+export type FeaturedProduct = CardProduct
 
 const HOW_IT_WORKS = [
   {
@@ -39,12 +27,12 @@ const HOW_IT_WORKS = [
   },
   {
     title: "Full batch traceability",
-    description: "Lot numbers on every vial. COA available before you order. Track your peptide from synthesis date to your door.",
+    description: "Lot numbers on every vial. COA for your lot available on request by email. Track your peptide from synthesis date to your door.",
     icon: ClipboardCheck,
   },
 ]
 
-const TRUST_BADGES = ["HPLC Verified", "3rd Party Tested", "COA on Every Lot", "≥98% Purity"]
+const TRUST_BADGES = ["HPLC Verified", "3rd Party Tested", "COA on Request", "≥98% Purity"]
 
 // Slugs match products.tags and CATEGORY_TAGS in lib/products.ts
 const CATEGORIES = [
@@ -184,7 +172,7 @@ function CategoriesStrip() {
           <Link
             key={cat.slug}
             href={`/products?category=${cat.slug}`}
-            className="whitespace-nowrap text-xs font-mono text-sand-600 border border-white/10 px-4 py-2 rounded-full hover:border-brand-600 hover:text-brand-400 transition-colors"
+            className="whitespace-nowrap text-xs font-mono text-sand-400 border border-white/10 px-4 py-2 rounded-full hover:border-brand-600 hover:text-brand-400 transition-colors"
           >
             {cat.label}
           </Link>
@@ -204,11 +192,11 @@ function StatsBar() {
           {[
             { value: "Tested Before Release",  detail: "Every batch certified by an independent lab before shipping" },
             { value: "50+ Compounds",           detail: "Wide research catalog, restocked regularly" },
-            { value: "99%+ Avg. Batch Purity",  detail: "HPLC and mass spec verified on every lot" },
+            { value: "≥98% Purity, Every Batch", detail: "HPLC and mass spec verified on every lot" },
           ].map((item) => (
             <div key={item.value} className="px-6 py-4 first:pl-0">
               <p className="font-semibold text-white text-sm">{item.value}</p>
-              <p className="font-mono text-2xs text-sand-600 mt-0.5 max-w-56">{item.detail}</p>
+              <p className="font-mono text-2xs text-sand-400 mt-0.5 max-w-56">{item.detail}</p>
             </div>
           ))}
         </div>
@@ -222,29 +210,21 @@ function StatsBar() {
 function ProductGrid({ products }: { products: FeaturedProduct[] }) {
   return (
     <div className="bg-sand-50 border-b border-sand-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
 
         <Reveal direction="none">
-          <div className="flex items-baseline justify-between mb-10">
-            <div>
-              <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
-                Available now
-              </p>
-              <h2 className="text-xl font-bold text-sand-900">Featured peptides</h2>
-            </div>
-            <Link
-              href="/products"
-              className="text-xs font-mono text-brand-700 hover:text-brand-800 underline underline-offset-2"
-            >
-              View all →
-            </Link>
-          </div>
+          <SectionHeading
+            title="Featured peptides"
+            description="Research compounds our customers reorder most — every lot HPLC-tested and shipped with its certificate of analysis."
+            href="/products"
+            cta="View All Products"
+          />
         </Reveal>
 
         <StaggerReveal stagger={0.06}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+          <div className={PRODUCT_GRID_CLS}>
             {products.map((p) => (
-              <StaggerItem key={p.handle}>
+              <StaggerItem key={p.handle} className="h-full">
                 <ProductCard product={p} />
               </StaggerItem>
             ))}
@@ -256,50 +236,34 @@ function ProductGrid({ products }: { products: FeaturedProduct[] }) {
   )
 }
 
-function ProductCard({ product }: { product: FeaturedProduct }) {
+/**
+ * Every section leads the same way: a heading, one line explaining the section,
+ * and a filled pill to the matching page.
+ */
+function SectionHeading({
+  title,
+  description,
+  href,
+  cta,
+}: {
+  title: string
+  description: string
+  href: string
+  cta: string
+}) {
   return (
-    <div className="group flex flex-col rounded-2xl border border-sand-200 bg-white p-3 transition-colors hover:border-brand-300">
-      <Link href={`/products/${product.handle}`} className="block">
-        <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-sand-200 bg-sand-100">
-          {product.badge && (
-            <span className="absolute right-2 top-2 z-10 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-2xs uppercase tracking-widest text-brand-700">
-              {product.badge}
-            </span>
-          )}
-          {product.thumbnail ? (
-            <Image
-              src={product.thumbnail}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <span className="select-none font-mono text-3xl font-bold text-sand-600 transition-transform duration-300 group-hover:scale-110">
-              {product.name.slice(0, 3).toUpperCase()}
-            </span>
-          )}
-        </div>
-
-        <p className="text-center text-sm font-semibold leading-tight text-sand-900 transition-colors group-hover:text-brand-700">
-          {product.name}
-        </p>
+    <div className="mb-10 flex flex-col gap-5 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+      <div className="max-w-xl">
+        <h2 className="text-2xl font-bold text-sand-900 sm:text-3xl">{title}</h2>
+        <p className="mt-2.5 text-sm leading-relaxed text-sand-600">{description}</p>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 sm:self-auto"
+      >
+        {cta}
+        <ArrowRight size={15} strokeWidth={2.5} />
       </Link>
-
-      <div className="mt-2.5 flex justify-center">
-        <SpecBadges purity="≥99% purity" />
-      </div>
-
-      <div className="mt-auto pt-3">
-        <p className="mb-2.5 text-center text-sm font-semibold text-sand-900">
-          {product.price}
-        </p>
-        <CardAddToCart
-          variantId={product.onlyVariantId}
-          handle={product.handle}
-          inStock={product.inStock}
-        />
-      </div>
     </div>
   )
 }
@@ -312,20 +276,12 @@ function HowItWorks() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
 
         <Reveal direction="none">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-14">
-            <div>
-              <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
-                Why researchers choose us
-              </p>
-              <h2 className="text-xl font-bold text-sand-900">Quality standards</h2>
-            </div>
-            <Link
-              href="/blog/understanding-certificates-of-analysis"
-              className="text-xs font-mono text-brand-700 hover:text-brand-800 underline underline-offset-2 shrink-0"
-            >
-              Understanding COAs →
-            </Link>
-          </div>
+          <SectionHeading
+            title="Quality standards"
+            description="What every order goes through before it leaves the lab — independent testing, cold-chain handling, and a lot number you can trace."
+            href="/blog/understanding-certificates-of-analysis"
+            cta="Understanding COAs"
+          />
         </Reveal>
 
         <StaggerReveal stagger={0.1}>
@@ -336,7 +292,7 @@ function HowItWorks() {
                   <div className="w-10 h-10 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center mb-4">
                     <item.icon size={18} className="text-brand-600" />
                   </div>
-                  <h3 className="font-semibold text-sand-900 mb-2">{item.title}</h3>
+                  <h3 className="mb-2 text-lg font-semibold text-sand-900">{item.title}</h3>
                   <p className="text-sm text-sand-600 leading-relaxed">{item.description}</p>
                 </div>
               </StaggerItem>
@@ -375,7 +331,7 @@ function Newsletter() {
               <p className="font-mono text-2xs tracking-widest text-sand-400 uppercase mb-2">
                 Research updates
               </p>
-              <h2 className="text-2xl font-bold text-white mb-2">Join the lab list.</h2>
+              <h2 className="mb-2 text-2xl font-bold text-white sm:text-3xl">Join the lab list.</h2>
               <p className="text-sm text-sand-500 max-w-sm">
                 Batch releases, restock notifications, and new COA alerts. No spam.
               </p>
@@ -392,7 +348,7 @@ function Newsletter() {
                   className="flex bg-white/5 border border-white/10 text-sm p-1 rounded-full"
                 >
                   <input
-                    className="flex-1 pl-5 outline-none bg-transparent placeholder-sand-600 text-white text-sm"
+                    className="flex-1 pl-5 outline-none bg-transparent placeholder-sand-500 text-white text-sm"
                     type="email"
                     required
                     value={email}

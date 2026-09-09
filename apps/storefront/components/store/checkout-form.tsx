@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Check } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
@@ -34,6 +35,9 @@ const contactSchema = z.object({
   zip: z.string().min(5, "ZIP code required"),
   ageConfirmed: z.boolean().refine((v) => v === true, {
     message: "You must confirm you are 21+",
+  }),
+  termsAccepted: z.boolean().refine((v) => v === true, {
+    message: "You must accept the terms to continue",
   }),
   saveAddress: z.boolean().optional(),
 })
@@ -102,6 +106,7 @@ function Step1({
       defaultValues: {
         ...defaults,
         ageConfirmed: false,
+        termsAccepted: false,
         // Default to saving when the user has no saved address yet.
         saveAddress: isSignedIn && !hasSavedAddress,
       },
@@ -167,8 +172,8 @@ function Step1({
         </label>
       )}
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <label className="flex items-start gap-3 cursor-pointer">
+      <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <label className="flex cursor-pointer items-start gap-3">
           <input
             {...register("ageConfirmed")}
             type="checkbox"
@@ -179,8 +184,31 @@ function Step1({
           </span>
         </label>
         {errors.ageConfirmed && (
-          <p className="mt-2 text-xs text-red-500">{errors.ageConfirmed.message}</p>
+          <p className="text-xs text-red-500">{errors.ageConfirmed.message}</p>
         )}
+
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            {...register("termsAccepted")}
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          <span className="text-sm text-amber-800">
+            I accept the{" "}
+            <Link href="/terms" target="_blank" className="underline">Terms of Service</Link>,{" "}
+            <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link> and{" "}
+            <Link href="/refunds" target="_blank" className="underline">Refund Policy</Link>, and
+            I confirm these products are for <strong>laboratory research only</strong> and not
+            for human or animal consumption.
+          </span>
+        </label>
+        {errors.termsAccepted && (
+          <p className="text-xs text-red-500">{errors.termsAccepted.message}</p>
+        )}
+
+        <p className="border-t border-amber-200 pt-3 text-xs text-amber-800">
+          Crypto orders are refunded as <strong>store credit</strong>, not returned on-chain.
+        </p>
       </div>
 
       <button
@@ -421,7 +449,10 @@ export function CheckoutForm({
     }
 
     try {
-      const collection = await initiatePaymentSession(cartId, "stripe")
+      const collection = await initiatePaymentSession(cartId, "stripe", {
+        ageConfirmed: data.ageConfirmed,
+        termsAccepted: data.termsAccepted,
+      })
       const session = collection?.payment_sessions?.[0]
       const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
       setStripeClientSecret(sessionData.client_secret ?? null)

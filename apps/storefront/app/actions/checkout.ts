@@ -37,7 +37,31 @@ export async function addShippingMethod(cartId: string, optionId: string) {
   return getCartById(cartId)
 }
 
-// ─── Payment ──────────────────────────────────────────────────────────────────
+// ─── Payment ─────────────────────────────────────────────────────────────────
+
+/**
+ * What the buyer confirmed at checkout. Both are legal preconditions for the
+ * sale, so they are arguments to the mutation rather than UI state: a checkbox
+ * the server never sees enforces nothing.
+ */
+export type CheckoutAttestation = {
+  /** 21+ confirmation. Required — this catalogue is age-restricted. */
+  ageConfirmed: boolean
+  /** Terms, privacy policy and research-use disclaimer. */
+  termsAccepted: boolean
+}
+
+/** Stamped onto the order so the attestation is auditable after the fact. */
+function attestationTimestamps(attestation: CheckoutAttestation) {
+  if (attestation?.ageConfirmed !== true) {
+    throw new Error("You must confirm you are 21 or older to place this order.")
+  }
+  if (attestation?.termsAccepted !== true) {
+    throw new Error("You must accept the terms and research-use disclaimer to place this order.")
+  }
+  const now = new Date().toISOString()
+  return { age_confirmed_at: now, terms_accepted_at: now }
+}
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY
@@ -60,8 +84,13 @@ function getStripe(): Stripe {
  */
 export async function initiatePaymentSession(
   cartId: string,
-  providerId: "stripe" | "nowpayments"
+  providerId: "stripe" | "nowpayments",
+  attestation: CheckoutAttestation
 ) {
+  // Checked before anything else: an order that cannot lawfully be placed must
+  // not consume a rate-limit slot or reach a payment provider.
+  const attested = attestationTimestamps(attestation)
+
   // Payment attempts are limited per cart: card testing works by hammering
   // intent creation, and each attempt costs a Stripe API call.
   const gate = await rateLimit("payment", cartId)
@@ -81,7 +110,7 @@ export async function initiatePaymentSession(
     if (!settings.cryptoPaymentsEnabled || !isCryptoConfigured()) {
       throw new Error("Crypto payments are not available right now.")
     }
-    return createCryptoSession(cart, user?.id ?? null)
+    return createCryptoSession(cart, user?.id ?? null, attested)
   }
 
   // Card is gated by a setting rather than by code so it can be switched on the
@@ -147,6 +176,7 @@ export async function initiatePaymentSession(
     status: "pending" as const,
     payment_provider: "stripe" as const,
     payment_reference: intent.id,
+    ...attested,
     updated_at: new Date().toISOString(),
   }
 
@@ -256,7 +286,8 @@ export async function getOrderPaymentStatus(orderId: string) {
  */
 async function createCryptoSession(
   cart: Awaited<ReturnType<typeof getCartById>>,
-  userId: string | null
+  userId: string | null,
+  attested: { age_confirmed_at: string; terms_accepted_at: string }
 ) {
   if (!cart) throw new Error("Cart not found")
 
@@ -279,6 +310,7 @@ async function createCryptoSession(
     total_cents: cart.total,
     status: "pending" as const,
     payment_provider: "nowpayments" as const,
+    ...attested,
     updated_at: new Date().toISOString(),
   }
 

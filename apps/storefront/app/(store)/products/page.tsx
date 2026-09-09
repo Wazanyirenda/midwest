@@ -1,13 +1,15 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import { FlaskConical } from "lucide-react"
-import { listProducts, lowestVariantPrice, CATEGORY_TAGS, type Product } from "@/lib/products"
-import { formatPrice } from "@/lib/utils"
+import {
+  listProducts,
+  lowestVariantPrice,
+  categoryLabel,
+  CATEGORY_TAGS,
+  type Product,
+} from "@/lib/products"
 import { getUser } from "@/lib/auth"
 import { getWishlistedProductIds } from "@/lib/wishlist"
-import { WishlistButton } from "@/components/store/wishlist-button"
-import { SpecBadges } from "@/components/store/spec-badges"
-import { CardAddToCart } from "@/components/store/card-add-to-cart"
+import { ProductCard, PRODUCT_GRID_CLS } from "@/components/store/product-card"
 import Link from "next/link"
 
 export const metadata: Metadata = {
@@ -124,71 +126,25 @@ function ProductGrid({
   wishlisted: Set<string>
 }) {
   return (
-    <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-      {products.map((product) => {
-        const lowestPrice = lowestVariantPrice(product)
-        const inStock = product.variants.some((v) => v.inventory_quantity > 0)
-        // Only offer a one-click add when there is nothing to choose between.
-        const onlyVariant = product.variants.length === 1 ? product.variants[0] : null
-
-        return (
-          <div
-            key={product.id}
-            className="group flex flex-col rounded-2xl border border-sand-200 bg-white p-3 transition-colors hover:border-brand-300"
-          >
-            <Link href={`/products/${product.handle}`} className="block">
-              {/* Image area */}
-              <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-[#F0F5F0]">
-                {product.thumbnail ? (
-                  <Image
-                    src={product.thumbnail}
-                    alt={product.title ?? ""}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="select-none font-mono text-4xl font-bold text-brand-200 transition-transform duration-300 group-hover:scale-110">
-                    {product.title?.slice(0, 3).toUpperCase()}
-                  </span>
-                )}
-                <WishlistButton
-                  productId={product.id}
-                  initial={wishlisted.has(product.id)}
-                  className="absolute right-2 top-2"
-                />
-              </div>
-
-              <p className="text-center text-sm font-semibold leading-tight text-sand-900 transition-colors group-hover:text-brand-700">
-                {product.title}
-              </p>
-            </Link>
-
-            {product.category === "peptide" && (
-              <div className="mt-2.5 flex justify-center">
-                <SpecBadges purity="≥99% purity" />
-              </div>
-            )}
-
-            {/* Price and action pinned to the bottom so cards line up. */}
-            <div className="mt-auto pt-3">
-              {lowestPrice != null && (
-                <p className="mb-2.5 text-center text-sm font-semibold text-sand-900">
-                  {product.variants.length > 1 && (
-                    <span className="font-normal text-sand-600">From </span>
-                  )}
-                  {formatPrice(lowestPrice)} USD
-                </p>
-              )}
-              <CardAddToCart
-                variantId={onlyVariant?.id ?? null}
-                handle={product.handle}
-                inStock={inStock}
-              />
-            </div>
-          </div>
-        )
-      })}
+    <div className={PRODUCT_GRID_CLS}>
+      {products.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={{
+            handle: product.handle,
+            title: product.title,
+            label: categoryLabel(product),
+            priceCents: lowestVariantPrice(product),
+            variantCount: product.variants.length,
+            thumbnail: product.thumbnail,
+            showSpecs: product.category === "peptide",
+            // Only offer a one-click add when there is nothing to choose between.
+            onlyVariantId: product.variants.length === 1 ? (product.variants[0]?.id ?? null) : null,
+            inStock: product.variants.some((v) => v.inventory_quantity > 0),
+          }}
+          wishlist={{ productId: product.id, initial: wishlisted.has(product.id) }}
+        />
+      ))}
     </div>
   )
 }

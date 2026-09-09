@@ -31,7 +31,7 @@ export function OrganizationJsonLd() {
         url: base,
         logo: `${base}/logo.png`,
         description:
-          "High-purity research peptides. Third-party tested, batch-verified, COA on every lot.",
+          "High-purity research peptides. Third-party tested, batch-verified, COA available on request.",
       }}
     />
   )

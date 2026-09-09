@@ -16,6 +16,10 @@ export const LIMITS = {
   campaignSend: { limit: 3, windowSeconds: 3600 },
   // Guessable tokens — a shared wishlist link is short and public.
   tokenLookup: { limit: 30, windowSeconds: 600 },
+  // The print agent polls on a few-second interval and acknowledges each
+  // batch, so the ceiling is generous — it exists to cap a leaked token, not
+  // to pace a healthy agent.
+  printAgent: { limit: 240, windowSeconds: 60 },
 } as const
 
 export type LimitName = keyof typeof LIMITS

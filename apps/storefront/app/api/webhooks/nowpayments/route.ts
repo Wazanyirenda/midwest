@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { verifyIpnSignature, type InvoiceStatus } from "@/lib/nowpayments"
 import { getSiteSettings } from "@/lib/settings"
 import { sendOrderConfirmationEmail } from "@/lib/email"
+import { queueOrderLabel } from "@/lib/print"
 
 // NOWPayments IPN. Same contract as the Stripe route: verify the signature over
 // the RAW body, process exactly once through the webhook_events ledger, and
@@ -113,10 +114,15 @@ export async function POST(request: Request) {
 
       const result = data as { status?: string; order_id?: string } | null
       if (result?.status === "paid" && result.order_id) {
+        // Inside the same one-shot gate as the email, so a repeated IPN for a
+        // payment that is already paid does not print a second label.
+        await queueOrderLabel(result.order_id)
+
         const { data: order } = await supabase
           .from("orders")
           .select(
             "id,display_id,email,total_cents,shipping_cents,subtotal_cents," +
+              "created_at,status,payment_provider,shipping_address," +
               "items:order_items(product_title,variant_title,quantity,unit_price_cents)"
           )
           .eq("id", result.order_id)

@@ -4,6 +4,7 @@ import { formatCartTotal } from "@/lib/cart"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { OrderStatusSelect } from "@/components/admin/order-status-select"
 import { OrderTrackingForm } from "@/components/admin/order-tracking-form"
+import { ReprintButton } from "@/components/admin/reprint-button"
 
 export const dynamic = "force-dynamic"
 
@@ -96,12 +97,13 @@ export default async function AdminOrdersPage() {
               </div>
             </div>
 
-            <div className="mt-4 border-t border-sand-100 pt-3">
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-sand-100 pt-3">
               <OrderTrackingForm
                 orderId={order.id}
                 trackingNumber={order.tracking_number}
                 trackingCarrier={order.tracking_carrier}
               />
+              <ReprintButton orderId={order.id} />
             </div>
 
             <div className="mt-4 rounded-lg bg-sand-50 divide-y divide-sand-100">

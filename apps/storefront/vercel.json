@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/abandoned-carts",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/print-retry",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

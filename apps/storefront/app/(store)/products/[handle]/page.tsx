@@ -105,15 +105,25 @@ export default async function ProductPage({ params }: Props) {
             <div className="rounded-2xl border border-sand-200 bg-sand-50 p-5 text-sm space-y-2.5">
               {[
                 { label: "Purity",                  value: "≥ 98% (HPLC verified)" },
-                { label: "Certificate of Analysis", value: "Available on request", link: true },
+                {
+                  label: "Certificate of Analysis",
+                  value: "Request by email",
+                  href: `mailto:support@midwesternpeptides.com?subject=${encodeURIComponent(`COA request — ${product.title}`)}`,
+                },
                 { label: "Batch / Lot",             value: "See product label", muted: true },
                 { label: "Form",                    value: "Lyophilized powder" },
               ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between">
+                <div key={row.label} className="flex items-center justify-between gap-4">
                   <span className="font-medium text-sand-700">{row.label}</span>
-                  <span className={row.link ? "text-brand-600 cursor-pointer hover:underline" : row.muted ? "text-sand-600 italic" : "text-sand-600"}>
-                    {row.value}
-                  </span>
+                  {row.href ? (
+                    <a href={row.href} className="text-brand-700 underline underline-offset-2 hover:text-brand-800">
+                      {row.value}
+                    </a>
+                  ) : (
+                    <span className={row.muted ? "text-sand-600 italic" : "text-sand-600"}>
+                      {row.value}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -125,7 +135,7 @@ export default async function ProductPage({ params }: Props) {
               { label: "Third-party tested", icon: FlaskConical },
               { label: "Secure checkout",    icon: Lock },
               { label: "Discreet shipping",  icon: Package },
-              { label: "COA on every lot",   icon: FileText },
+              { label: "COA on request",     icon: FileText },
             ].map((badge) => (
               <span
                 key={badge.label}

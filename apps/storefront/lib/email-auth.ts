@@ -82,7 +82,7 @@ export function renderAuthEmail(
           <td style="padding:32px;">
             <h1 style="margin:0 0 16px;font-size:20px;color:#1c1b18;">${copy.heading}</h1>
             <p style="margin:0 0 24px;font-size:14px;color:#514e48;line-height:1.6;">${copy.body}</p>
-            <a href="${confirmUrl}" style="background-color:#16a34a;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">${copy.cta}</a>
+            <a href="${confirmUrl}" style="background-color:#15803d;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">${copy.cta}</a>
             <p style="margin:24px 0 0;font-size:12px;color:#8f8b7f;line-height:1.6;">
               If the button doesn't work, paste this into your browser:<br/>
               <span style="color:#6b6760;word-break:break-all;">${confirmUrl}</span>
