@@ -120,11 +120,8 @@ function Hero() {
           ground — heavier on small screens, where the vial crops inward. */}
       {/* Capped at 30% — the plate's left half is already near-white, so the
           copy stays readable without veiling the vial and helix. */}
-      <div
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-white/25 from-0% via-white/10 via-45% to-transparent to-70%
-                   sm:bg-gradient-to-r sm:from-white/30 sm:from-0% sm:via-white/20 sm:via-40% sm:to-transparent sm:to-65%"
-      />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/25 from-0% via-white/12 via-45% to-transparent to-75% sm:hidden" />
+      {/* Mobile only. Desktop runs the plate unwashed. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/30 from-0% via-white/18 via-50% to-transparent to-88% sm:hidden" />
 
       <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start px-4 pb-16 pt-10 sm:min-h-[38rem] sm:items-center sm:px-6 sm:py-28 lg:min-h-[42rem] lg:px-8">
         <div className="max-w-2xl">
