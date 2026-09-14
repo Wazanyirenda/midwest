@@ -29,7 +29,7 @@ export async function Header() {
       </div>
 
       {/* Main nav */}
-      <header className="border-b border-sand-200 bg-white">
+      <header className="border-b border-white/10 bg-ink">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
 
@@ -40,7 +40,7 @@ export async function Header() {
                 alt="Midwestern Peptides"
                 width={180}
                 height={56}
-                className="h-16 w-auto"
+                className="h-16 w-auto brightness-0 invert"
                 priority
               />
             </Link>
@@ -48,13 +48,15 @@ export async function Header() {
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-6 text-sm">
               {[
-                { label: "Products", href: "/products" },
+                { label: "Peptides", href: "/products" },
+                { label: "Lab Supplies", href: "/products?category=supplies" },
                 { label: "Research", href: "/blog" },
+                { label: "FAQs", href: "/faq" },
               ].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sand-600 hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5"
+                  className="border-b border-transparent pb-0.5 text-sand-300 transition-colors hover:border-white hover:text-white"
                 >
                   {link.label}
                 </Link>
@@ -65,21 +67,21 @@ export async function Header() {
             <form
               action="/products"
               method="get"
-              className="hidden xl:flex items-center gap-2 bg-sand-100 px-4 py-2 rounded-full text-sm w-56 border border-sand-200 focus-within:border-brand-400 transition-colors"
+              className="hidden w-56 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm transition-colors focus-within:border-brand-400 xl:flex"
             >
-              <Search size={15} className="text-sand-600 shrink-0" />
+              <Search size={15} className="shrink-0 text-sand-400" />
               <input
                 name="q"
                 type="text"
                 placeholder="Search peptides"
-                className="flex-1 bg-transparent outline-none placeholder-sand-400 text-sand-800 text-sm"
+                className="flex-1 bg-transparent text-sm text-white outline-none placeholder-sand-400"
               />
             </form>
 
             {/* Right side */}
             <div className="flex items-center gap-4 shrink-0">
               {/* Cart */}
-              <Link href="/cart" aria-label={`Cart${cartCount > 0 ? ` (${cartCount} items)` : ""}`} className="relative text-sand-600 hover:text-ink transition-colors">
+              <Link href="/cart" aria-label={`Cart${cartCount > 0 ? ` (${cartCount} items)` : ""}`} className="relative text-sand-300 transition-colors hover:text-white">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                 </svg>

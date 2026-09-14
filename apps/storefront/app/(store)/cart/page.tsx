@@ -1,10 +1,10 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Lock, ShoppingCart } from "lucide-react"
+import { Lock, ShoppingCart, Trash2, BookmarkPlus, Minus, Plus } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getSiteSettings } from "@/lib/settings"
 import { PaymentBadges } from "@/components/store/payment-badges"
-import { removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
+import { clearCart, removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
 import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
 
@@ -21,7 +21,20 @@ export default async function CartPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-sand-900 mb-8">Your Cart</h1>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold text-sand-900">Your Cart</h1>
+        {!isEmpty && (
+          <form action={clearCart.bind(null, cart!.id)}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-full border border-sand-300 px-4 py-2 text-xs font-medium text-sand-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+            >
+              <Trash2 size={14} strokeWidth={1.75} />
+              Clear cart
+            </button>
+          </form>
+        )}
+      </div>
 
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -95,8 +108,9 @@ export default async function CartPage() {
                       <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
                         <button
                           type="submit"
-                          className="text-xs text-sand-600 hover:text-brand-600 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-brand-600"
                         >
+                          <BookmarkPlus size={14} strokeWidth={1.75} />
                           Save for later
                         </button>
                       </form>
@@ -105,8 +119,10 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs text-sand-600 hover:text-red-500 transition-colors"
+                          aria-label={`Remove ${item.variant.product.title} from cart`}
+                          className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-red-600"
                         >
+                          <Trash2 size={14} strokeWidth={1.75} />
                           Remove
                         </button>
                       </form>
@@ -123,9 +139,10 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
+                          aria-label="Decrease quantity"
+                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
                         >
-                          −
+                          <Minus size={14} strokeWidth={2} />
                         </button>
                       </form>
                       <span className="w-6 text-center text-sm font-medium text-sand-900">
@@ -141,9 +158,10 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
+                          aria-label="Increase quantity"
+                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
                         >
-                          +
+                          <Plus size={14} strokeWidth={2} />
                         </button>
                       </form>
                     </div>

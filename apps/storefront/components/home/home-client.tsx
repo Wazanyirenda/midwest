@@ -87,7 +87,7 @@ function Hero() {
   const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.06])
 
   return (
-    <section ref={sectionRef} className="relative isolate overflow-hidden bg-sand-50">
+    <section ref={sectionRef} className="relative isolate overflow-hidden bg-ink text-white">
       {/* Full-bleed product plate. Anchored right, where the vial sits, so the
           bright empty half of the frame stays under the copy at every width. */}
       <motion.div
@@ -120,13 +120,14 @@ function Hero() {
           ground — heavier on small screens, where the vial crops inward. */}
       {/* Capped at 30% — the plate's left half is already near-white, so the
           copy stays readable without veiling the vial and helix. */}
-      {/* Mobile only. Desktop runs the plate unwashed. */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/30 from-0% via-white/18 via-50% to-transparent to-88% sm:hidden" />
+      {/* Dark hero: the wash is the section's ground, not a veil over it. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/95 from-0% via-ink/80 via-45% to-ink/25 to-95% sm:hidden" />
+      <div className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-ink/95 from-0% via-ink/80 via-40% to-ink/15 to-80% sm:block" />
 
       <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start px-4 pb-16 pt-10 sm:min-h-[38rem] sm:items-center sm:px-6 sm:py-28 lg:min-h-[42rem] lg:px-8">
         <div className="max-w-2xl">
           <motion.p
-            className="mb-5 max-w-xs font-mono text-2xs font-semibold uppercase leading-relaxed tracking-[0.14em] text-brand-800 sm:max-w-none sm:text-xs sm:tracking-[0.18em]"
+            className="mb-5 max-w-xs font-mono text-2xs font-semibold uppercase leading-relaxed tracking-[0.14em] text-brand-300 sm:max-w-none sm:text-xs sm:tracking-[0.18em]"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.05 }}
@@ -136,17 +137,17 @@ function Hero() {
 
           <div className="mb-6 overflow-hidden">
             <motion.h1
-              className="text-[2.1rem] font-bold leading-[1.06] tracking-tight text-sand-900 sm:text-6xl sm:leading-[1.03] lg:text-7xl"
+              className="text-[2.1rem] font-bold leading-[1.06] tracking-tight text-white sm:text-6xl sm:leading-[1.03] lg:text-7xl"
               initial={{ y: "105%" }}
               animate={{ y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Research peptides you can verify.
+              Trusted US supplier of lab-tested peptides.
             </motion.h1>
           </div>
 
           <motion.p
-            className="mb-8 max-w-lg text-base font-bold leading-relaxed text-sand-900 sm:text-lg sm:font-medium"
+            className="mb-8 max-w-lg text-base font-medium leading-relaxed text-sand-200 sm:text-lg"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.22 }}
@@ -169,7 +170,7 @@ function Hero() {
             </Link>
             <Link
               href="/blog"
-              className="inline-block rounded-full border-2 border-sand-900 bg-white/90 px-7 py-3 text-sm font-semibold text-sand-900 backdrop-blur transition-colors hover:bg-sand-900 hover:text-white"
+              className="inline-block rounded-full border-2 border-white/40 px-7 py-3 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white hover:text-ink"
             >
               Research Library
             </Link>
@@ -186,7 +187,7 @@ function Hero() {
 
 function CategoriesStrip() {
   return (
-    <div className="relative border-t border-sand-200 bg-white/85 overflow-x-auto no-scrollbar backdrop-blur">
+    <div className="relative border-t border-white/10 bg-ink/70 overflow-x-auto no-scrollbar backdrop-blur">
       <div className="flex gap-3 px-4 sm:px-6 lg:px-8 py-4 min-w-max mx-auto max-w-7xl">
         {CATEGORIES.map((cat) => (
           <Link
@@ -367,17 +368,25 @@ function SectionHeading({
   description,
   href,
   cta,
+  tone = "light",
 }: {
   title: string
   description: string
   href: string
   cta: string
+  /** "dark" for sections sitting on ink. */
+  tone?: "light" | "dark"
 }) {
+  const dark = tone === "dark"
   return (
     <div className="mb-10 flex flex-col gap-5 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-xl">
-        <h2 className="text-2xl font-bold text-sand-900 sm:text-3xl">{title}</h2>
-        <p className="mt-2.5 text-sm leading-relaxed text-sand-600">{description}</p>
+        <h2 className={`text-2xl font-bold sm:text-3xl ${dark ? "text-white" : "text-sand-900"}`}>
+          {title}
+        </h2>
+        <p className={`mt-2.5 text-sm leading-relaxed ${dark ? "text-sand-300" : "text-sand-600"}`}>
+          {description}
+        </p>
       </div>
       <Link
         href={href}
@@ -394,7 +403,7 @@ function SectionHeading({
 
 function HowItWorks() {
   return (
-    <div className="border-b border-brand-200/60 bg-brand-50">
+    <div className="border-b border-white/10 bg-ink text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
 
         <Reveal direction="none">
@@ -403,6 +412,7 @@ function HowItWorks() {
             description="What every order goes through before it leaves the lab: independent testing, cold-chain handling, and a lot number you can trace."
             href="/blog/understanding-certificates-of-analysis"
             cta="Understanding COAs"
+            tone="dark"
           />
         </Reveal>
 
@@ -411,11 +421,11 @@ function HowItWorks() {
             {HOW_IT_WORKS.map((item, i) => (
               <StaggerItem key={i}>
                 <div className="flex flex-col items-start">
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-brand-200 bg-brand-50 text-brand-700">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-brand-300">
                     <item.icon size={19} strokeWidth={1.75} />
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold text-sand-900">{item.title}</h3>
-                  <p className="text-sm text-sand-600 leading-relaxed">{item.description}</p>
+                  <h3 className="mb-2 text-lg font-semibold text-white">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-sand-300">{item.description}</p>
                 </div>
               </StaggerItem>
             ))}

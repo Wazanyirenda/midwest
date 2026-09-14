@@ -7,8 +7,10 @@ import { signOut } from "@/app/actions/auth"
 import type { AuthUser } from "./auth-buttons"
 
 const NAV_LINKS = [
-  { label: "Products",         href: "/products" },
+  { label: "Peptides",         href: "/products" },
+  { label: "Lab Supplies",     href: "/products?category=supplies" },
   { label: "Research Library", href: "/blog" },
+  { label: "FAQs",             href: "/faq" },
   { label: "My Account",       href: "/account" },
 ]
 
@@ -29,7 +31,7 @@ export function MobileNav({ authUser }: { authUser: AuthUser | null }) {
       <button
         onClick={() => setOpen(v => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
-        className="text-sand-600 hover:text-ink transition-colors md:hidden"
+        className="text-sand-300 transition-colors hover:text-white md:hidden"
       >
         {open ? (
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

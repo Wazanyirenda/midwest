@@ -49,7 +49,7 @@ export function AuthButtons({ authUser }: { authUser: AuthUser | null }) {
       <Link
         href="/sign-in"
         aria-label="Sign in"
-        className="flex items-center gap-2 text-sand-600 hover:text-ink transition-colors"
+        className="flex items-center gap-2 text-sand-300 transition-colors hover:text-white"
       >
         <User size={20} strokeWidth={1.5} />
         <span className="hidden sm:inline text-sm font-medium">Sign in</span>

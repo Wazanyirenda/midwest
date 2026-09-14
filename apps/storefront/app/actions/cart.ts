@@ -86,6 +86,18 @@ export async function removeLineItem(cartId: string, lineItemId: string) {
   revalidatePath("/", "layout")
 }
 
+/**
+ * Empties a cart without retiring it, so the same cart id keeps working and the
+ * cookie stays valid. Scoped by cart id for the same reason removeLineItem is:
+ * the id comes from the caller and must never delete another cart's lines.
+ */
+export async function clearCart(cartId: string) {
+  await supabase.from("cart_items").delete().eq("cart_id", cartId)
+  revalidatePath("/cart")
+  revalidatePath("/checkout")
+  revalidatePath("/", "layout")
+}
+
 export async function updateCartContact(
   cartId: string,
   data: {
