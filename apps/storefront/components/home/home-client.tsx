@@ -123,7 +123,7 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.05 }}
           >
-            North Dakota · Est. 2026 · Lab-tested research peptides
+            North Dakota · Est. 2026
           </motion.p>
 
           <div className="mb-6 overflow-hidden">
@@ -133,9 +133,21 @@ function Hero() {
               animate={{ y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Trusted US supplier of lab-tested peptides.
+              Research peptides you can verify.
             </motion.h1>
           </div>
+
+          <motion.p
+            className="mb-8 max-w-lg text-base leading-relaxed text-sand-700 sm:text-lg"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.22 }}
+          >
+            Every lot is tested by an independent US lab for HPLC purity and
+            mass-spec identity, with the certificate available on request.
+            Lyophilized and shipped cold-chain from North Dakota — for
+            laboratory research use only.
+          </motion.p>
 
           <motion.div
             className="mb-8 flex flex-wrap gap-2"

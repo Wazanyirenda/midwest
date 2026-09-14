@@ -3,10 +3,12 @@ import { cookies } from "next/headers"
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
 import { OrganizationJsonLd } from "@/components/seo/structured-data"
 import { CookieConsent } from "@/components/layout/cookie-consent"
+import { CartFab } from "@/components/layout/cart-fab"
 import { ConsentProvider } from "@/components/providers/consent"
 import { Analytics } from "@/components/providers/analytics"
 import { CONSENT_COOKIE, googleAnalyticsId, parseConsent } from "@/lib/consent"
 import { getSiteSettings } from "@/lib/settings"
+import { getCart } from "@/lib/cart"
 import { AnnouncementBanner } from "@/components/layout/announcement-banner"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -59,10 +61,12 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [{ showCookieBanner }, cookieStore] = await Promise.all([
+  const [{ showCookieBanner }, cookieStore, cart] = await Promise.all([
     getSiteSettings(),
     cookies(),
+    getCart(),
   ])
+  const cartCount = cart?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0
   const gaId = googleAnalyticsId()
   // With the banner switched off there is no way to accept, so consent can
   // never be granted and the analytics tag never renders.
@@ -86,6 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
             <Footer />
           </SmoothScroll>
+          <CartFab count={cartCount} />
           {showCookieBanner && <CookieConsent />}
           {gaId && <Analytics measurementId={gaId} />}
         </ConsentProvider>
