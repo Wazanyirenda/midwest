@@ -26,7 +26,7 @@ export default async function SharedWishlistPage({ params }: Props) {
         <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
           <Heart size={22} strokeWidth={1.5} />
         </span>
-        <h1 className="text-xl font-semibold text-gray-700">
+        <h1 className="text-xl font-semibold text-sand-700">
           This wishlist is empty or no longer available
         </h1>
         <Link

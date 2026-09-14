@@ -43,6 +43,14 @@ export const CATEGORY_TAGS: Record<string, string> = {
 // category chip, and the COA claim is already a spec badge on the card.
 const GENERIC_TAGS = new Set(["coa", "new"])
 
+/** The tag driving a product's category chip, or null when it has none. */
+export function categorySlug(product: Product): string | null {
+  for (const tag of product.tags) {
+    if (CATEGORY_TAGS[tag] && !GENERIC_TAGS.has(tag)) return tag
+  }
+  return null
+}
+
 /** Short marketing label for the chip on a product card. */
 export function categoryLabel(product: Product): string {
   for (const tag of product.tags) {

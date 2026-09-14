@@ -5,12 +5,13 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { passwordSchema, PASSWORD_MIN } from "@/lib/password"
 import { resetPassword } from "@/app/actions/auth"
 import { Field, inputCls } from "@/components/ui/form-field"
 
 const schema = z
   .object({
-    password: z.string().min(8, "At least 8 characters"),
+    password: passwordSchema,
     confirm: z.string(),
   })
   .refine((d) => d.password === d.confirm, {
@@ -38,7 +39,7 @@ export function ResetPasswordForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-md"
+      className="space-y-5 rounded-xl border border-sand-200 bg-white p-6 shadow-md"
     >
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -55,7 +56,7 @@ export function ResetPasswordForm() {
           type="password"
           autoComplete="new-password"
           className={inputCls}
-          placeholder="At least 8 characters"
+          placeholder={`At least ${PASSWORD_MIN} characters`}
         />
       </Field>
 

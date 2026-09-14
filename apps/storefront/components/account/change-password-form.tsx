@@ -5,12 +5,13 @@ import { Check } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { passwordSchema, PASSWORD_MIN } from "@/lib/password"
 import { changePassword } from "@/app/actions/auth"
 import { Field, inputCls } from "@/components/ui/form-field"
 
 const schema = z
   .object({
-    newPassword: z.string().min(8, "At least 8 characters"),
+    newPassword: passwordSchema,
     confirm: z.string(),
   })
   .refine((d) => d.newPassword === d.confirm, {
@@ -50,7 +51,7 @@ export function ChangePasswordForm() {
           type="password"
           autoComplete="new-password"
           className={inputCls}
-          placeholder="At least 8 characters"
+          placeholder={`At least ${PASSWORD_MIN} characters`}
         />
       </Field>
       <Field label="Confirm new password" error={errors.confirm?.message}>
@@ -77,7 +78,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        className="rounded-lg border border-sand-300 px-5 py-2.5 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50 disabled:opacity-50"
       >
         {isSubmitting ? "Saving…" : "Change password"}
       </button>

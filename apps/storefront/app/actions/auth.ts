@@ -8,6 +8,7 @@ import { createAuthClient } from "@/lib/supabase/server"
 import { mergeCartOnSignIn } from "@/lib/cart-merge"
 import { CART_COOKIE } from "@/lib/cart"
 import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
+import { checkPassword } from "@/lib/password"
 import { sendWelcomeEmail } from "@/lib/email"
 
 // Auth actions return { error } for inline form errors instead of throwing;
@@ -59,6 +60,9 @@ export async function signUp(data: {
   lastName: string
   marketingOptIn: boolean
 }): Promise<ActionResult> {
+  const weak = checkPassword(data.password)
+  if (weak) return { error: weak }
+
   // By IP: signup abuse comes from one source creating many accounts.
   const gate = await rateLimit("signUp")
   if (!gate.allowed) return { error: rateLimitMessage(gate.retryAfter) }
@@ -159,6 +163,9 @@ export async function forgotPassword(data: { email: string }): Promise<ActionRes
 }
 
 export async function resetPassword(data: { password: string }): Promise<ActionResult> {
+  const weak = checkPassword(data.password)
+  if (weak) return { error: weak }
+
   const supabase = await createAuthClient()
   const {
     data: { user },
@@ -174,6 +181,9 @@ export async function resetPassword(data: { password: string }): Promise<ActionR
 }
 
 export async function changePassword(data: { newPassword: string }): Promise<ActionResult> {
+  const weak = checkPassword(data.newPassword)
+  if (weak) return { error: weak }
+
   const supabase = await createAuthClient()
   const {
     data: { user },

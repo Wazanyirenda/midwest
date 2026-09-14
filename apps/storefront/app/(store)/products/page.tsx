@@ -4,12 +4,14 @@ import {
   listProducts,
   lowestVariantPrice,
   categoryLabel,
+  categorySlug,
   CATEGORY_TAGS,
   type Product,
 } from "@/lib/products"
 import { getUser } from "@/lib/auth"
 import { getWishlistedProductIds } from "@/lib/wishlist"
 import { ProductCard, PRODUCT_GRID_CLS } from "@/components/store/product-card"
+import { categoryStyle } from "@/components/store/category-style"
 import Link from "next/link"
 
 export const metadata: Metadata = {
@@ -41,7 +43,7 @@ export default async function ProductsPage({
 
       {/* Page title */}
       <div className="mb-6">
-        <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
+        <p className="font-mono text-xs font-semibold tracking-widest text-sand-600 uppercase mb-1">
           Available now
         </p>
         <div className="flex items-baseline justify-between">
@@ -64,8 +66,8 @@ export default async function ProductsPage({
             href={tag === slug ? "/products" : `/products?category=${slug}`}
             className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
               tag === slug
-                ? "border-brand-500 bg-brand-50 text-brand-800"
-                : "border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-700"
+                ? categoryStyle(slug).chip
+                : "border-sand-300 text-sand-600 hover:border-sand-400 hover:text-sand-900"
             }`}
           >
             {label}
@@ -106,7 +108,7 @@ export default async function ProductsPage({
       {equipment.length > 0 && (
         <>
           <div className="mt-14 mb-8">
-            <p className="font-mono text-2xs tracking-widest text-sand-600 uppercase mb-1">
+            <p className="font-mono text-xs font-semibold tracking-widest text-sand-600 uppercase mb-1">
               For your lab
             </p>
             <h2 className="text-2xl font-bold text-sand-900">Lab Supplies</h2>
@@ -134,6 +136,7 @@ function ProductGrid({
             handle: product.handle,
             title: product.title,
             label: categoryLabel(product),
+            labelSlug: categorySlug(product),
             priceCents: lowestVariantPrice(product),
             variantCount: product.variants.length,
             thumbnail: product.thumbnail,

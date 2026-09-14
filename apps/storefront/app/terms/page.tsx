@@ -10,8 +10,8 @@ const LAST_UPDATED = "May 24, 2026"
 export default function TermsPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>
-      <p className="mt-2 text-sm text-gray-600">Last updated: {LAST_UPDATED}</p>
+      <h1 className="text-3xl font-bold text-sand-900">Terms of Service</h1>
+      <p className="mt-2 text-sm text-sand-600">Last updated: {LAST_UPDATED}</p>
 
       <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
         <strong>Important:</strong> By accessing this website or placing an order, you agree to

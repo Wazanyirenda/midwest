@@ -33,7 +33,7 @@ export default async function InvoicePage({ params }: Props) {
   if (!o) {
     return (
       <main className="py-24 text-center">
-        <p className="text-gray-600">Order not found.</p>
+        <p className="text-sand-600">Order not found.</p>
         <Link href="/account/orders" className="mt-4 inline-block text-sm text-brand-600 hover:underline">
           ← Back to Orders
         </Link>
@@ -46,37 +46,37 @@ export default async function InvoicePage({ params }: Props) {
       <div className="mb-6 flex items-center justify-between print:hidden">
         <Link
           href={`/account/orders/${o.id}`}
-          className="text-sm text-gray-600 hover:text-gray-700"
+          className="text-sm text-sand-600 hover:text-sand-700"
         >
           ← Back to order
         </Link>
         <PrintButton />
       </div>
 
-      <div className="rounded-xl border border-gray-200 p-8 print:border-0 print:p-0">
+      <div className="rounded-xl border border-sand-200 p-8 print:border-0 print:p-0">
         {/* Letterhead */}
-        <div className="mb-8 flex items-start justify-between border-b border-gray-200 pb-6">
+        <div className="mb-8 flex items-start justify-between border-b border-sand-200 pb-6">
           <div>
-            <p className="text-lg font-bold text-gray-900">Midwestern Peptides</p>
-            <p className="text-xs text-gray-600">orders@midwesternpeptides.com</p>
+            <p className="text-lg font-bold text-sand-900">Midwestern Peptides</p>
+            <p className="text-xs text-sand-600">orders@midwesternpeptides.com</p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-gray-900">Invoice</p>
-            <p className="text-sm text-gray-600">Order #{o.display_id}</p>
-            <p className="text-sm text-gray-600">{formatDate(o.created_at)}</p>
+            <p className="text-lg font-semibold text-sand-900">Invoice</p>
+            <p className="text-sm text-sand-600">Order #{o.display_id}</p>
+            <p className="text-sm text-sand-600">{formatDate(o.created_at)}</p>
           </div>
         </div>
 
         {/* Bill / ship to */}
         <div className="mb-8 grid grid-cols-2 gap-8 text-sm">
           <div>
-            <p className="mb-1 font-semibold text-gray-700">Billed to</p>
-            <p className="text-gray-600">{o.email}</p>
+            <p className="mb-1 font-semibold text-sand-700">Billed to</p>
+            <p className="text-sand-600">{o.email}</p>
           </div>
           {o.shipping_address && (
             <div>
-              <p className="mb-1 font-semibold text-gray-700">Ship to</p>
-              <address className="not-italic text-gray-600">
+              <p className="mb-1 font-semibold text-sand-700">Ship to</p>
+              <address className="not-italic text-sand-600">
                 <p>{o.shipping_address.first_name} {o.shipping_address.last_name}</p>
                 <p>{o.shipping_address.address_1}</p>
                 {o.shipping_address.address_2 && <p>{o.shipping_address.address_2}</p>}
@@ -89,20 +89,20 @@ export default async function InvoicePage({ params }: Props) {
         {/* Items */}
         <table className="mb-6 w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-300 text-left text-gray-700">
+            <tr className="border-b border-sand-300 text-left text-sand-700">
               <th className="py-2 font-semibold">Item</th>
               <th className="py-2 text-center font-semibold">Qty</th>
               <th className="py-2 text-right font-semibold">Unit</th>
               <th className="py-2 text-right font-semibold">Amount</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-sand-100">
             {o.items.map((item) => (
               <tr key={item.id}>
-                <td className="py-2 text-gray-800">{item.title}</td>
-                <td className="py-2 text-center text-gray-600">{item.quantity}</td>
-                <td className="py-2 text-right text-gray-600">{formatAmount(item.unit_price)}</td>
-                <td className="py-2 text-right font-medium text-gray-900">
+                <td className="py-2 text-sand-800">{item.title}</td>
+                <td className="py-2 text-center text-sand-600">{item.quantity}</td>
+                <td className="py-2 text-right text-sand-600">{formatAmount(item.unit_price)}</td>
+                <td className="py-2 text-right font-medium text-sand-900">
                   {formatAmount(item.unit_price * item.quantity)}
                 </td>
               </tr>
@@ -112,22 +112,22 @@ export default async function InvoicePage({ params }: Props) {
 
         {/* Totals */}
         <div className="ml-auto w-56 space-y-1 text-sm">
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-sand-600">
             <span>Subtotal</span>
             <span>{formatAmount(o.subtotal)}</span>
           </div>
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-sand-600">
             <span>Shipping</span>
             <span>{formatAmount(o.shipping_total)}</span>
           </div>
-          <div className="flex justify-between border-t border-gray-300 pt-1 font-semibold text-gray-900">
+          <div className="flex justify-between border-t border-sand-300 pt-1 font-semibold text-sand-900">
             <span>Total</span>
             <span>{formatAmount(o.total)}</span>
           </div>
-          <p className="pt-1 text-right text-xs text-gray-600">Paid via {o.payment_method}</p>
+          <p className="pt-1 text-right text-xs text-sand-600">Paid via {o.payment_method}</p>
         </div>
 
-        <p className="mt-10 border-t border-gray-200 pt-4 text-center text-xs text-gray-600">
+        <p className="mt-10 border-t border-sand-200 pt-4 text-center text-xs text-sand-600">
           All products are sold for laboratory research use only.
           Not for human or veterinary use.
         </p>

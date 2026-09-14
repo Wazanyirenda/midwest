@@ -6,13 +6,6 @@ import { supabaseAdmin } from "@/lib/supabase/admin"
 
 export type Role = "customer" | "staff" | "admin"
 
-/** What each role may reach. Admin is a superset of staff. */
-export const ROLE_LABELS: Record<Role, string> = {
-  customer: "Customer",
-  staff: "Staff — orders and inventory",
-  admin: "Admin — full access",
-}
-
 /**
  * Emergency bootstrap only. If roles are misconfigured (a bad migration, a role
  * cleared by mistake) an address here still gets in, so you can never lock

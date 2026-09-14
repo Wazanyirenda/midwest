@@ -4,6 +4,7 @@ import { formatPrice } from "@/lib/utils"
 import { SpecBadges } from "@/components/store/spec-badges"
 import { CardAddToCart } from "@/components/store/card-add-to-cart"
 import { WishlistButton } from "@/components/store/wishlist-button"
+import { categoryStyle } from "@/components/store/category-style"
 
 /** Shared by the featured grid and the catalog so both stay the same shape. */
 export const PRODUCT_GRID_CLS = "grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4"
@@ -13,6 +14,8 @@ export type CardProduct = {
   title: string
   /** Marketing category label for the chip above the name. */
   label: string | null
+  /** Category tag behind the label, used to tint the chip. */
+  labelSlug?: string | null
   /** Lowest variant price; null when the product has no variants. */
   priceCents: number | null
   variantCount: number
@@ -46,7 +49,7 @@ export function ProductCard({
       <Link href={href} className="block">
         <div className="relative mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-sand-200 bg-sand-100">
           {product.badge && (
-            <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-brand-600 px-2.5 py-1 font-mono text-2xs font-semibold uppercase tracking-wide text-white">
+            <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-accent-400 px-2.5 py-1 font-mono text-xs font-semibold font-semibold uppercase tracking-wide text-ink">
               {product.badge}
             </span>
           )}
@@ -75,7 +78,11 @@ export function ProductCard({
 
       {product.label && (
         <div className="mb-2 flex justify-center">
-          <span className="rounded-full bg-sand-100 px-2.5 py-1 font-mono text-2xs uppercase tracking-wide text-sand-600">
+          <span
+            className={`rounded-full border px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wide ${
+              categoryStyle(product.labelSlug).chip
+            }`}
+          >
             {product.label}
           </span>
         </div>

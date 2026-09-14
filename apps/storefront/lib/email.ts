@@ -313,7 +313,7 @@ export async function sendOrderConfirmationEmail(order: {
     </table>
     <p style="margin:24px 0 0;">
       <a href="${appUrl()}/account/orders/${order.id}"
-         style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+         style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
         View your order
       </a>
     </p>`
@@ -385,7 +385,7 @@ export async function sendWelcomeEmail(input: {
     ${copyToParagraphs(settings.emailWelcomeBody, vars)}
     <p style="margin:24px 0 0;">
       <a href="${appUrl()}/account"
-         style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+         style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
         Go to your account
       </a>
     </p>`
@@ -450,7 +450,7 @@ export async function sendOrderStatusEmail(order: {
              trackingUrl
                ? `<p style="margin:20px 0 0;">
                     <a href="${trackingUrl}"
-                       style="display:inline-block;background-color:#15803d;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+                       style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
                       Track your shipment
                     </a>
                   </p>`
@@ -459,7 +459,7 @@ export async function sendOrderStatusEmail(order: {
         : ""
     }
     <p style="margin:24px 0 0;font-size:13px;">
-      <a href="${appUrl()}/account/orders/${order.id}" style="color:#15803d;">View order details</a>
+      <a href="${appUrl()}/account/orders/${order.id}" style="color:#1d6ad4;">View order details</a>
     </p>`
 
   await send(
@@ -518,7 +518,7 @@ export async function sendAbandonedCartEmail(input: {
           ${formatAmount(input.total_cents)}</td></tr>
     </table>
     <p style="margin:24px 0 0;">
-      <a href="${appUrl()}/cart" style="background-color:#15803d;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">
+      <a href="${appUrl()}/cart" style="background-color:#1d6ad4;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">
         Return to cart
       </a>
     </p>`

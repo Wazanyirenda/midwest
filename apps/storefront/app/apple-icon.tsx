@@ -23,7 +23,7 @@ export default function AppleIcon() {
         }}
       >
         MP
-        <div style={{ width: 56, height: 6, background: "#15803d", borderRadius: 3 }} />
+        <div style={{ width: 56, height: 6, background: "#1d6ad4", borderRadius: 3 }} />
       </div>
     ),
     size

@@ -14,7 +14,7 @@ export function SpecBadges({ purity }: { purity: string }) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-md border border-sand-200 bg-sand-50 px-2 py-1 font-mono text-2xs uppercase tracking-wide text-sand-700">
+    <span className="rounded-md border border-sand-200 bg-sand-50 px-2 py-1 font-mono text-xs font-semibold uppercase tracking-wide text-sand-700">
       {children}
     </span>
   )

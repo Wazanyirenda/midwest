@@ -27,8 +27,8 @@ export default async function AddressesPage() {
   return (
     <main>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Saved Addresses</h1>
-        <p className="mt-1 text-gray-600">
+        <h1 className="text-3xl font-bold text-sand-900">Saved Addresses</h1>
+        <p className="mt-1 text-sand-600">
           Your default address pre-fills at checkout.
         </p>
       </div>

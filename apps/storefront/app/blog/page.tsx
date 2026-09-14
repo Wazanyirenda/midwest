@@ -19,12 +19,15 @@ const CATEGORY_FILTERS = [
   { value: "industry", label: "Industry" },
 ]
 
+// Two tones from the site palette rather than five unrelated hues — the tag
+// says which kind of article it is, it is not trying to be the loudest thing
+// on the card.
 const CATEGORY_COLORS: Record<string, string> = {
-  educational: "bg-blue-100 text-blue-700",
-  guide: "bg-green-100 text-green-700",
-  comparison: "bg-purple-100 text-purple-700",
-  transparency: "bg-amber-100 text-amber-700",
-  industry: "bg-gray-100 text-gray-700",
+  educational: "bg-brand-50 text-brand-800",
+  guide: "bg-sand-100 text-sand-800",
+  comparison: "bg-brand-50 text-brand-800",
+  transparency: "bg-sand-100 text-sand-800",
+  industry: "bg-sand-100 text-sand-700",
 }
 
 export default async function BlogPage({
@@ -43,8 +46,8 @@ export default async function BlogPage({
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-gray-900">Research Library</h1>
-        <p className="mt-3 max-w-2xl text-gray-600">
+        <h1 className="text-4xl font-bold text-sand-900">Research Library</h1>
+        <p className="mt-3 max-w-2xl text-sand-600">
           Educational articles and research overviews for scientists and researchers.
           All content is for informational purposes only.{" "}
           <strong>Not medical advice.</strong>
@@ -60,7 +63,7 @@ export default async function BlogPage({
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
               active === f.value
                 ? "border-brand-500 bg-brand-50 text-brand-800"
-                : "border-gray-200 text-gray-600 hover:border-brand-400 hover:text-brand-700"
+                : "border-sand-200 text-sand-600 hover:border-brand-400 hover:text-brand-700"
             }`}
           >
             {f.label}
@@ -69,7 +72,7 @@ export default async function BlogPage({
       </div>
 
       {posts.length === 0 && (
-        <p className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-sm text-gray-600">
+        <p className="rounded-xl border border-dashed border-sand-300 py-16 text-center text-sm text-sand-600">
           No articles in this category yet.
         </p>
       )}
@@ -80,30 +83,30 @@ export default async function BlogPage({
           <Link
             key={post.slug}
             href={`/blog/${post.slug}`}
-            className="group flex flex-col rounded-xl border border-gray-200 bg-white p-6
+            className="group flex flex-col rounded-xl border border-sand-200 bg-white p-6
               hover:border-brand-300 hover:shadow-sm transition-all"
           >
             {/* Category + reading time */}
             <div className="mb-3 flex items-center gap-2">
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[post.category] ?? "bg-gray-100 text-gray-700"}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[post.category] ?? "bg-sand-100 text-sand-700"}`}>
                 {getCategoryLabel(post.category)}
               </span>
-              <span className="text-xs text-gray-600">{post.readingTime} min read</span>
+              <span className="text-xs text-sand-600">{post.readingTime} min read</span>
             </div>
 
             {/* Title */}
-            <h2 className="text-lg font-semibold text-gray-900 group-hover:text-brand-700 transition-colors flex-1">
+            <h2 className="text-lg font-semibold text-sand-900 group-hover:text-brand-700 transition-colors flex-1">
               {post.title}
             </h2>
 
             {/* Excerpt */}
-            <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+            <p className="mt-2 text-sm text-sand-600 line-clamp-3">
               {post.excerpt}
             </p>
 
             {/* Date */}
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-gray-600">{formatDate(post.date)}</span>
+              <span className="text-xs text-sand-600">{formatDate(post.date)}</span>
               <span className="text-xs font-medium text-brand-600 group-hover:underline">
                 Read more →
               </span>

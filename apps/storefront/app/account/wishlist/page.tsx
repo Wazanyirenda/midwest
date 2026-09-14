@@ -23,8 +23,8 @@ export default async function WishlistPage() {
     <main>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Wishlist</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="text-3xl font-bold text-sand-900">Wishlist</h1>
+          <p className="mt-1 text-sand-600">
             Saved products — move them to your cart whenever you&apos;re ready.
           </p>
         </div>
@@ -34,12 +34,12 @@ export default async function WishlistPage() {
       </div>
 
       {wishlist.items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-24 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sand-300 bg-white py-24 text-center">
           <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <Heart size={22} strokeWidth={1.5} />
           </span>
-          <h2 className="text-lg font-semibold text-gray-700">Your wishlist is empty</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-lg font-semibold text-sand-700">Your wishlist is empty</h2>
+          <p className="mt-2 text-sm text-sand-600">
             Tap the heart on any product to save it here.
           </p>
           <Link
@@ -61,7 +61,7 @@ export default async function WishlistPage() {
             const inStock = product.variants.some((v) => v.inventory_quantity > 0)
 
             return (
-              <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div key={item.id} className="rounded-xl border border-sand-200 bg-white p-4 shadow-sm">
                 <Link href={`/products/${product.handle}`} className="group block">
                   <div className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-sand-200 bg-[#F0F5F0]">
                     {product.thumbnail ? (
@@ -78,22 +78,22 @@ export default async function WishlistPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-medium leading-tight text-gray-900 group-hover:text-brand-700">
+                  <p className="text-sm font-medium leading-tight text-sand-900 group-hover:text-brand-700">
                     {product.title}
                   </p>
                 </Link>
                 {savedVariant && (
-                  <p className="mt-0.5 text-xs text-gray-600">{savedVariant.title}</p>
+                  <p className="mt-0.5 text-xs text-sand-600">{savedVariant.title}</p>
                 )}
                 <div className="mt-1 mb-3 flex items-center justify-between">
                   {price != null && (
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="text-sm font-semibold text-sand-800">
                       {savedVariant ? "" : "From "}
                       {formatPrice(price)}
                     </p>
                   )}
                   {!inStock && (
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                    <span className="rounded-full bg-sand-100 px-2 py-0.5 text-xs text-sand-600">
                       Out of stock
                     </span>
                   )}

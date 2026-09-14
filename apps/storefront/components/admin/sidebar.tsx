@@ -9,8 +9,8 @@ import {
   ShoppingCart,
   Wallet,
   Mail,
-  Users,
   Settings,
+  ShieldCheck,
   HelpCircle,
   Printer,
   ExternalLink,
@@ -27,7 +27,7 @@ const NAV = [
   { href: "/admin/payments", label: "Payments", icon: Wallet, adminOnly: true },
   { href: "/admin/campaigns", label: "Campaigns", icon: Mail, adminOnly: true },
   { href: "/admin/faq", label: "FAQ", icon: HelpCircle, adminOnly: true },
-  { href: "/admin/team", label: "Team", icon: Users, adminOnly: true },
+  { href: "/admin/security", label: "Security", icon: ShieldCheck },
   { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ]
 

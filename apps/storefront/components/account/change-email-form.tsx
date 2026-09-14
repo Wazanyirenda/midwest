@@ -32,8 +32,8 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <p className="text-sm text-gray-600">
-        Current email: <span className="font-medium text-gray-700">{currentEmail}</span>
+      <p className="text-sm text-sand-600">
+        Current email: <span className="font-medium text-sand-700">{currentEmail}</span>
       </p>
       <Field label="New email address" error={errors.newEmail?.message}>
         <input {...register("newEmail")} type="email" className={inputCls} placeholder="new@email.com" />
@@ -53,7 +53,7 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        className="rounded-lg border border-sand-300 px-5 py-2.5 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50 disabled:opacity-50"
       >
         {isSubmitting ? "Sending…" : "Change email"}
       </button>

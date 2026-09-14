@@ -109,11 +109,11 @@ export function AddressForm({
         </Field>
       </div>
 
-      <label className="flex items-center gap-3 text-sm text-gray-700">
+      <label className="flex items-center gap-3 text-sm text-sand-700">
         <input
           {...register("is_default_shipping")}
           type="checkbox"
-          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          className="h-4 w-4 rounded border-sand-300 text-brand-600 focus:ring-brand-500"
         />
         Use as my default shipping address
       </label>
@@ -129,7 +129,7 @@ export function AddressForm({
         <button
           type="button"
           onClick={onDone}
-          className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          className="rounded-lg border border-sand-300 px-5 py-2.5 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50"
         >
           Cancel
         </button>

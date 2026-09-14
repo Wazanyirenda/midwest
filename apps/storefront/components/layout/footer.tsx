@@ -57,7 +57,7 @@ export async function Footer() {
               Third-party tested, batch-verified.
               North Dakota, USA.
             </p>
-            <div className="mt-4 space-y-1 font-mono text-2xs text-sand-400">
+            <div className="mt-4 space-y-1 font-mono text-xs text-sand-400">
               <p>≥98% purity by HPLC</p>
               <p>Mass spec verified</p>
               <p>COA available on request</p>
@@ -68,7 +68,7 @@ export async function Footer() {
           {/* Link cols */}
           {Object.entries(LINKS).map(([group, links]) => (
             <div key={group}>
-              <p className="font-mono text-2xs tracking-widest text-sand-400 uppercase mb-4">
+              <p className="font-mono text-xs font-semibold tracking-widest text-sand-400 uppercase mb-4">
                 {group}
               </p>
               <ul className="space-y-2.5">
@@ -93,7 +93,7 @@ export async function Footer() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           {showDisclaimerStrip && summary && (
             <div className="max-w-3xl">
-              <p className="font-mono text-2xs uppercase tracking-widest text-sand-400">
+              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-sand-400">
                 Research use only
               </p>
               <p className="mt-1.5 text-xs leading-relaxed text-sand-400">

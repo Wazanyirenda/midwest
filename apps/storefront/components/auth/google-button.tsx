@@ -12,7 +12,7 @@ export function GoogleButton({ next, label }: { next?: string; label?: string })
         type="button"
         disabled={pending}
         onClick={() => startTransition(() => signInWithGoogle(next).then(() => {}))}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-3 rounded-lg border border-sand-300 bg-white py-2.5 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50 disabled:opacity-50"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
@@ -24,9 +24,9 @@ export function GoogleButton({ next, label }: { next?: string; label?: string })
       </button>
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs uppercase tracking-wide text-gray-600">or</span>
-        <span className="h-px flex-1 bg-gray-200" />
+        <span className="h-px flex-1 bg-sand-200" />
+        <span className="text-xs uppercase tracking-wide text-sand-600">or</span>
+        <span className="h-px flex-1 bg-sand-200" />
       </div>
     </div>
   )

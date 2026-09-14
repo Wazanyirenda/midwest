@@ -30,10 +30,10 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-md">
+      <div className="rounded-xl border border-sand-200 bg-white p-8 text-center shadow-md">
         <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600"><MailCheck size={22} strokeWidth={1.5} /></span>
-        <p className="text-sm text-gray-600">{sent}</p>
-        <p className="mt-4 text-xs text-gray-600">
+        <p className="text-sm text-sand-600">{sent}</p>
+        <p className="mt-4 text-xs text-sand-600">
           <Link href="/sign-in" className="text-brand-700 hover:underline">
             Back to sign in
           </Link>
@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-md"
+      className="space-y-5 rounded-xl border border-sand-200 bg-white p-6 shadow-md"
     >
       <Field label="Email address" error={errors.email?.message}>
         <input
@@ -65,7 +65,7 @@ export function ForgotPasswordForm() {
         {isSubmitting ? "Sending…" : "Send reset link"}
       </button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-sand-600">
         <Link href="/sign-in" className="text-brand-700 hover:underline">
           Back to sign in
         </Link>

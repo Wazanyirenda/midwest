@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic"
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
   processing: "bg-blue-50 text-blue-700 ring-blue-200",
-  shipped: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  shipped: "bg-brand-50 text-brand-800 ring-indigo-200",
   delivered: "bg-brand-50 text-brand-800 ring-brand-200",
   canceled: "bg-red-50 text-red-700 ring-red-200",
 }

@@ -31,7 +31,7 @@ export function WishlistItemActions({ itemId }: { itemId: string }) {
         <button
           disabled={pending}
           onClick={() => run(() => removeWishlistItem(itemId))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-lg border border-sand-300 px-3 py-2 text-xs font-medium text-sand-600 transition-colors hover:bg-sand-50 disabled:opacity-50"
         >
           Remove
         </button>

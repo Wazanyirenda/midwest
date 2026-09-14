@@ -8,39 +8,55 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary green — single accent, used sparingly. 600 is the fill
-        // behind white button text, so it has to clear WCAG AA (4.5:1); the
-        // ramp is shifted one stop darker from Tailwind green to get there.
+        // Primary blue — the only colour that means "act": buttons and links.
+        // 600 carries white button text at 5.17:1, clear of the AA minimum.
         brand: {
-          50:  "#f0fdf4",
-          100: "#dcfce7",
-          200: "#bbf7d0",
-          400: "#4ade80",
-          500: "#22c55e",
-          600: "#15803d",
-          700: "#166534",
-          800: "#14532d",
-          900: "#052e16",
-          950: "#03190c",
+          50:  "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#1d6ad4",
+          700: "#17539f",
+          800: "#154277",
+          900: "#132f52",
+          950: "#0b1c32",
         },
-        // Warm neutrals — primary UI palette
+        // Cool neutrals. Named `sand` because every class in the app already
+        // says sand-*; the values are now slate so black/white/blue reads
+        // crisp instead of muddy.
         sand: {
-          50:  "#fafaf7",
-          100: "#f5f4f0",
-          200: "#ebe9e3",
-          300: "#d9d6cd",
-          400: "#b8b4a8",
-          500: "#8f8b7f",
-          600: "#6b6760",
-          700: "#514e48",
-          800: "#35332f",
-          900: "#1c1b18",
+          50:  "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a",
+        },
+        // Amber — blue's complement, used sparingly for merchandising badges
+        // and highlight figures. Never for actions; blue owns those.
+        accent: {
+          50:  "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde68a",
+          300: "#fcd34d",
+          400: "#fbbf24",
+          500: "#f0a020",
+          600: "#c97e12",
+          700: "#9a5f0e",
+          800: "#7a4b0d",
+          900: "#5c380a",
         },
         // Dark surface — hero, nav, callout sections
         ink: {
-          DEFAULT: "#0d0d0d",
-          soft:    "#1a1a1a",
-          muted:   "#2e2e2e",
+          DEFAULT: "#0a0a0a",
+          soft:    "#141414",
+          muted:   "#262626",
         },
       },
       fontFamily: {

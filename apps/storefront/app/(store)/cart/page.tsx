@@ -21,15 +21,15 @@ export default async function CartPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
+      <h1 className="text-3xl font-bold text-sand-900 mb-8">Your Cart</h1>
 
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <ShoppingCart size={26} strokeWidth={1.5} />
           </span>
-          <h2 className="text-xl font-semibold text-gray-700">Your cart is empty</h2>
-          <p className="mt-2 text-gray-600">Browse our catalog to add research peptides.</p>
+          <h2 className="text-xl font-semibold text-sand-700">Your cart is empty</h2>
+          <p className="mt-2 text-sand-600">Browse our catalog to add research peptides.</p>
           <Link
             href="/products"
             className="mt-6 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
@@ -54,10 +54,10 @@ export default async function CartPage() {
               return (
                 <div
                   key={item.id}
-                  className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4"
+                  className="flex gap-4 rounded-xl border border-sand-200 bg-white p-4"
                 >
                   {/* Thumbnail */}
-                  <div className="relative h-20 w-20 flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                  <div className="relative h-20 w-20 flex-shrink-0 rounded-lg bg-sand-100 overflow-hidden">
                     {thumbnail ? (
                       <Image
                         src={thumbnail}
@@ -67,7 +67,7 @@ export default async function CartPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-xs font-bold text-gray-300">
+                      <div className="flex h-full items-center justify-center text-xs font-bold text-sand-300">
                         {productTitle.slice(0, 3).toUpperCase()}
                       </div>
                     )}
@@ -77,12 +77,12 @@ export default async function CartPage() {
                   <div className="flex flex-1 flex-col gap-1">
                     <Link
                       href={`/products/${handle}`}
-                      className="font-semibold text-gray-900 hover:text-brand-700 transition-colors"
+                      className="font-semibold text-sand-900 hover:text-brand-700 transition-colors"
                     >
                       {productTitle}
                     </Link>
                     {variantTitle && (
-                      <p className="text-sm text-gray-600">{variantTitle}</p>
+                      <p className="text-sm text-sand-600">{variantTitle}</p>
                     )}
                     <p className="text-sm font-medium text-brand-600">
                       {formatCartTotal(item.unit_price)}
@@ -95,7 +95,7 @@ export default async function CartPage() {
                       <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
                         <button
                           type="submit"
-                          className="text-xs text-gray-600 hover:text-brand-600 transition-colors"
+                          className="text-xs text-sand-600 hover:text-brand-600 transition-colors"
                         >
                           Save for later
                         </button>
@@ -105,7 +105,7 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="text-xs text-gray-600 hover:text-red-500 transition-colors"
+                          className="text-xs text-sand-600 hover:text-red-500 transition-colors"
                         >
                           Remove
                         </button>
@@ -123,12 +123,12 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-300 text-gray-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
+                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
                         >
                           −
                         </button>
                       </form>
-                      <span className="w-6 text-center text-sm font-medium text-gray-900">
+                      <span className="w-6 text-center text-sm font-medium text-sand-900">
                         {item.quantity}
                       </span>
                       <form
@@ -141,7 +141,7 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-300 text-gray-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
+                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 hover:border-brand-400 hover:text-brand-600 transition-colors"
                         >
                           +
                         </button>
@@ -155,17 +155,17 @@ export default async function CartPage() {
 
           {/* Order summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-xl border border-gray-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+            <div className="sticky top-24 rounded-xl border border-sand-200 bg-white p-6">
+              <h2 className="text-lg font-semibold text-sand-900 mb-4">Order Summary</h2>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-sand-600">
                   <span>Subtotal</span>
                   <span>{formatCartTotal(cart?.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-sand-600">
                   <span>Shipping</span>
-                  <span className="text-gray-600">Calculated at checkout</span>
+                  <span className="text-sand-600">Calculated at checkout</span>
                 </div>
                 {(cart?.discount_total ?? 0) > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -175,7 +175,7 @@ export default async function CartPage() {
                 )}
               </div>
 
-              <div className="mt-4 border-t border-gray-200 pt-4 flex justify-between font-semibold text-gray-900">
+              <div className="mt-4 border-t border-sand-200 pt-4 flex justify-between font-semibold text-sand-900">
                 <span>Total</span>
                 <span>{formatCartTotal(cart?.total)}</span>
               </div>
@@ -189,12 +189,12 @@ export default async function CartPage() {
 
               <Link
                 href="/products"
-                className="mt-3 block w-full rounded-lg border border-gray-300 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="mt-3 block w-full rounded-lg border border-sand-300 py-3 text-center text-sm font-medium text-sand-700 hover:bg-sand-50 transition-colors"
               >
                 Continue Shopping
               </Link>
 
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-600">
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-sand-600">
                 <Lock size={12} strokeWidth={1.75} />
                 Secure card checkout
               </p>

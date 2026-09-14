@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation"
+import { getMfaState } from "@/lib/mfa"
 import { requireStaffOrRedirect } from "@/lib/admin"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { AdminSidebar } from "@/components/admin/sidebar"
@@ -16,6 +18,11 @@ export default async function AdminLayout({
   // requireAdmin()/requireStaff() — this is the layer that protects the
   // order/PII pages. Returns the role so the nav can hide admin-only items.
   const role = await requireStaffOrRedirect()
+
+  // Only bites for accounts that actually enrolled a factor — everyone else
+  // passes straight through, so turning MFA on can never lock the store out.
+  const { needsChallenge } = await getMfaState()
+  if (needsChallenge) redirect("/verify?next=/admin")
 
   // Badge count for the Inventory nav item. Compared per-variant against its
   // own reorder_point, so the number matches the alerts panel exactly.

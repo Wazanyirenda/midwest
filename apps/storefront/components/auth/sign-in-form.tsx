@@ -37,7 +37,7 @@ export function SignInForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-md"
+      className="space-y-5 rounded-xl border border-sand-200 bg-white p-6 shadow-md"
     >
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">

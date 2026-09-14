@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="flex min-h-[calc(100vh-9rem)] items-center justify-center bg-gray-50 px-4 py-12">
+    <main className="flex min-h-[calc(100vh-9rem)] items-center justify-center bg-sand-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-2xl font-bold text-sand-900">Reset your password</h1>
+          <p className="mt-1 text-sm text-sand-600">
             Enter your account email and we&apos;ll send you a reset link.
           </p>
         </div>

@@ -26,12 +26,12 @@ export function CommunicationPrefs({ optedIn }: { optedIn: boolean }) {
           checked={checked}
           disabled={pending}
           onChange={(e) => onToggle(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          className="mt-0.5 h-4 w-4 rounded border-sand-300 text-brand-600 focus:ring-brand-500"
         />
-        <span className="text-gray-700">
+        <span className="text-sand-700">
           <span className="font-medium">Marketing emails</span>
           <br />
-          <span className="text-gray-600">
+          <span className="text-sand-600">
             New products, restocks, and research updates. Order and shipping
             emails are always sent.
           </span>

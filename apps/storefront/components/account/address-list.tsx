@@ -26,7 +26,7 @@ function AddressCard({ address }: { address: Address }) {
   if (editing) {
     return (
       <div className="rounded-xl border border-brand-300 bg-white p-6 shadow-sm sm:col-span-2">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">Edit address</h3>
+        <h3 className="mb-4 text-sm font-semibold text-sand-900">Edit address</h3>
         <AddressForm
           addressId={address.id}
           defaults={{
@@ -48,7 +48,7 @@ function AddressCard({ address }: { address: Address }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-sand-200 bg-white p-6 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         {address.label && (
           <span className="rounded-full bg-sand-100 px-2.5 py-0.5 text-xs font-medium text-sand-700">
@@ -62,8 +62,8 @@ function AddressCard({ address }: { address: Address }) {
         )}
       </div>
 
-      <address className="space-y-0.5 text-sm not-italic text-gray-600">
-        <p className="font-medium text-gray-900">
+      <address className="space-y-0.5 text-sm not-italic text-sand-600">
+        <p className="font-medium text-sand-900">
           {address.first_name} {address.last_name}
         </p>
         <p>{address.address_1}</p>
@@ -86,7 +86,7 @@ function AddressCard({ address }: { address: Address }) {
             <button
               disabled={pending}
               onClick={() => startTransition(() => setDefaultShipping(address.id))}
-              className="font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50"
+              className="font-medium text-sand-600 hover:text-sand-900 disabled:opacity-50"
             >
               Set as default
             </button>
@@ -114,12 +114,12 @@ export function AddressList({ addresses }: { addresses: Address[] }) {
   return (
     <div className="space-y-6">
       {addresses.length === 0 && !adding && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sand-300 bg-white py-16 text-center">
           <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sand-50 text-sand-600">
             <MapPin size={22} strokeWidth={1.5} />
           </span>
-          <h2 className="text-lg font-semibold text-gray-700">No saved addresses</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-lg font-semibold text-sand-700">No saved addresses</h2>
+          <p className="mt-2 text-sm text-sand-600">
             Save an address to check out faster next time.
           </p>
         </div>
@@ -133,7 +133,7 @@ export function AddressList({ addresses }: { addresses: Address[] }) {
 
       {adding ? (
         <div className="rounded-xl border border-brand-300 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">New address</h3>
+          <h3 className="mb-4 text-sm font-semibold text-sand-900">New address</h3>
           <AddressForm onDone={() => setAdding(false)} />
         </div>
       ) : (

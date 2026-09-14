@@ -68,16 +68,16 @@ function StepIndicator({ current }: { current: number }) {
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold border-2 transition-colors
                   ${done ? "bg-brand-600 border-brand-600 text-white"
                     : active ? "border-brand-600 text-brand-600 bg-white"
-                    : "border-gray-300 text-gray-600 bg-white"}`}
+                    : "border-sand-300 text-sand-600 bg-white"}`}
               >
                 {done ? <Check size={14} strokeWidth={2.5} /> : num}
               </div>
-              <span className={`mt-1 hidden sm:block text-xs ${active ? "font-semibold text-gray-900" : "text-gray-600"}`}>
+              <span className={`mt-1 hidden sm:block text-xs ${active ? "font-semibold text-sand-900" : "text-sand-600"}`}>
                 {label}
               </span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 mt-[-1rem] mx-2 ${done ? "bg-brand-600" : "bg-gray-200"}`} />
+              <div className={`flex-1 h-0.5 mt-[-1rem] mx-2 ${done ? "bg-brand-600" : "bg-sand-200"}`} />
             )}
           </li>
         )
@@ -114,7 +114,7 @@ function Step1({
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-5">
-      <h2 className="text-lg font-semibold text-gray-900">Contact Information</h2>
+      <h2 className="text-lg font-semibold text-sand-900">Contact Information</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="First name" error={errors.firstName?.message}>
@@ -133,8 +133,8 @@ function Step1({
         <input {...register("phone")} type="tel" className={inputCls} placeholder="+1 (555) 000-0000" />
       </Field>
 
-      <hr className="border-gray-200" />
-      <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
+      <hr className="border-sand-200" />
+      <h2 className="text-lg font-semibold text-sand-900">Shipping Address</h2>
 
       <Field label="Address line 1" error={errors.address1?.message}>
         <input {...register("address1")} className={inputCls} placeholder="123 Research Drive" />
@@ -162,11 +162,11 @@ function Step1({
       </div>
 
       {isSignedIn && (
-        <label className="flex items-start gap-3 cursor-pointer text-sm text-gray-600">
+        <label className="flex items-start gap-3 cursor-pointer text-sm text-sand-600">
           <input
             {...register("saveAddress")}
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            className="mt-0.5 h-4 w-4 rounded border-sand-300 text-brand-600 focus:ring-brand-500"
           />
           <span>Save this address to my account for faster checkout</span>
         </label>
@@ -177,7 +177,7 @@ function Step1({
           <input
             {...register("ageConfirmed")}
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            className="mt-0.5 h-4 w-4 rounded border-sand-300 text-brand-600 focus:ring-brand-500"
           />
           <span className="text-sm text-amber-800">
             I confirm I am <strong>21 years of age or older</strong>
@@ -191,7 +191,7 @@ function Step1({
           <input
             {...register("termsAccepted")}
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            className="mt-0.5 h-4 w-4 rounded border-sand-300 text-brand-600 focus:ring-brand-500"
           />
           <span className="text-sm text-amber-800">
             I accept the{" "}
@@ -282,7 +282,7 @@ function StripePaymentForm({
       {error && <p className="text-sm text-red-500">{error}</p>}
       <div className="flex gap-3">
         <button type="button" onClick={onBack} disabled={submitting}
-          className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          className="flex-1 rounded-lg border border-sand-300 py-3 text-sm font-medium text-sand-700 hover:bg-sand-50 disabled:opacity-50 transition-colors">
           ← Back
         </button>
         <button type="submit" disabled={submitting || !stripe}
@@ -329,26 +329,26 @@ function ReviewStep({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900">Review Your Order</h2>
+      <h2 className="text-lg font-semibold text-sand-900">Review Your Order</h2>
 
-      <div className="rounded-lg border border-gray-200 p-4 space-y-1 text-sm">
-        <div className="font-medium text-gray-700 mb-2">Shipping to</div>
-        <p className="text-gray-900">{contact.firstName} {contact.lastName}</p>
-        <p className="text-gray-600">{contact.address1}{contact.address2 ? `, ${contact.address2}` : ""}</p>
-        <p className="text-gray-600">{contact.city}, {contact.state} {contact.zip}</p>
-        <p className="text-gray-600">{contact.email}</p>
+      <div className="rounded-lg border border-sand-200 p-4 space-y-1 text-sm">
+        <div className="font-medium text-sand-700 mb-2">Shipping to</div>
+        <p className="text-sand-900">{contact.firstName} {contact.lastName}</p>
+        <p className="text-sand-600">{contact.address1}{contact.address2 ? `, ${contact.address2}` : ""}</p>
+        <p className="text-sand-600">{contact.city}, {contact.state} {contact.zip}</p>
+        <p className="text-sand-600">{contact.email}</p>
       </div>
 
-      <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+      <div className="rounded-lg border border-sand-200 divide-y divide-sand-100">
         {cart.items.map((item) => (
           <div key={item.id} className="flex justify-between p-4 text-sm">
-            <span className="text-gray-800">{item.title ?? "Item"} × {item.quantity ?? 1}</span>
-            <span className="font-medium text-gray-900">
+            <span className="text-sand-800">{item.title ?? "Item"} × {item.quantity ?? 1}</span>
+            <span className="font-medium text-sand-900">
               {formatAmount((item.unit_price ?? 0) * (item.quantity ?? 1))}
             </span>
           </div>
         ))}
-        <div className="flex justify-between p-4 font-semibold text-gray-900">
+        <div className="flex justify-between p-4 font-semibold text-sand-900">
           <span>Total</span>
           <span>{formatAmount(cart.total)}</span>
         </div>
@@ -365,11 +365,11 @@ function ReviewStep({
       ) : (
         <div className="flex gap-3">
           <button onClick={onBack}
-            className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            className="flex-1 rounded-lg border border-sand-300 py-3 text-sm font-medium text-sand-700 hover:bg-sand-50 transition-colors">
             ← Back
           </button>
           <button disabled
-            className="flex-1 rounded-lg bg-gray-200 py-3 text-sm font-semibold text-gray-600 cursor-not-allowed">
+            className="flex-1 rounded-lg bg-sand-200 py-3 text-sm font-semibold text-sand-600 cursor-not-allowed">
             Payment not available
           </button>
         </div>

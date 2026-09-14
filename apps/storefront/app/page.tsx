@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
-import { HomeClient, type FeaturedProduct } from "@/components/home/home-client"
-import { listProducts, lowestVariantPrice, categoryLabel } from "@/lib/products"
+import { HomeClient, type FeaturedProduct, type PostTeaser } from "@/components/home/home-client"
+import { getAllPosts } from "@/lib/blog"
+import { listProducts, lowestVariantPrice, categoryLabel, categorySlug } from "@/lib/products"
 
 export const metadata: Metadata = {
   title: "Midwestern Peptides — Research Peptides",
@@ -24,6 +25,11 @@ const FEATURED = [
 export default async function HomePage() {
   const products = await listProducts()
 
+  // Newest three, so the section refreshes as the library grows.
+  const posts: PostTeaser[] = getAllPosts()
+    .slice(0, 3)
+    .map(({ slug, title, excerpt, readingTime }) => ({ slug, title, excerpt, readingTime }))
+
   const featured: FeaturedProduct[] = FEATURED.flatMap(({ handle, badge }) => {
     const p = products.find((prod) => prod.handle === handle)
     if (!p) return []
@@ -31,6 +37,7 @@ export default async function HomePage() {
       handle: p.handle,
       title: p.title,
       label: categoryLabel(p),
+      labelSlug: categorySlug(p),
       priceCents: lowestVariantPrice(p),
       variantCount: p.variants.length,
       thumbnail: p.thumbnail,
@@ -41,5 +48,5 @@ export default async function HomePage() {
     }]
   })
 
-  return <HomeClient featured={featured} />
+  return <HomeClient featured={featured} posts={posts} />
 }

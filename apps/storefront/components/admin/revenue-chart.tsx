@@ -4,7 +4,7 @@ import { useState } from "react"
 import type { DaySlice } from "@/lib/admin-stats"
 
 // Single series, so no legend — the heading names what's plotted.
-const BAR = "#15803d" // brand-600, validated ≥3:1 on the white card surface
+const BAR = "#1d6ad4" // brand-600, validated ≥3:1 on the white card surface
 const SURFACE = "#ffffff"
 const MAX_BAR_W = 24
 const GAP = 2 // surface gap between adjacent bars

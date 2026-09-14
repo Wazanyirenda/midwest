@@ -53,11 +53,11 @@ export function AvatarUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={pending}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-lg border border-sand-300 px-4 py-2 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50 disabled:opacity-50"
         >
           {pending ? "Uploading…" : avatarUrl ? "Change photo" : "Upload photo"}
         </button>
-        <p className="mt-1 text-xs text-gray-600">JPEG, PNG, or WebP — max 2 MB.</p>
+        <p className="mt-1 text-xs text-sand-600">JPEG, PNG, or WebP — max 2 MB.</p>
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
     </div>
