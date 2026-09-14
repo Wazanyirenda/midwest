@@ -1,19 +1,25 @@
 "use client"
 
+import { useState } from "react"
+import { CookiePreferences } from "@/components/layout/cookie-preferences"
 import { useConsent } from "@/components/providers/consent"
 
 /**
- * Withdrawing consent has to be as easy as giving it, so this clears the stored
- * answer and puts the banner back rather than sending the visitor to a settings
- * page. Hidden while the banner is already open — there is nothing to reopen.
+ * Footer entry point to cookie preferences. Hidden while the banner is still
+ * open — the choice is already on screen at that point.
  */
 export function CookieSettingsLink({ className = "" }: { className?: string }) {
-  const { consent, reset } = useConsent()
+  const { consent } = useConsent()
+  const [open, setOpen] = useState(false)
+
   if (consent === "unset") return null
 
   return (
-    <button type="button" onClick={reset} className={className}>
-      Cookie settings
-    </button>
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={className}>
+        Cookie settings
+      </button>
+      <CookiePreferences open={open} onClose={() => setOpen(false)} />
+    </>
   )
 }

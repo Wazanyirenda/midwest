@@ -19,3 +19,10 @@ export function googleAnalyticsId(): string | null {
   const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   return id && /^G-[A-Z0-9]{4,20}$/.test(id) ? id : null
 }
+
+/**
+ * Cookie name prefixes Google Analytics writes. Withdrawing consent has to
+ * remove what was already set — stopping the script only prevents new writes,
+ * and these carry a two-year expiry.
+ */
+export const ANALYTICS_COOKIE_PREFIXES = ["_ga", "_gid", "_gat"]

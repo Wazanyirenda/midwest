@@ -20,7 +20,7 @@ export type FeaturedProduct = CardProduct
 const HOW_IT_WORKS = [
   {
     title: "Independent testing",
-    description: "Every lot verified by an accredited external lab — HPLC purity, mass spec identity, and endotoxin testing on every batch. Not spot checks.",
+    description: "Every lot verified by an accredited external lab: HPLC purity, mass spec identity, and endotoxin testing on every batch. Not spot checks.",
     icon: FlaskConical,
   },
   {
@@ -34,8 +34,6 @@ const HOW_IT_WORKS = [
     icon: ClipboardCheck,
   },
 ]
-
-const TRUST_BADGES = ["HPLC Verified", "3rd Party Tested", "COA on Request", "≥98% Purity"]
 
 // Slugs match products.tags and CATEGORY_TAGS in lib/products.ts
 const CATEGORIES = [
@@ -96,13 +94,25 @@ function Hero() {
         className="absolute inset-0 -z-10"
         style={{ y: imageY, scale: imageScale }}
       >
+        {/* Art direction, not a resize: the phone gets a portrait crop with open
+            sky across the top, which is why the copy needs no blur and only a
+            light wash here. `sizes` keeps each viewport from fetching the crop
+            it will never display. */}
         <Image
-          src="/image.png"
-          alt="NAD+ 500mg research vial on a stone plate"
+          src="/mobile/image.png"
+          alt="NAD+ 500mg research vial beside a mountain lake"
           fill
           priority
-          sizes="100vw"
-          className="object-cover object-[38%_center] sm:object-[78%_center]"
+          sizes="(min-width: 640px) 1px, 100vw"
+          className="object-cover object-center sm:hidden"
+        />
+        <Image
+          src="/image.png"
+          alt="NAD+ 500mg research vial beside a mountain lake"
+          fill
+          priority
+          sizes="(max-width: 639px) 1px, 100vw"
+          className="hidden object-cover object-[78%_center] sm:block"
         />
       </motion.div>
 
@@ -111,11 +121,12 @@ function Hero() {
       {/* Capped at 30% — the plate's left half is already near-white, so the
           copy stays readable without veiling the vial and helix. */}
       <div
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-white/92 from-0% via-white/78 via-50% to-white/25 to-100%
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-white/25 from-0% via-white/10 via-45% to-transparent to-70%
                    sm:bg-gradient-to-r sm:from-white/30 sm:from-0% sm:via-white/20 sm:via-40% sm:to-transparent sm:to-65%"
       />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/25 from-0% via-white/12 via-45% to-transparent to-75% sm:hidden" />
 
-      <div className="mx-auto flex min-h-[30rem] max-w-7xl items-center px-4 py-16 sm:min-h-[38rem] sm:px-6 sm:py-28 lg:min-h-[42rem] lg:px-8">
+      <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start px-4 pb-16 pt-10 sm:min-h-[38rem] sm:items-center sm:px-6 sm:py-28 lg:min-h-[42rem] lg:px-8">
         <div className="max-w-2xl">
           <motion.p
             className="mb-5 max-w-xs font-mono text-2xs font-semibold uppercase leading-relaxed tracking-[0.14em] text-brand-800 sm:max-w-none sm:text-xs sm:tracking-[0.18em]"
@@ -138,32 +149,14 @@ function Hero() {
           </div>
 
           <motion.p
-            className="mb-8 max-w-lg text-base leading-relaxed text-sand-700 sm:text-lg"
+            className="mb-8 max-w-lg text-base font-bold leading-relaxed text-sand-900 sm:text-lg sm:font-medium"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.22 }}
           >
-            Every lot is tested by an independent US lab for HPLC purity and
-            mass-spec identity, with the certificate available on request.
-            Lyophilized and shipped cold-chain from North Dakota — for
-            laboratory research use only.
+            Every lot tested by an independent US lab for HPLC purity and
+            mass-spec identity. Certificates available on request.
           </motion.p>
-
-          <motion.div
-            className="mb-8 flex flex-wrap gap-2"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.3 }}
-          >
-            {TRUST_BADGES.map((badge) => (
-              <span
-                key={badge}
-                className="rounded-full border border-sand-300 bg-white px-3.5 py-1.5 font-mono text-xs font-medium tracking-wide text-sand-800 shadow-sm sm:bg-white/90 sm:backdrop-blur"
-              >
-                {badge}
-              </span>
-            ))}
-          </motion.div>
 
           <motion.div
             className="flex flex-wrap gap-3"
@@ -249,7 +242,7 @@ function CategoryGrid() {
         <Reveal direction="none">
           <SectionHeading
             title="Shop by research area"
-            description="Six categories covering repair, metabolic, cognitive and longevity research — every compound lab-tested and shipped with its certificate."
+            description="Six categories covering repair, metabolic, cognitive and longevity research. Every compound is lab-tested and shipped with its certificate."
             href="/products"
             cta="View All Products"
           />
@@ -300,7 +293,7 @@ function ResearchTeaser({ posts }: { posts: PostTeaser[] }) {
         <Reveal direction="none">
           <SectionHeading
             title="From the research library"
-            description="Plain-language write-ups of what the published literature actually says — mechanisms, handling, and how to read a certificate of analysis."
+            description="Plain-language write-ups of what the published literature actually says: mechanisms, handling, and how to read a certificate of analysis."
             href="/blog"
             cta="Read the Library"
           />
@@ -347,7 +340,7 @@ function ProductGrid({ products }: { products: FeaturedProduct[] }) {
         <Reveal direction="none">
           <SectionHeading
             title="Featured peptides"
-            description="Research compounds our customers reorder most — every lot HPLC-tested and shipped with its certificate of analysis."
+            description="Research compounds our customers reorder most. Every lot is HPLC-tested and shipped with its certificate of analysis."
             href="/products"
             cta="View All Products"
           />
@@ -410,7 +403,7 @@ function HowItWorks() {
         <Reveal direction="none">
           <SectionHeading
             title="Quality standards"
-            description="What every order goes through before it leaves the lab — independent testing, cold-chain handling, and a lot number you can trace."
+            description="What every order goes through before it leaves the lab: independent testing, cold-chain handling, and a lot number you can trace."
             href="/blog/understanding-certificates-of-analysis"
             cta="Understanding COAs"
           />
