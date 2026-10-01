@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: Props) {
             {/* COA / Batch info */}
             <div className="rounded-2xl border border-sand-200 bg-sand-50 p-5 text-sm space-y-2.5">
               {[
-                { label: "Purity",                  value: "≥ 98% (HPLC verified)" },
+                { label: "Purity",                  value: "≥ 99% (HPLC verified)" },
                 {
                   label: "Certificate of Analysis",
                   value: "Request by email",

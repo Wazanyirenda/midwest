@@ -50,9 +50,9 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* "98%+" not "≥98%" — the default OG font has no glyph for ≥ and
+          {/* "99%+" not "≥99%" — the default OG font has no glyph for ≥ and
               renders it as a tofu box. */}
-          {["HPLC Verified", "3rd Party Tested", "COA on Request", "98%+ Purity"].map(
+          {["HPLC Verified", "3rd Party Tested", "COA on Request", "99%+ Purity"].map(
             (badge) => (
               <div
                 key={badge}

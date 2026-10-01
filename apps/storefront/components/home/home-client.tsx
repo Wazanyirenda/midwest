@@ -213,7 +213,7 @@ function StatsBar() {
           {[
             { value: "Tested Before Release",  detail: "Every batch certified by an independent lab before shipping" },
             { value: "50+ Compounds",           detail: "Wide research catalog, restocked regularly" },
-            { value: "≥98% Purity, Every Batch", detail: "HPLC and mass spec verified on every lot" },
+            { value: "≥99% Purity, Every Batch", detail: "HPLC and mass spec verified on every lot" },
           ].map((item) => (
             <div key={item.value} className="px-6 py-5 first:pl-0">
               <p className="text-base font-bold text-sand-900">{item.value}</p>

@@ -96,7 +96,7 @@ export function ProductCard({
 
       {product.showSpecs && (
         <div className="mt-3 flex justify-center">
-          <SpecBadges purity="≥98% purity" />
+          <SpecBadges purity="≥99% purity" />
         </div>
       )}
 

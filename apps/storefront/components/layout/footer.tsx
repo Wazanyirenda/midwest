@@ -58,7 +58,7 @@ export async function Footer() {
               North Dakota, USA.
             </p>
             <div className="mt-4 space-y-1 font-mono text-xs text-sand-400">
-              <p>≥98% purity by HPLC</p>
+              <p>≥99% purity by HPLC</p>
               <p>Mass spec verified</p>
               <p>COA available on request</p>
             </div>

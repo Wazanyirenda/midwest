@@ -368,7 +368,7 @@ We do not spot-check. Each production lot is tested before it is made available,
 
 ## The analytical panel
 
-**High-performance liquid chromatography (HPLC).** This is the purity measurement. The sample is separated into its components and the target peptide's peak area is compared against total peak area. Our release threshold is 98 percent or above; typical batch results run higher. The chromatogram is included in the COA so you can assess peak shape and impurity profile yourself rather than relying on a single number.
+**High-performance liquid chromatography (HPLC).** This is the purity measurement. The sample is separated into its components and the target peptide's peak area is compared against total peak area. Our release threshold is 99 percent or above; typical batch results run higher. The chromatogram is included in the COA so you can assess peak shape and impurity profile yourself rather than relying on a single number.
 
 **Mass spectrometry.** This is the identity measurement. Observed molecular weight is compared against the theoretical weight calculated from the peptide's sequence. HPLC tells you how pure the material is; mass spectrometry tells you what it is. Both are required — neither substitutes for the other.
 

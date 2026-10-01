@@ -25,7 +25,8 @@ export async function Header() {
   return (
     <div className="sticky top-0 z-50">
       {/* Research-use notice */}
-      <div className="bg-ink text-sand-600 px-4 py-1 text-center font-mono text-2xs tracking-widest uppercase">
+      <div className="bg-ink px-4 py-1.5 text-center font-mono text-2xs uppercase tracking-widest text-sand-300">
+        For research purposes only &middot; Not for human or veterinary use
       </div>
 
       {/* Main nav */}
