@@ -39,7 +39,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   // Without this, Next cannot turn the generated opengraph-image into the
   // absolute URL that link unfurlers require.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://midwesternpeptides.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://www.midwesternpeptides.com"),
   title: {
     default: "Midwestern Peptides — Research Peptides",
     template: "%s — Midwestern Peptides",

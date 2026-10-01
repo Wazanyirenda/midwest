@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 
 function baseUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://midwesternpeptides.com"
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://www.midwesternpeptides.com"
   ).replace(/\/$/, "")
 }
 
