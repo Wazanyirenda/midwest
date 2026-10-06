@@ -11,6 +11,7 @@ export type CartItem = {
   variant: {
     id: string
     title: string
+    inventory_quantity: number
     product: {
       title: string
       handle: string
@@ -41,7 +42,7 @@ export async function getCartById(cartId: string): Promise<Cart | null> {
     .select(
       "id,email,shipping_address,shipping_cents,completed_at," +
         "items:cart_items(id,quantity," +
-        "variant:product_variants(id,title,price_cents," +
+        "variant:product_variants(id,title,price_cents,inventory_quantity," +
         "product:products(title,handle,thumbnail)))"
     )
     .eq("id", cartId)
@@ -62,6 +63,7 @@ export async function getCartById(cartId: string): Promise<Cart | null> {
         id: string
         title: string
         price_cents: number
+        inventory_quantity: number
         product: { title: string; handle: string; thumbnail: string | null }
       }
     }>
@@ -76,6 +78,7 @@ export async function getCartById(cartId: string): Promise<Cart | null> {
     variant: {
       id: i.variant.id,
       title: i.variant.title,
+      inventory_quantity: i.variant.inventory_quantity,
       product: i.variant.product,
     },
   }))

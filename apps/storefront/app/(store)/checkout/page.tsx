@@ -2,8 +2,10 @@ import { redirect } from "next/navigation"
 import { Lock, Package } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getUser, getProfile } from "@/lib/auth"
+import { getSiteSettings } from "@/lib/settings"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { CheckoutForm, type CheckoutDefaults } from "@/components/store/checkout-form"
+import { StockNote } from "@/components/store/stock-note"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -12,7 +14,11 @@ export const metadata: Metadata = {
 }
 
 export default async function CheckoutPage() {
-  const [cart, user] = await Promise.all([getCart(), getUser()])
+  const [cart, user, settings] = await Promise.all([
+    getCart(),
+    getUser(),
+    getSiteSettings(),
+  ])
 
   if (!cart || (cart.items?.length ?? 0) === 0) {
     redirect("/cart")
@@ -30,6 +36,7 @@ export default async function CheckoutPage() {
       title: variantTitle ? `${productTitle} — ${variantTitle}` : productTitle,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      available: item.variant?.inventory_quantity ?? 0,
     }
   })
 
@@ -86,10 +93,17 @@ export default async function CheckoutPage() {
             <div className="space-y-3 mb-4">
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-sand-700 flex-1 pr-2">
-                    {item.title}
-                    <span className="ml-1 text-sand-600">× {item.quantity}</span>
-                  </span>
+                  <div className="flex-1 pr-2">
+                    <span className="text-sand-700">
+                      {item.title}
+                      <span className="ml-1 text-sand-600">× {item.quantity}</span>
+                    </span>
+                    <StockNote
+                      available={item.available}
+                      threshold={settings.lowStockThreshold}
+                      className="mt-0.5"
+                    />
+                  </div>
                   <span className="font-medium text-sand-900">
                     {formatCartTotal((item.unit_price ?? 0) * (item.quantity ?? 1))}
                   </span>

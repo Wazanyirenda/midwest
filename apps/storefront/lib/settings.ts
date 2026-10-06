@@ -7,6 +7,8 @@ export type SiteSettings = {
   showApplePayBadge: boolean
   showAmazonPayBadge: boolean
   hideOutOfStock: boolean
+  /** Remaining units at or below which cart and checkout show the count. 0 = never. */
+  lowStockThreshold: number
   showAnnouncement: boolean
   announcementText: string
   showDisclaimerStrip: boolean
@@ -65,6 +67,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showApplePayBadge: false,
   showAmazonPayBadge: false,
   hideOutOfStock: false,
+  // Mirrors the seeded row in 20261006000030. The count it reveals is read live
+  // from inventory, so it states a fact rather than promising anything.
+  lowStockThreshold: 10,
   showAnnouncement: false,
   announcementText: "",
   showDisclaimerStrip: true,
@@ -118,6 +123,7 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   showApplePayBadge: "show_apple_pay_badge",
   showAmazonPayBadge: "show_amazon_pay_badge",
   hideOutOfStock: "hide_out_of_stock",
+  lowStockThreshold: "low_stock_threshold",
   showAnnouncement: "show_announcement",
   announcementText: "announcement_text",
   showDisclaimerStrip: "show_disclaimer_strip",

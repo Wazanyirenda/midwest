@@ -4,6 +4,7 @@ import { Lock, ShoppingCart, Trash2, BookmarkPlus, Minus, Plus } from "lucide-re
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getSiteSettings } from "@/lib/settings"
 import { PaymentBadges } from "@/components/store/payment-badges"
+import { StockNote } from "@/components/store/stock-note"
 import { clearCart, removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
 import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
@@ -63,6 +64,10 @@ export default async function CartPage() {
               const variantTitle = i.variant?.title ?? ""
               const handle = i.variant?.product?.handle ?? ""
               const thumbnail = i.variant?.product?.thumbnail
+              // Treat a line whose variant didn't come back as sold out rather
+              // than quietly claiming stock we can't account for.
+              const available = item.variant?.inventory_quantity ?? 0
+              const atStockLimit = item.quantity >= available
 
               return (
                 <div
@@ -100,6 +105,11 @@ export default async function CartPage() {
                     <p className="text-sm font-medium text-brand-600">
                       {formatCartTotal(item.unit_price)}
                     </p>
+                    <StockNote
+                      available={available}
+                      threshold={settings.lowStockThreshold}
+                      className="mt-0.5"
+                    />
                   </div>
 
                   {/* Qty + Remove */}
@@ -158,8 +168,13 @@ export default async function CartPage() {
                       >
                         <button
                           type="submit"
-                          aria-label="Increase quantity"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
+                          disabled={atStockLimit}
+                          aria-label={
+                            atStockLimit
+                              ? "No more stock available"
+                              : "Increase quantity"
+                          }
+                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sand-300 disabled:hover:text-sand-600"
                         >
                           <Plus size={14} strokeWidth={2} />
                         </button>

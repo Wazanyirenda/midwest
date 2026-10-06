@@ -32,7 +32,32 @@ export async function getOrCreateCartId(): Promise<string> {
   return data.id
 }
 
+/**
+ * Units of a variant a cart line may hold. Read here rather than taken from the
+ * caller: the cart's quantity stepper disabling itself at the limit is a hint to
+ * the customer, not a boundary a crafted request has to respect.
+ */
+async function availableStock(variantId: string): Promise<number> {
+  const { data } = await supabase
+    .from("product_variants")
+    .select("inventory_quantity")
+    .eq("id", variantId)
+    .maybeSingle()
+  return Math.max(0, data?.inventory_quantity ?? 0)
+}
+
 export async function addToCart(variantId: string, quantity = 1) {
+  const requested = Math.max(1, Math.floor(quantity))
+  const available = await availableStock(variantId)
+
+  // Nothing left to sell. The add button is already disabled on a current page,
+  // so this is a stale tab or a forged call — revalidate and add nothing, which
+  // refreshes the page into showing the item as unavailable.
+  if (available === 0) {
+    revalidatePath("/", "layout")
+    return
+  }
+
   const cartId = await getOrCreateCartId()
 
   const { data: existing } = await supabase
@@ -45,12 +70,16 @@ export async function addToCart(variantId: string, quantity = 1) {
   if (existing) {
     await supabase
       .from("cart_items")
-      .update({ quantity: existing.quantity + quantity })
+      .update({ quantity: Math.min(existing.quantity + requested, available) })
       .eq("id", existing.id)
   } else {
     const { error } = await supabase
       .from("cart_items")
-      .insert({ cart_id: cartId, variant_id: variantId, quantity })
+      .insert({
+        cart_id: cartId,
+        variant_id: variantId,
+        quantity: Math.min(requested, available),
+      })
     if (error) throw new Error(`Could not add to cart: ${error.message}`)
   }
 
@@ -67,11 +96,24 @@ export async function updateLineItemQuantity(
   if (quantity <= 0) {
     await supabase.from("cart_items").delete().eq("id", lineItemId).eq("cart_id", cartId)
   } else {
-    await supabase
+    // Scoped by cart id for the same reason removeLineItem is, and capped at
+    // stock so the quantity can't be raised past what we can actually ship.
+    const { data: line } = await supabase
       .from("cart_items")
-      .update({ quantity })
+      .select("variant_id")
       .eq("id", lineItemId)
       .eq("cart_id", cartId)
+      .maybeSingle()
+    if (!line) return
+
+    const capped = Math.min(Math.floor(quantity), await availableStock(line.variant_id))
+    if (capped > 0) {
+      await supabase
+        .from("cart_items")
+        .update({ quantity: capped })
+        .eq("id", lineItemId)
+        .eq("cart_id", cartId)
+    }
   }
 
   revalidatePath("/cart")

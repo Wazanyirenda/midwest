@@ -9,6 +9,7 @@ type Result = { error?: string }
 
 // Ranges for numeric settings — a setting still has to be sane.
 const NUMERIC_BOUNDS: Partial<Record<keyof SiteSettings, [number, number]>> = {
+  lowStockThreshold: [0, 999],
   abandonedCartDelayHours: [1, 72],
   abandonedCartWindowHours: [2, 336],
   marketingDailyCap: [1, 50000],

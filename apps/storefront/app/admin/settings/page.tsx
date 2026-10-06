@@ -122,6 +122,16 @@ export default async function AdminSettingsPage() {
           description="Removes products with no stock from listings instead of showing them as unavailable."
           initial={settings.hideOutOfStock}
         />
+        <SettingField
+          field="lowStockThreshold"
+          label="Tell customers when stock is low"
+          description="The cart and checkout show “Only 3 left in stock” once a variant has this many or fewer remaining. Set it to 0 to never show counts — sold-out lines are always flagged either way."
+          initial={settings.lowStockThreshold}
+          type="number"
+          min={0}
+          max={999}
+          suffix="units left"
+        />
       </Section>
 
       <Section
