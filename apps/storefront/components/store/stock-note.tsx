@@ -14,11 +14,14 @@ export function StockNote({
   threshold,
   className = "",
 }: {
-  available: number
+  /** Undefined when stock couldn't be read — render nothing rather than guess. */
+  available: number | undefined
   show: boolean
   threshold: number
   className?: string
 }) {
+  if (available === undefined) return null
+
   // Icon as well as colour, never colour alone.
   if (available <= 0) {
     return (

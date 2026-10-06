@@ -64,10 +64,11 @@ export default async function CartPage() {
               const variantTitle = i.variant?.title ?? ""
               const handle = i.variant?.product?.handle ?? ""
               const thumbnail = i.variant?.product?.thumbnail
-              // Treat a line whose variant didn't come back as sold out rather
-              // than quietly claiming stock we can't account for.
-              const available = item.variant?.inventory_quantity ?? 0
-              const atStockLimit = item.quantity >= available
+              // Undefined means we don't know the stock, which is not the same
+              // as knowing it's zero — say nothing and leave the stepper alone.
+              // updateLineItemQuantity re-reads inventory and is the real limit.
+              const available = item.variant?.inventory_quantity
+              const atStockLimit = available !== undefined && item.quantity >= available
 
               return (
                 <div

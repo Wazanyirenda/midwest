@@ -36,7 +36,7 @@ export default async function CheckoutPage() {
       title: variantTitle ? `${productTitle} — ${variantTitle}` : productTitle,
       quantity: item.quantity,
       unit_price: item.unit_price,
-      available: item.variant?.inventory_quantity ?? 0,
+      available: item.variant?.inventory_quantity,
     }
   })
 
