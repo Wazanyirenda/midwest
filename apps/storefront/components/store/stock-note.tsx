@@ -1,18 +1,21 @@
-import { AlertTriangle, XOctagon } from "lucide-react"
+import { AlertTriangle, Check, XOctagon } from "lucide-react"
 
 /**
  * Remaining-stock line for cart and checkout lines.
  *
- * Sold out always shows — it blocks the order, so the owner's threshold has no
- * say over it. A low count only appears at or below that threshold, so a
- * well-stocked line stays quiet instead of manufacturing urgency.
+ * Sold out always shows — it blocks the order, so neither setting has a say
+ * over it. Otherwise the count is stated outright when the owner has counts
+ * switched on, styled as urgent only at or below their low-stock threshold, so
+ * "2 left" reads differently from "40 left" without inventing scarcity.
  */
 export function StockNote({
   available,
+  show,
   threshold,
   className = "",
 }: {
   available: number
+  show: boolean
   threshold: number
   className?: string
 }) {
@@ -26,12 +29,22 @@ export function StockNote({
     )
   }
 
-  if (threshold <= 0 || available > threshold) return null
+  if (!show) return null
+
+  const low = threshold > 0 && available <= threshold
 
   return (
-    <p className={`flex items-center gap-1.5 text-xs font-medium text-amber-700 ${className}`}>
-      <AlertTriangle size={13} strokeWidth={2} className="shrink-0" />
-      Only {available} left in stock
+    <p
+      className={`flex items-center gap-1.5 text-xs ${
+        low ? "font-medium text-amber-700" : "text-sand-600"
+      } ${className}`}
+    >
+      {low ? (
+        <AlertTriangle size={13} strokeWidth={2} className="shrink-0" />
+      ) : (
+        <Check size={13} strokeWidth={2} className="shrink-0 text-brand-600" />
+      )}
+      {low ? `Only ${available} left in stock` : `${available} left in stock`}
     </p>
   )
 }

@@ -100,6 +100,7 @@ export default async function CheckoutPage() {
                     </span>
                     <StockNote
                       available={item.available}
+                      show={settings.showStockCounts}
                       threshold={settings.lowStockThreshold}
                       className="mt-0.5"
                     />

@@ -107,6 +107,7 @@ export default async function CartPage() {
                     </p>
                     <StockNote
                       available={available}
+                      show={settings.showStockCounts}
                       threshold={settings.lowStockThreshold}
                       className="mt-0.5"
                     />
