@@ -1,4 +1,5 @@
 import "server-only"
+import { cache } from "react"
 import { redirect } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import { createAuthClient } from "@/lib/supabase/server"
@@ -15,13 +16,18 @@ export type Profile = {
 
 // Validates the JWT against the auth server — never use getSession() for
 // authorization decisions.
-export async function getUser(): Promise<User | null> {
+//
+// Deduped per request via React cache(): that validation is a network call to
+// the auth server, and the header, the page and any action it runs all ask who
+// is signed in. Who that is cannot change part-way through one request, so a
+// single answer per request is both correct and much cheaper.
+export const getUser = cache(async (): Promise<User | null> => {
   const supabase = await createAuthClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   return user
-}
+})
 
 export async function requireUser(next?: string): Promise<User> {
   const user = await getUser()

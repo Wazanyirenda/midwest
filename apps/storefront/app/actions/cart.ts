@@ -104,22 +104,28 @@ export async function changeLineItemQuantity(
   delta: number
 ) {
   // Scoped by cart id for the same reason removeLineItem is: the id comes from
-  // the caller and must never touch another cart's lines.
-  const { data: line } = await supabase
+  // the caller and must never touch another cart's lines. The stock comes back
+  // on the same query — a second round trip to Supabase costs about as much as
+  // everything else this action does.
+  const { data } = await supabase
     .from("cart_items")
-    .select("quantity,variant_id")
+    .select("quantity,variant:product_variants(inventory_quantity)")
     .eq("id", lineItemId)
     .eq("cart_id", cartId)
     .maybeSingle()
-  if (!line) return
+  if (!data) return
 
+  const line = data as unknown as {
+    quantity: number
+    variant: { inventory_quantity: number } | null
+  }
   const wanted = line.quantity + Math.trunc(delta)
 
   if (wanted <= 0) {
     await supabase.from("cart_items").delete().eq("id", lineItemId).eq("cart_id", cartId)
   } else {
     // Capped at stock so the quantity can't be raised past what we can ship.
-    const capped = Math.min(wanted, await availableStock(line.variant_id))
+    const capped = Math.min(wanted, Math.max(0, line.variant?.inventory_quantity ?? 0))
     if (capped > 0 && capped !== line.quantity) {
       await supabase
         .from("cart_items")

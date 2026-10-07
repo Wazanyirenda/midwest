@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { getUser } from "@/lib/auth"
 import { supabaseAdmin as supabase } from "./supabase/admin"
@@ -98,7 +99,17 @@ export async function getCartById(cartId: string): Promise<Cart | null> {
   }
 }
 
-export async function getCart(): Promise<Cart | null> {
+/**
+ * Deduped per request via React cache(), like getSiteSettings. Rendering one
+ * cart page asks for the cart three times — root layout (the floating cart
+ * count), header, and the page itself — and each call is two round trips to
+ * Supabase. Without this they all pay separately.
+ *
+ * Only this cookie-based read is cached. getCartById stays uncached on purpose:
+ * the checkout actions call it either side of their own writes and need the
+ * second call to see them.
+ */
+export const getCart = cache(async (): Promise<Cart | null> => {
   const cartId = await getCartId()
   if (!cartId) return null
 
@@ -118,7 +129,7 @@ export async function getCart(): Promise<Cart | null> {
   }
 
   return getCartById(cartId)
-}
+})
 
 export function formatCartTotal(amount: number | null | undefined): string {
   if (amount == null) return "$0.00"
