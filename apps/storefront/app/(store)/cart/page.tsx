@@ -5,7 +5,7 @@ import { getCart, formatCartTotal } from "@/lib/cart"
 import { getSiteSettings } from "@/lib/settings"
 import { PaymentBadges } from "@/components/store/payment-badges"
 import { StockNote } from "@/components/store/stock-note"
-import { clearCart, removeLineItem, updateLineItemQuantity } from "@/app/actions/cart"
+import { changeLineItemQuantity, clearCart, removeLineItem } from "@/app/actions/cart"
 import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
 
@@ -92,8 +92,9 @@ export default async function CartPage() {
                     )}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex flex-1 flex-col gap-1">
+                  {/* Info + controls. One column so the controls wrap under the
+                      details on a phone instead of being squeezed beside them. */}
+                  <div className="flex min-w-0 flex-1 flex-col">
                     <Link
                       href={`/products/${handle}`}
                       className="font-semibold text-sand-900 hover:text-brand-700 transition-colors"
@@ -101,86 +102,73 @@ export default async function CartPage() {
                       {productTitle}
                     </Link>
                     {variantTitle && (
-                      <p className="text-sm text-sand-600">{variantTitle}</p>
+                      <p className="mt-0.5 text-sm text-sand-600">{variantTitle}</p>
                     )}
-                    <p className="text-sm font-medium text-brand-600">
+                    <p className="mt-0.5 text-sm font-medium text-brand-600">
                       {formatCartTotal(item.unit_price)}
                     </p>
                     <StockNote
                       available={available}
                       show={settings.showStockCounts}
                       threshold={settings.lowStockThreshold}
-                      className="mt-0.5"
+                      className="mt-1"
                     />
-                  </div>
 
-                  {/* Qty + Remove */}
-                  <div className="flex flex-col items-end justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
-                        <button
-                          type="submit"
-                          className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-brand-600"
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                      <div className="flex items-center gap-2">
+                        <form
+                          action={changeLineItemQuantity.bind(null, cart!.id, item.id, -1)}
                         >
-                          <BookmarkPlus size={14} strokeWidth={1.75} />
-                          Save for later
-                        </button>
-                      </form>
-                      <form
-                        action={removeLineItem.bind(null, cart!.id, item.id)}
-                      >
-                        <button
-                          type="submit"
-                          aria-label={`Remove ${item.variant.product.title} from cart`}
-                          className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-red-600"
+                          <button
+                            type="submit"
+                            aria-label="Decrease quantity"
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
+                          >
+                            <Minus size={14} strokeWidth={2} />
+                          </button>
+                        </form>
+                        <span className="w-6 text-center text-sm font-medium text-sand-900 tabular-nums">
+                          {item.quantity}
+                        </span>
+                        <form
+                          action={changeLineItemQuantity.bind(null, cart!.id, item.id, 1)}
                         >
-                          <Trash2 size={14} strokeWidth={1.75} />
-                          Remove
-                        </button>
-                      </form>
-                    </div>
+                          <button
+                            type="submit"
+                            disabled={atStockLimit}
+                            aria-label={
+                              atStockLimit
+                                ? "No more stock available"
+                                : "Increase quantity"
+                            }
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sand-300 disabled:hover:text-sand-600"
+                          >
+                            <Plus size={14} strokeWidth={2} />
+                          </button>
+                        </form>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <form
-                        action={updateLineItemQuantity.bind(
-                          null,
-                          cart!.id,
-                          item.id,
-                          (item.quantity ?? 1) - 1
-                        )}
-                      >
-                        <button
-                          type="submit"
-                          aria-label="Decrease quantity"
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
-                        >
-                          <Minus size={14} strokeWidth={2} />
-                        </button>
-                      </form>
-                      <span className="w-6 text-center text-sm font-medium text-sand-900">
-                        {item.quantity}
-                      </span>
-                      <form
-                        action={updateLineItemQuantity.bind(
-                          null,
-                          cart!.id,
-                          item.id,
-                          (item.quantity ?? 1) + 1
-                        )}
-                      >
-                        <button
-                          type="submit"
-                          disabled={atStockLimit}
-                          aria-label={
-                            atStockLimit
-                              ? "No more stock available"
-                              : "Increase quantity"
-                          }
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sand-300 disabled:hover:text-sand-600"
-                        >
-                          <Plus size={14} strokeWidth={2} />
-                        </button>
-                      </form>
+                      <div className="flex items-center gap-4">
+                        <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>
+                          <button
+                            type="submit"
+                            className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-brand-600"
+                          >
+                            <BookmarkPlus size={14} strokeWidth={1.75} />
+                            Save for later
+                          </button>
+                        </form>
+                        <form action={removeLineItem.bind(null, cart!.id, item.id)}>
+                          <button
+                            type="submit"
+                            aria-label={`Remove ${productTitle} from cart`}
+                            className="inline-flex items-center gap-1.5 text-xs text-sand-600 transition-colors hover:text-red-600"
+                          >
+                            <Trash2 size={14} strokeWidth={1.75} />
+                            Remove
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   </div>
                 </div>

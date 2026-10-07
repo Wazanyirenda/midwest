@@ -88,26 +88,39 @@ export async function addToCart(variantId: string, quantity = 1) {
   revalidatePath("/", "layout")
 }
 
-export async function updateLineItemQuantity(
+/**
+ * Moves a line's quantity by `delta`, relative to whatever is in the database
+ * right now.
+ *
+ * Deliberately relative rather than an absolute target. A server action bound
+ * in a server component captures its arguments when the page renders, so an
+ * absolute quantity is a snapshot: tap "+" twice before the re-render lands and
+ * the second tap re-sends the first tap's number, leaving the count apparently
+ * frozen. A delta is correct no matter how stale the page that sent it is.
+ */
+export async function changeLineItemQuantity(
   cartId: string,
   lineItemId: string,
-  quantity: number
+  delta: number
 ) {
-  if (quantity <= 0) {
+  // Scoped by cart id for the same reason removeLineItem is: the id comes from
+  // the caller and must never touch another cart's lines.
+  const { data: line } = await supabase
+    .from("cart_items")
+    .select("quantity,variant_id")
+    .eq("id", lineItemId)
+    .eq("cart_id", cartId)
+    .maybeSingle()
+  if (!line) return
+
+  const wanted = line.quantity + Math.trunc(delta)
+
+  if (wanted <= 0) {
     await supabase.from("cart_items").delete().eq("id", lineItemId).eq("cart_id", cartId)
   } else {
-    // Scoped by cart id for the same reason removeLineItem is, and capped at
-    // stock so the quantity can't be raised past what we can actually ship.
-    const { data: line } = await supabase
-      .from("cart_items")
-      .select("variant_id")
-      .eq("id", lineItemId)
-      .eq("cart_id", cartId)
-      .maybeSingle()
-    if (!line) return
-
-    const capped = Math.min(Math.floor(quantity), await availableStock(line.variant_id))
-    if (capped > 0) {
+    // Capped at stock so the quantity can't be raised past what we can ship.
+    const capped = Math.min(wanted, await availableStock(line.variant_id))
+    if (capped > 0 && capped !== line.quantity) {
       await supabase
         .from("cart_items")
         .update({ quantity: capped })
