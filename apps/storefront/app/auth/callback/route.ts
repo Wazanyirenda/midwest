@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import type { NextRequest } from "next/server"
 import { createAuthClient } from "@/lib/supabase/server"
 import { mergeCartOnSignIn } from "@/lib/cart-merge"
+import { safeNextPath } from "@/lib/safe-next"
 
 // OAuth landing point (Google). Supabase redirects here with ?code=...,
 // which we exchange for a session using the PKCE verifier cookie set when
@@ -9,8 +10,7 @@ import { mergeCartOnSignIn } from "@/lib/cart-merge"
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
-  const nextParam = searchParams.get("next")
-  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/account"
+  const next = safeNextPath(searchParams.get("next"))
 
   // The user declined consent, or the provider returned an error.
   if (searchParams.get("error") || !code) {

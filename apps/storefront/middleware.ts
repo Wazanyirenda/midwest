@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
+import { safeNextPath } from "@/lib/safe-next"
 
 const PROTECTED_PREFIXES = ["/account", "/checkout", "/admin"]
 
@@ -43,14 +44,24 @@ function redirectWithCookies(url: URL, sessionResponse: NextResponse) {
   return redirect
 }
 
+// Where sign-in should send the user back to. Keeps the query string: a crypto
+// payer returns from the NOWPayments page to /checkout/success?order_id=…,
+// often past the idle timeout, and without the param sees "No order found".
+// Validated even though it is our own URL — a request for //evil.com has that
+// as its pathname.
+function returnPath(request: NextRequest): string {
+  return safeNextPath(request.nextUrl.pathname + request.nextUrl.search, "/")
+}
+
 /** Clear every Supabase auth cookie so the session is genuinely gone. */
 function signOutResponse(request: NextRequest, reason: string) {
   const url = request.nextUrl.clone()
   url.pathname = "/sign-in"
   url.search = ""
   url.searchParams.set("reason", reason)
-  if (request.nextUrl.pathname !== "/") {
-    url.searchParams.set("next", request.nextUrl.pathname)
+  const next = returnPath(request)
+  if (next !== "/") {
+    url.searchParams.set("next", next)
   }
 
   const response = NextResponse.redirect(url)
@@ -74,6 +85,10 @@ export async function middleware(request: NextRequest) {
   const now = Date.now()
 
   // ─── Idle timeout ──────────────────────────────────────────────────────────
+  // No route is exempt, /checkout/success included: an exemption would let a
+  // stale session on a shared browser be revived by opening that URL, and the
+  // refreshed cookie below would then cover every other route too. Returning
+  // there after sign-in is handled by returnPath instead.
   if (user) {
     const lastSeen = Number(request.cookies.get(ACTIVITY_COOKIE)?.value ?? 0)
 
@@ -97,7 +112,7 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = "/sign-in"
     url.search = ""
-    url.searchParams.set("next", path)
+    url.searchParams.set("next", returnPath(request))
     return redirectWithCookies(url, response)
   }
 

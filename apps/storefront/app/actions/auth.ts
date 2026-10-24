@@ -10,6 +10,7 @@ import { CART_COOKIE } from "@/lib/cart"
 import { rateLimit, rateLimitMessage } from "@/lib/rate-limit"
 import { checkPassword } from "@/lib/password"
 import { sendWelcomeEmail } from "@/lib/email"
+import { safeNextPath } from "@/lib/safe-next"
 
 // Auth actions return { error } for inline form errors instead of throwing;
 // redirect() is always called OUTSIDE any try/catch (it throws NEXT_REDIRECT).
@@ -48,9 +49,7 @@ export async function signIn(data: {
   await mergeCartOnSignIn(result.user.id)
   revalidatePath("/", "layout")
 
-  // Only allow internal redirect targets.
-  const next = data.next && data.next.startsWith("/") ? data.next : "/account"
-  redirect(next)
+  redirect(safeNextPath(data.next))
 }
 
 export async function signUp(data: {
@@ -109,7 +108,7 @@ export async function signUp(data: {
 // /auth/callback needs to exchange the code for a session.
 export async function signInWithGoogle(next?: string): Promise<ActionResult> {
   const supabase = await createAuthClient()
-  const target = next && next.startsWith("/") ? next : "/account"
+  const target = safeNextPath(next)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
