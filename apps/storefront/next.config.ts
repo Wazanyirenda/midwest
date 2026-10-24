@@ -1,5 +1,15 @@
 import type { NextConfig } from "next"
 
+function hostOf(url: string | undefined): string | null {
+  try {
+    return url ? new URL(url).hostname : null
+  } catch {
+    return null
+  }
+}
+
+const supabaseHost = hostOf(process.env.NEXT_PUBLIC_SUPABASE_URL)
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -8,12 +18,12 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-    ],
+    // This project's storage only. A *.supabase.co wildcard would let anyone
+    // with a free Supabase project feed files to the optimizer — the path the
+    // sharp/librsvg RCE (CVE-2026-96889) is reached through.
+    remotePatterns: supabaseHost
+      ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
+      : [],
     // Product masters are 2560px JPEGs; the optimizer serves them re-encoded at
     // the size actually rendered. AVIF first, WebP for browsers without it.
     formats: ["image/avif", "image/webp"],

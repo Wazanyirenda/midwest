@@ -1,5 +1,5 @@
 import "server-only"
-import nodemailer from "nodemailer"
+import nodemailer, { type Transporter } from "nodemailer"
 import { Resend } from "resend"
 
 // How mail actually leaves the building. Which transport is used is
@@ -97,9 +97,9 @@ export function transportStatus(prefer?: "resend" | "smtp"): {
 
 // One pooled connection per mailbox — reconnecting for every message is slow,
 // and mailbox hosts rate-limit new sessions.
-const cachedSmtp = new Map<Mailbox, nodemailer.Transporter>()
+const cachedSmtp = new Map<Mailbox, Transporter>()
 
-function smtpTransport(mailbox: Mailbox): nodemailer.Transporter {
+function smtpTransport(mailbox: Mailbox): Transporter {
   const cached = cachedSmtp.get(mailbox)
   if (cached) return cached
 

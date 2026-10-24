@@ -10,3 +10,9 @@ allowBuilds:
   protobufjs: true
   sharp: true
   unrs-resolver: true
+overrides:
+  # Next's own ranges still admit the vulnerable releases: sharp <0.35.5
+  # (librsvg RCE, CVE-2026-96889) and its pinned postcss 8.4.31 (source map
+  # path traversal). Drop these once Next's ranges exclude them.
+  "next>sharp": "^0.35.5"
+  "next>postcss": "^8.5.23"
