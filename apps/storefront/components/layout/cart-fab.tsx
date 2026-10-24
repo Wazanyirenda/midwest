@@ -30,7 +30,7 @@ export function CartFab({ count }: { count: number }) {
     <Link
       href="/cart"
       aria-label={`Cart — ${count} ${count === 1 ? "item" : "items"}`}
-      className={`fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-900/25 transition-all hover:bg-brand-700 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:right-6 ${
+      className={`fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-900/25 transition-all hover:bg-brand-700 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:right-6 print:hidden ${
         bannerShowing ? "bottom-40 sm:bottom-28" : "bottom-6"
       }`}
     >

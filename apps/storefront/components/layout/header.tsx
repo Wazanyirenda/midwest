@@ -23,7 +23,7 @@ export async function Header() {
   }
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className="sticky top-0 z-50 print:hidden">
       {/* Research-use notice */}
       <div className="bg-ink px-4 py-1.5 text-center font-mono text-2xs uppercase tracking-widest text-sand-300">
         For research purposes only

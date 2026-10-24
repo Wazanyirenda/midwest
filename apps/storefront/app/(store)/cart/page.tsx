@@ -1,11 +1,12 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Lock, ShoppingCart, Trash2, BookmarkPlus, Minus, Plus } from "lucide-react"
+import { Lock, ShoppingCart, Trash2, BookmarkPlus } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getSiteSettings } from "@/lib/settings"
 import { PaymentBadges } from "@/components/store/payment-badges"
 import { StockNote } from "@/components/store/stock-note"
-import { changeLineItemQuantity, clearCart, removeLineItem } from "@/app/actions/cart"
+import { QuantityStepper } from "@/components/store/quantity-stepper"
+import { clearCart, removeLineItem } from "@/app/actions/cart"
 import { saveCartItemForLater } from "@/app/actions/wishlist"
 import type { Metadata } from "next"
 
@@ -66,9 +67,8 @@ export default async function CartPage() {
               const thumbnail = i.variant?.product?.thumbnail
               // Undefined means we don't know the stock, which is not the same
               // as knowing it's zero — say nothing and leave the stepper alone.
-              // updateLineItemQuantity re-reads inventory and is the real limit.
+              // changeLineItemQuantity re-reads inventory and is the real limit.
               const available = item.variant?.inventory_quantity
-              const atStockLimit = available !== undefined && item.quantity >= available
 
               return (
                 <div
@@ -115,38 +115,13 @@ export default async function CartPage() {
                     />
 
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                      <div className="flex items-center gap-2">
-                        <form
-                          action={changeLineItemQuantity.bind(null, cart!.id, item.id, -1)}
-                        >
-                          <button
-                            type="submit"
-                            aria-label="Decrease quantity"
-                            className="flex h-8 w-8 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600"
-                          >
-                            <Minus size={14} strokeWidth={2} />
-                          </button>
-                        </form>
-                        <span className="w-6 text-center text-sm font-medium text-sand-900 tabular-nums">
-                          {item.quantity}
-                        </span>
-                        <form
-                          action={changeLineItemQuantity.bind(null, cart!.id, item.id, 1)}
-                        >
-                          <button
-                            type="submit"
-                            disabled={atStockLimit}
-                            aria-label={
-                              atStockLimit
-                                ? "No more stock available"
-                                : "Increase quantity"
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-md border border-sand-300 text-sand-600 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sand-300 disabled:hover:text-sand-600"
-                          >
-                            <Plus size={14} strokeWidth={2} />
-                          </button>
-                        </form>
-                      </div>
+                      <QuantityStepper
+                        cartId={cart!.id}
+                        lineItemId={item.id}
+                        quantity={item.quantity}
+                        available={available}
+                        productTitle={productTitle}
+                      />
 
                       <div className="flex items-center gap-4">
                         <form action={saveCartItemForLater.bind(null, cart!.id, item.id)}>

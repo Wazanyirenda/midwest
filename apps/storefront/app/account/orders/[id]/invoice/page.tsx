@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { requireUser } from "@/lib/auth"
-import { getOrderById } from "@/lib/orders"
+import { getOrderById, hasReceipt } from "@/lib/orders"
 import { PrintButton } from "@/components/store/print-button"
 
 export const metadata: Metadata = {
@@ -50,7 +50,17 @@ export default async function InvoicePage({ params }: Props) {
         >
           ← Back to order
         </Link>
-        <PrintButton />
+        <div className="flex flex-wrap items-center gap-3">
+          {hasReceipt(o.db_status) && (
+            <a
+              href={`/account/orders/${o.id}/receipt`}
+              className="rounded-lg border border-sand-300 px-5 py-2.5 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50"
+            >
+              Download PDF
+            </a>
+          )}
+          <PrintButton />
+        </div>
       </div>
 
       <div className="rounded-xl border border-sand-200 p-8 print:border-0 print:p-0">

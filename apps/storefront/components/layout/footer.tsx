@@ -35,7 +35,7 @@ export async function Footer() {
   const summary = disclaimerBody.split(/\n{2,}/)[0]?.trim() ?? ""
 
   return (
-    <footer className="bg-ink text-sand-400">
+    <footer className="bg-ink text-sand-400 print:hidden">
 
       {/* Link grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">

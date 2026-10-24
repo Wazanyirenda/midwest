@@ -66,6 +66,7 @@ export function PaymentStatus({
         title="Order confirmed"
         body="Payment received. You'll get a confirmation email shortly."
         orderId={orderId}
+        receipt
       />
     )
   }
@@ -113,12 +114,15 @@ function Shell({
   title,
   body,
   orderId,
+  receipt = false,
 }: {
   icon: React.ReactNode
   tone: string
   title: string
   body: string
   orderId: string
+  /** Only once paid — the receipt pages refuse an unpaid order anyway. */
+  receipt?: boolean
 }) {
   return (
     <>
@@ -130,10 +134,31 @@ function Shell({
       <h1 className="text-3xl font-bold text-sand-900">{title}</h1>
       <p className="mx-auto mt-3 max-w-md text-sand-600">{body}</p>
 
-      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+        {receipt && (
+          <>
+            <Link
+              href={`/account/orders/${orderId}/invoice`}
+              className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+            >
+              Print receipt
+            </Link>
+            {/* A plain anchor: this is a file download, not a page to prefetch. */}
+            <a
+              href={`/account/orders/${orderId}/receipt`}
+              className="rounded-lg border border-sand-300 px-6 py-3 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50"
+            >
+              Download PDF
+            </a>
+          </>
+        )}
         <Link
           href={`/account/orders/${orderId}`}
-          className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+          className={
+            receipt
+              ? "rounded-lg border border-sand-300 px-6 py-3 text-sm font-medium text-sand-700 transition-colors hover:bg-sand-50"
+              : "rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+          }
         >
           View order details
         </Link>

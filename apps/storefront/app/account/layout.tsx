@@ -26,7 +26,7 @@ export default async function AccountLayout({
     <div className="min-h-[70vh] bg-sand-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-8 lg:flex-row">
-          <aside className="lg:w-56 lg:shrink-0">
+          <aside className="lg:w-56 lg:shrink-0 print:hidden">
             {/* Identity card */}
             <div className="mb-5 flex items-center gap-3 rounded-xl border border-sand-200 bg-white p-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sand-200 bg-brand-50 text-sm font-semibold text-brand-800">

@@ -10,7 +10,7 @@ export async function AnnouncementBanner() {
   if (!showAnnouncement || !text) return null
 
   return (
-    <div className="bg-brand-700 px-4 py-2 text-center">
+    <div className="bg-brand-700 px-4 py-2 text-center print:hidden">
       <p className="text-xs font-medium text-white sm:text-sm">{text}</p>
     </div>
   )

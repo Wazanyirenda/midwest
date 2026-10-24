@@ -1,6 +1,7 @@
 import "server-only"
 import type { User } from "@supabase/supabase-js"
 import { supabaseAdmin } from "@/lib/supabase/admin"
+import type { ReceiptOrder } from "@/lib/receipt-pdf"
 
 export type OrderListItem = {
   id: string
@@ -208,6 +209,49 @@ export async function getOrderById(
       quantity: i.quantity,
       unit_price: i.unit_price_cents,
       variant_id: i.variant_id,
+    })),
+  }
+}
+
+// A receipt is proof money was taken. A pending order has nothing to show yet,
+// and a canceled or refunded one would be proof of a sale that did not stand.
+const RECEIPT_STATUSES = new Set(["paid", "shipped", "delivered"])
+
+export function hasReceipt(dbStatus: string): boolean {
+  return RECEIPT_STATUSES.has(dbStatus)
+}
+
+/** The PDF receipt's view of an order — its owner only, and only once paid. */
+export async function getReceiptForUser(
+  id: string,
+  user: User
+): Promise<ReceiptOrder | null> {
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select(ORDER_FIELDS)
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error || !data) return null
+
+  const order = data as unknown as OrderRow
+  if (!ownsOrder(order, user) || !hasReceipt(order.status)) return null
+
+  return {
+    displayId: order.display_id,
+    createdAt: order.created_at,
+    email: order.email,
+    status: order.status,
+    paymentProvider: order.payment_provider,
+    subtotalCents: order.subtotal_cents,
+    shippingCents: order.shipping_cents,
+    totalCents: order.total_cents,
+    shippingAddress: order.shipping_address,
+    items: order.items.map((i) => ({
+      productTitle: i.product_title,
+      variantTitle: i.variant_title,
+      quantity: i.quantity,
+      unitPriceCents: i.unit_price_cents,
     })),
   }
 }
