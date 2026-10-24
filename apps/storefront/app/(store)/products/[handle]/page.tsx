@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import Image from "next/image"
@@ -13,9 +14,9 @@ type Props = {
   params: Promise<{ handle: string }>
 }
 
-async function getProduct(handle: string) {
-  return getProductByHandle(handle)
-}
+// Deduped per request: generateMetadata and the page both need the product,
+// and without cache() each pays its own Supabase round trip.
+const getProduct = cache((handle: string) => getProductByHandle(handle))
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params

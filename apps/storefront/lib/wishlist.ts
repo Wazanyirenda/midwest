@@ -65,20 +65,17 @@ export async function getWishlistWithItems(userId: string): Promise<Wishlist> {
   }
 }
 
-// Cheap lookup for rendering heart state on product grids.
+// Cheap lookup for rendering heart state on product grids. One query with the
+// items embedded, not two in sequence: it runs on every product page render for
+// a signed-in visitor.
 export async function getWishlistedProductIds(userId: string): Promise<Set<string>> {
-  const { data: wishlist } = await supabaseAdmin
+  const { data } = await supabaseAdmin
     .from("wishlists")
-    .select("id")
+    .select("items:wishlist_items(product_id)")
     .eq("user_id", userId)
     .maybeSingle()
-  if (!wishlist) return new Set()
-
-  const { data } = await supabaseAdmin
-    .from("wishlist_items")
-    .select("product_id")
-    .eq("wishlist_id", wishlist.id)
-  return new Set((data ?? []).map((r) => r.product_id as string))
+  const items = (data?.items ?? []) as Array<{ product_id: string }>
+  return new Set(items.map((r) => r.product_id))
 }
 
 // Public share page: read-only, published products only.

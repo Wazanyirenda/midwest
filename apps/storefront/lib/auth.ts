@@ -37,7 +37,10 @@ export async function requireUser(next?: string): Promise<User> {
   return user
 }
 
-export async function getProfile(userId: string): Promise<Profile | null> {
+// Deduped per request: the header asks for the profile on every page, and
+// checkout and the account area ask again for the same row. No action reads it
+// either side of its own write, so one answer per request is safe.
+export const getProfile = cache(async (userId: string): Promise<Profile | null> => {
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("id,first_name,last_name,phone,avatar_url,marketing_email_opt_in")
@@ -48,4 +51,4 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     return null
   }
   return data as Profile | null
-}
+})

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
-import { CART_COOKIE } from "@/lib/cart"
+import { CART_COOKIE, getCartId } from "@/lib/cart"
 import { getUser } from "@/lib/auth"
 
 export async function getOrCreateCartId(): Promise<string> {
@@ -48,7 +48,23 @@ async function availableStock(variantId: string): Promise<number> {
 
 export async function addToCart(variantId: string, quantity = 1) {
   const requested = Math.max(1, Math.floor(quantity))
-  const available = await availableStock(variantId)
+
+  // The stock read and the existing-line lookup don't depend on each other, so
+  // they go out together rather than as two sequential Supabase round trips. A
+  // visitor with no cart cookie has no line to look up.
+  const cookieCartId = await getCartId()
+  const [available, existing] = await Promise.all([
+    availableStock(variantId),
+    cookieCartId
+      ? supabase
+          .from("cart_items")
+          .select("id,quantity")
+          .eq("cart_id", cookieCartId)
+          .eq("variant_id", variantId)
+          .maybeSingle()
+          .then(({ data }) => data)
+      : null,
+  ])
 
   // Nothing left to sell. The add button is already disabled on a current page,
   // so this is a stale tab or a forged call — revalidate and add nothing, which
@@ -59,13 +75,6 @@ export async function addToCart(variantId: string, quantity = 1) {
   }
 
   const cartId = await getOrCreateCartId()
-
-  const { data: existing } = await supabase
-    .from("cart_items")
-    .select("id,quantity")
-    .eq("cart_id", cartId)
-    .eq("variant_id", variantId)
-    .maybeSingle()
 
   if (existing) {
     await supabase
