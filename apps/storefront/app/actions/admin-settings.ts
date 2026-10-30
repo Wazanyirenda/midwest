@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin"
 import { DEFAULT_SETTINGS, SETTING_KEYS, type SiteSettings } from "@/lib/settings"
@@ -27,6 +28,9 @@ const STRING_MAX: Partial<Record<keyof SiteSettings, number>> = {
   emailAbandonedCartBody: 2000,
 }
 
+// Settings that must hold an email address when they hold anything at all.
+const EMAIL_FIELDS: ReadonlySet<keyof SiteSettings> = new Set(["printAlertEmail"])
+
 // Settings whose value must be one of a fixed set.
 const ENUM_VALUES: Partial<Record<keyof SiteSettings, readonly string[]>> = {
   marketingTransport: ["same", "resend"],
@@ -49,6 +53,13 @@ export async function updateSetting(
   const allowed = ENUM_VALUES[field]
   if (allowed && (typeof value !== "string" || !allowed.includes(value))) {
     return { error: `Must be one of: ${allowed.join(", ")}` }
+  }
+
+  if (EMAIL_FIELDS.has(field) && typeof value === "string" && value.trim() !== "") {
+    if (!z.string().email().max(254).safeParse(value.trim()).success) {
+      return { error: "Enter a valid email address, or leave it empty." }
+    }
+    value = value.trim()
   }
 
   if (typeof value === "number") {

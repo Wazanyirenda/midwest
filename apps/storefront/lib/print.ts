@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getSiteSettings, type SiteSettings } from "@/lib/settings"
 import { formatCartTotal } from "@/lib/cart"
 import { sendZplToPrinter, zebraCloudConfigured } from "@/lib/zebra-cloud"
+import { sendPrintAlertEmail } from "@/lib/email"
 
 /**
  * Order receipts for the Zebra ZD421C, printed on its 4x6 stock, rendered as
@@ -34,6 +35,10 @@ const ITEM_CHARS_PER_LINE = 38
 const ITEM_MAX_LINES = 2
 
 const MAX_COPIES = 5
+
+// The agent polls every few seconds while it can reach the printer, so a
+// minute and a half of silence means receipts are not printing right now.
+const AGENT_STALE_MS = 90 * 1000
 
 export type LabelOrder = {
   display_id: number
@@ -279,8 +284,35 @@ async function dispatch(
     .eq("status", "queued")
 }
 
+/** Called on every agent poll — the heartbeat the offline alert reads. */
+export async function recordAgentSeen(): Promise<void> {
+  const { error } = await supabase
+    .from("print_agent_status")
+    .upsert({ id: 1, last_seen_at: new Date().toISOString() })
+  if (error) console.error("[print] could not record agent heartbeat:", error.message)
+}
+
 /**
- * Queues the packing label for an order and tries to deliver it immediately.
+ * Whether the local agent has polled recently. Null when it can't be told —
+ * table missing or unreadable — so the caller stays quiet rather than mailing
+ * a false alarm about every order.
+ */
+async function agentRecentlySeen(): Promise<boolean | null> {
+  const { data, error } = await supabase
+    .from("print_agent_status")
+    .select("last_seen_at")
+    .eq("id", 1)
+    .maybeSingle()
+  if (error) {
+    console.error("[print] could not read agent heartbeat:", error.message)
+    return null
+  }
+  if (!data) return false
+  return Date.now() - new Date(data.last_seen_at as string).getTime() < AGENT_STALE_MS
+}
+
+/**
+ * Queues the receipt for an order and tries to deliver it immediately.
  *
  * Never throws. It is called from payment webhooks, where an exception would
  * return 500 and make the provider retry a payment that has already committed
@@ -320,6 +352,12 @@ export async function queueOrderLabel(
     if (insertError) throw new Error(insertError.message)
 
     await dispatch(job.id, zpl, settings)
+
+    // Cloud printing reports its own failures through the job row. For the
+    // local agent, the only sign of trouble is the agent going quiet.
+    if (!zebraCloudConfigured() && (await agentRecentlySeen()) === false) {
+      await sendPrintAlertEmail({ kind: "offline", displayIds: [order.display_id] })
+    }
     return {}
   } catch (e) {
     console.error("[print] queueOrderLabel failed:", e)

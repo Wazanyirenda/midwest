@@ -550,3 +550,83 @@ export async function sendCampaignEmail(input: {
     unsubscribeToken: input.unsubscribeToken,
   })
 }
+
+// One "printing is offline" email an hour at most. Orders keep arriving while
+// the shop PC is asleep, and an alert per order would bury the inbox.
+const PRINT_OFFLINE_ALERT_GAP_MS = 60 * 60 * 1000
+
+/**
+ * Tells the owner a paid order's receipt is not printing. Goes to the address
+ * in the print_alert_email setting and nowhere else; empty means alerts are
+ * off. Carries the order number and a link to admin, never customer details —
+ * a mailbox is not the place for someone's home address.
+ */
+export async function sendPrintAlertEmail(alert: {
+  kind: "offline" | "failed"
+  displayIds: number[]
+  detail?: string
+}): Promise<void> {
+  const { printAlertEmail: to } = await getSiteSettings()
+  if (!to) return
+
+  const template = alert.kind === "offline" ? "print_alert_offline" : "print_alert_failed"
+
+  if (alert.kind === "offline") {
+    const since = new Date(Date.now() - PRINT_OFFLINE_ALERT_GAP_MS).toISOString()
+    const { count } = await supabaseAdmin
+      .from("email_log")
+      .select("id", { count: "exact", head: true })
+      .eq("template", template)
+      .eq("status", "sent")
+      .gte("sent_at", since)
+    if ((count ?? 0) > 0) return
+  }
+
+  const orders = alert.displayIds.map((id) => `#${id}`).join(", ")
+  const subject =
+    alert.kind === "offline"
+      ? `Receipt printing is offline — order ${orders} is waiting`
+      : `Receipt failed to print — order ${orders}`
+
+  const body =
+    alert.kind === "offline"
+      ? `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+           Order ${escapeHtml(orders)} was paid, but its receipt can't print right now:
+           the print agent at the shop hasn't checked in recently. Usually the shop
+           computer is off or asleep, the agent window was closed, or the printer
+           is off.
+         </p>
+         <p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+           Nothing is lost — the receipt stays queued and prints as soon as the
+           agent and printer are back. You won't get another of these for an hour.
+         </p>`
+      : `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+           The receipt for order ${escapeHtml(orders)} failed after repeated tries
+           and has stopped retrying.
+         </p>
+         ${
+           alert.detail
+             ? `<p style="font-size:13px;color:#8f8b7f;line-height:1.6;margin:0 0 16px;">Last error: ${escapeHtml(alert.detail)}</p>`
+             : ""
+         }
+         <p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+           Check the printer for paper and errors, then reprint it from the
+           printing page.
+         </p>`
+
+  await send(
+    to,
+    subject,
+    renderLayout(
+      alert.kind === "offline" ? "Receipt printing is offline" : "A receipt failed to print",
+      `${body}
+      <p style="margin:24px 0 0;">
+        <a href="${appUrl()}/admin/printing"
+           style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+          Open printing
+        </a>
+      </p>`
+    ),
+    { category: "transactional", template, mailbox: "orders" }
+  )
+}

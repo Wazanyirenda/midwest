@@ -46,6 +46,8 @@ export type SiteSettings = {
   labelPrinterSerial: string
   /** Printer's LAN address, read by the local print agent. */
   labelPrinterHost: string
+  /** Where receipt-printing problems are emailed. Empty = no alerts. */
+  printAlertEmail: string
 }
 
 const DEFAULT_DISCLAIMER = `All products sold by Midwestern Peptides are intended strictly for laboratory research use. They are not designed or approved for human or animal consumption, and must not be used for any diagnostic, therapeutic, or medical application.
@@ -119,6 +121,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   printLabelCopies: 1,
   labelPrinterSerial: "",
   labelPrinterHost: "",
+  printAlertEmail: "",
 }
 
 /** DB key ↔ camelCase field. The DB key is the stable name. */
@@ -160,6 +163,7 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   printLabelCopies: "print_label_copies",
   labelPrinterSerial: "label_printer_serial",
   labelPrinterHost: "label_printer_host",
+  printAlertEmail: "print_alert_email",
 }
 
 /**

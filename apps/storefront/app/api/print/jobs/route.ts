@@ -4,6 +4,8 @@ import { z } from "zod"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getSiteSettings } from "@/lib/settings"
 import { rateLimit } from "@/lib/rate-limit"
+import { recordAgentSeen } from "@/lib/print"
+import { sendPrintAlertEmail } from "@/lib/email"
 
 /**
  * Queue endpoint for the local print agent (tools/print-agent).
@@ -80,6 +82,8 @@ export async function GET(request: Request) {
   const denied = await guard(request)
   if (denied) return denied
 
+  await recordAgentSeen()
+
   const { data, error } = await supabase.rpc("claim_print_jobs", {
     p_limit: MAX_BATCH,
     p_max_attempts: MAX_ATTEMPTS,
@@ -135,12 +139,20 @@ export async function POST(request: Request) {
     // Out of attempts: retire it as failed so /admin/printing flags it. Left
     // queued, claim_print_jobs would never hand it out again and admin would
     // show it as on its way forever.
-    await supabase
+    const { data: retired } = await supabase
       .from("print_jobs")
       .update({ status: "failed", last_error: job.error })
       .eq("id", job.id)
       .eq("status", "claimed")
       .gte("attempts", MAX_ATTEMPTS)
+      .select("order:orders(display_id)")
+
+    const displayIds = (retired ?? [])
+      .map((r) => (r as unknown as { order: { display_id: number } | null }).order?.display_id)
+      .filter((id): id is number => typeof id === "number")
+    if (displayIds.length > 0) {
+      await sendPrintAlertEmail({ kind: "failed", displayIds, detail: job.error })
+    }
 
     // Otherwise back to queued: a printer briefly out of paper retries. A row
     // retired just above no longer matches status = claimed.

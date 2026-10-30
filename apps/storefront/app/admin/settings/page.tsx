@@ -177,6 +177,14 @@ export default async function AdminSettingsPage() {
           placeholder="192.168.1.74"
           maxLength={60}
         />
+        <SettingField
+          field="printAlertEmail"
+          label="Email me when printing has a problem"
+          description="Sent the moment a paid order's receipt can't print — the computer at the shop is off or asleep, the print agent isn't running, the printer is unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Leave empty for no alerts."
+          initial={settings.printAlertEmail}
+          placeholder="you@example.com"
+          maxLength={254}
+        />
       </Section>
 
       <Section
