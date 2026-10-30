@@ -54,6 +54,32 @@ function sendZpl(host, zpl) {
   })
 }
 
+/**
+ * Opens and closes a connection without sending anything. Checked before
+ * claiming, so a printer that is off or asleep leaves receipts waiting in the
+ * queue instead of burning their attempts against a closed port.
+ */
+function printerReachable(host) {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port: PRINTER_PORT })
+    socket.setTimeout(3000)
+    socket.on("connect", () => {
+      socket.destroy()
+      resolve(true)
+    })
+    socket.on("timeout", () => {
+      socket.destroy()
+      resolve(false)
+    })
+    socket.on("error", () => resolve(false))
+  })
+}
+
+// Last address in use, so the reachability check has a target before the
+// first claim. Updated from the site's setting on every claim.
+let lastHost = FALLBACK_HOST
+let printerDown = false
+
 async function claimJobs() {
   const response = await fetch(ENDPOINT, { headers: AUTH })
   if (!response.ok) {
@@ -78,7 +104,18 @@ async function acknowledge(printed, failed) {
 }
 
 async function tick() {
+  if (lastHost) {
+    const up = await printerReachable(lastHost)
+    if (up !== !printerDown) {
+      // Logged on change only, so a printer off overnight is one line.
+      log(up ? `printer ${lastHost} is back` : `printer ${lastHost} unreachable, holding the queue`)
+      printerDown = !up
+    }
+    if (!up) return
+  }
+
   const { jobs, printerHost } = await claimJobs()
+  lastHost = printerHost || FALLBACK_HOST
   if (jobs.length === 0) return
 
   // The site's setting wins, so the printer's address can be corrected from

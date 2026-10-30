@@ -141,14 +141,14 @@ export default async function AdminSettingsPage() {
       </Section>
 
       <Section
-        title="Order label printing"
-        description="Prints a 4×6 packing label on the Zebra as soon as an order is paid. Setup steps are in tools/print-agent/README.md."
+        title="Order receipt printing"
+        description="Prints a 4×6 receipt on the Zebra as soon as an order is paid: ship-to name and address, items with prices, totals, and how it was paid. Setup steps are in tools/print-agent/README.md."
       >
         <SettingToggle
           field="autoPrintOrderLabels"
-          label="Print a label for every paid order"
-          description="Labels queue the moment payment clears, whether or not anyone is at the computer. A label that can't print now stays queued and prints when the printer is back."
-          warning="Leave this off until a test label has printed. Nothing prints while it is off, and you can still print any order by hand from the Orders page."
+          label="Print a receipt for every paid order"
+          description="Receipts queue the moment payment clears, whether or not anyone is at the computer. A receipt that can't print now stays queued and prints when the printer is back."
+          warning="Leave this off until a test receipt has printed. Nothing prints while it is off, and you can still print any order by hand from the Orders page."
           initial={settings.autoPrintOrderLabels}
         />
         <SettingField
@@ -159,7 +159,7 @@ export default async function AdminSettingsPage() {
           type="number"
           min={1}
           max={5}
-          suffix="labels"
+          suffix="receipts"
         />
         <SettingField
           field="labelPrinterSerial"

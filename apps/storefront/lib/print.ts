@@ -5,8 +5,9 @@ import { formatCartTotal } from "@/lib/cart"
 import { sendZplToPrinter, zebraCloudConfigured } from "@/lib/zebra-cloud"
 
 /**
- * Packing labels for the Zebra ZD421C, rendered as ZPL and queued in
- * print_jobs. Nothing here talks to the printer's LAN address — see the
+ * Order receipts for the Zebra ZD421C, printed on its 4x6 stock, rendered as
+ * ZPL and queued in print_jobs. One receipt doubles as the packing slip: it
+ * carries the ship-to block as well as the prices. Nothing here talks to the printer's LAN address — see the
  * migration for why the queue exists and how it drains.
  */
 
@@ -16,15 +17,20 @@ const LABEL_HEIGHT = 1800
 const MARGIN = 32
 const CONTENT_WIDTH = LABEL_WIDTH - MARGIN * 2
 
-// Room kept at the foot of the label for the totals rule and the barcode.
-const FOOTER_RESERVE = 300
+// Room kept at the foot of the receipt for the totals, the payment line, the
+// barcode and the research-use notice.
+const FOOTER_RESERVE = 470
+
+// Right-hand column the line amounts are right-aligned in.
+const AMOUNT_WIDTH = 240
+const ITEM_TEXT_WIDTH = CONTENT_WIDTH - AMOUNT_WIDTH - 20
 
 // Character budget per wrapped line at the item font size. ^FB wraps on real
 // glyph widths; this only decides how much vertical space to reserve, so it is
 // deliberately pessimistic — over-reserving prints an honest overflow note,
 // under-reserving would run text off the label.
 const ITEM_FONT = 34
-const ITEM_CHARS_PER_LINE = 50
+const ITEM_CHARS_PER_LINE = 38
 const ITEM_MAX_LINES = 2
 
 const MAX_COPIES = 5
@@ -33,18 +39,28 @@ export type LabelOrder = {
   display_id: number
   email: string
   created_at: string
+  status: string
+  payment_provider: string | null
+  subtotal_cents: number
+  shipping_cents: number
   total_cents: number
   shipping_address: Record<string, string> | null
   items: Array<{
     product_title: string
     variant_title: string | null
     quantity: number
+    unit_price_cents: number
   }>
 }
 
 const ORDER_LABEL_FIELDS =
-  "display_id,email,created_at,total_cents,shipping_address," +
-  "items:order_items(product_title,variant_title,quantity)"
+  "display_id,email,created_at,status,payment_provider,subtotal_cents," +
+  "shipping_cents,total_cents,shipping_address," +
+  "items:order_items(product_title,variant_title,quantity,unit_price_cents)"
+
+// Only these mean money was taken. A reprint of anything else must not claim
+// the order was paid.
+const PAID_STATUSES = new Set(["paid", "shipped", "delivered"])
 
 /**
  * Strips the characters that would be read as commands instead of text.
@@ -70,6 +86,14 @@ function wrapped(y: number, size: number, value: string, maxLines: number): stri
   return (
     `^FO${MARGIN},${y}^A0N,${size},${size}` +
     `^FB${CONTENT_WIDTH},${maxLines},0,L^FD${value}^FS`
+  )
+}
+
+/** Right-aligned in the full content width — the money column. */
+function amount(y: number, size: number, value: string): string {
+  return (
+    `^FO${MARGIN},${y}^A0N,${size},${size}` +
+    `^FB${CONTENT_WIDTH},1,0,R^FD${value}^FS`
   )
 }
 
@@ -115,10 +139,22 @@ function itemLabel(item: LabelOrder["items"][number]): string {
   return zplSafe(`${item.quantity} x ${title}`, 140)
 }
 
+function paymentLine(order: LabelOrder): string {
+  const method =
+    order.payment_provider === "nowpayments"
+      ? "Crypto"
+      : order.payment_provider === "stripe"
+        ? "Card"
+        : "Other"
+  return PAID_STATUSES.has(order.status)
+    ? `PAID - ${method}`
+    : `Payment ${zplSafe(order.status, 20)} - ${method}`
+}
+
 /**
- * One 4x6 packing label. Everything is laid out against a running y cursor so
- * that a two-line product title pushes what follows down instead of printing
- * over it.
+ * One 4x6 receipt. Everything is laid out against a running y cursor so that
+ * a two-line product title pushes what follows down instead of printing over
+ * it.
  */
 export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
   const parts: string[] = [
@@ -131,6 +167,7 @@ export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
 
   let y = 36
   parts.push(line(y, 56, "Midwestern Peptides"))
+  parts.push(amount(y + 10, 44, "RECEIPT"))
   y += 70
   parts.push(line(y, 34, `Order #${order.display_id}   ${placedAt(order.created_at)}`))
   y += 48
@@ -146,6 +183,7 @@ export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
   y += 26
 
   parts.push(line(y, 26, "ITEMS"))
+  parts.push(amount(y, 26, "AMOUNT"))
   y += 36
 
   let printed = 0
@@ -155,33 +193,55 @@ export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
       Math.ceil(value.length / ITEM_CHARS_PER_LINE) || 1,
       ITEM_MAX_LINES
     )
-    const height = lines * (ITEM_FONT + 8) + 6
+    // The unit price sits under the title, so a quantity of 3 reads as
+    // "3 x ... / $20.00 each" against a $60.00 line total.
+    const height = lines * (ITEM_FONT + 8) + 34 + 10
 
     // Stop before running into the footer. The overflow note below is printed
     // instead, so a long order is never silently short of items.
     if (y + height > LABEL_HEIGHT - FOOTER_RESERVE) break
 
-    parts.push(wrapped(y, ITEM_FONT, value, lines))
+    parts.push(
+      `^FO${MARGIN},${y}^A0N,${ITEM_FONT},${ITEM_FONT}` +
+        `^FB${ITEM_TEXT_WIDTH},${lines},0,L^FD${value}^FS`
+    )
+    parts.push(amount(y, ITEM_FONT, formatCartTotal(item.unit_price_cents * item.quantity)))
+    parts.push(
+      line(y + lines * (ITEM_FONT + 8), 26, `${formatCartTotal(item.unit_price_cents)} each`)
+    )
     y += height
     printed += 1
   }
 
   const remaining = order.items.length - printed
   if (remaining > 0) {
-    parts.push(line(y, 30, `+ ${remaining} more item(s) - see admin`))
+    parts.push(line(y, 30, `+ ${remaining} more item(s) - full list in the order email`))
   }
 
-  const units = order.items.reduce((sum, item) => sum + item.quantity, 0)
-  const footerY = LABEL_HEIGHT - FOOTER_RESERVE + 40
+  const footerY = LABEL_HEIGHT - FOOTER_RESERVE + 20
   parts.push(rule(footerY))
-  parts.push(
-    line(footerY + 24, 34, `${units} unit(s)   ${formatCartTotal(order.total_cents)}`)
-  )
-  parts.push(
-    `^BY3,3,90^FO${MARGIN},${footerY + 80}^BCN,110,Y,N,N^FD${order.display_id}^FS`
-  )
 
-  // ^PQ repeats the whole label; copies is clamped by the caller.
+  let fy = footerY + 22
+  for (const [label, value] of [
+    ["Subtotal", formatCartTotal(order.subtotal_cents)],
+    ["Shipping", order.shipping_cents === 0 ? "Free" : formatCartTotal(order.shipping_cents)],
+  ] as const) {
+    parts.push(line(fy, 32, label))
+    parts.push(amount(fy, 32, value))
+    fy += 42
+  }
+  parts.push(line(fy, 44, "Total"))
+  parts.push(amount(fy, 44, formatCartTotal(order.total_cents)))
+  fy += 56
+  parts.push(line(fy, 32, paymentLine(order)))
+  fy += 48
+
+  parts.push(`^BY3,3,90^FO${MARGIN},${fy}^BCN,90,Y,N,N^FD${order.display_id}^FS`)
+  fy += 140
+
+  parts.push(line(fy, 24, "For laboratory research use only. Not for human or veterinary use."))
+
+  // ^PQ repeats the whole receipt; copies is clamped by the caller.
   parts.push(`^PQ${copies},0,0,N`)
   parts.push("^XZ")
 

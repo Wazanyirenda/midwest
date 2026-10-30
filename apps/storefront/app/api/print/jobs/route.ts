@@ -23,6 +23,9 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const MAX_BATCH = 5
+// Tries before a job is retired as failed. Passed to claim_print_jobs too, so
+// the claim and the acknowledgement can never disagree about the limit.
+const MAX_ATTEMPTS = 5
 
 const AckSchema = z.object({
   printed: z.array(z.string().uuid()).max(50).optional(),
@@ -79,6 +82,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase.rpc("claim_print_jobs", {
     p_limit: MAX_BATCH,
+    p_max_attempts: MAX_ATTEMPTS,
   })
   if (error) {
     console.error("[print/jobs] claim failed:", error.message)
@@ -128,8 +132,18 @@ export async function POST(request: Request) {
   }
 
   for (const job of failed) {
-    // Back to queued rather than failed: the attempt counter is what decides
-    // when to give up, so a printer that is briefly out of labels retries.
+    // Out of attempts: retire it as failed so /admin/printing flags it. Left
+    // queued, claim_print_jobs would never hand it out again and admin would
+    // show it as on its way forever.
+    await supabase
+      .from("print_jobs")
+      .update({ status: "failed", last_error: job.error })
+      .eq("id", job.id)
+      .eq("status", "claimed")
+      .gte("attempts", MAX_ATTEMPTS)
+
+    // Otherwise back to queued: a printer briefly out of paper retries. A row
+    // retired just above no longer matches status = claimed.
     await supabase
       .from("print_jobs")
       .update({ status: "queued", last_error: job.error })
