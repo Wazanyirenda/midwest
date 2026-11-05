@@ -30,7 +30,7 @@ type EventRow = {
 }
 
 function ProviderTag({ provider }: { provider: string | null }) {
-  if (provider === "nowpayments") {
+  if (provider === "btcpay") {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-sand-600">
         <Bitcoin size={12} strokeWidth={2} className="text-amber-600" />
@@ -76,7 +76,7 @@ export default async function AdminPaymentsPage() {
   const collected = settled.reduce((sum, o) => sum + o.total_cents, 0)
   const byProvider = {
     stripe: settled.filter((o) => o.payment_provider === "stripe"),
-    nowpayments: settled.filter((o) => o.payment_provider === "nowpayments"),
+    btcpay: settled.filter((o) => o.payment_provider === "btcpay"),
   }
   const awaiting = orders.filter((o) => o.status === "pending")
   const refunded = orders.filter((o) => o.status === "refunded")
@@ -94,7 +94,7 @@ export default async function AdminPaymentsPage() {
         {[
           { label: "Collected", value: formatCartTotal(collected), hint: `${settled.length} settled` },
           { label: "Card", value: String(byProvider.stripe.length), hint: "Stripe" },
-          { label: "Crypto", value: String(byProvider.nowpayments.length), hint: "NOWPayments" },
+          { label: "Crypto", value: String(byProvider.btcpay.length), hint: "BTCPay Server" },
           { label: "Awaiting payment", value: String(awaiting.length), hint: "Not yet confirmed" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-sand-200 bg-white p-4">

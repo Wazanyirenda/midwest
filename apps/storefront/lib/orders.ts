@@ -91,7 +91,7 @@ function itemTitle(item: OrderRow["items"][number]): string {
 
 function paymentMethodLabel(provider: string | null): string {
   if (provider === "stripe") return "Card (Stripe)"
-  if (provider === "nowpayments") return "Crypto"
+  if (provider === "btcpay") return "Crypto"
   return "—"
 }
 

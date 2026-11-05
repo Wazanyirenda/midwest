@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Check } from "lucide-react"
+import { Bitcoin, Check } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { updateCartContact } from "@/app/actions/cart"
@@ -294,6 +294,65 @@ function StripePaymentForm({
   )
 }
 
+// ─── Crypto payment (used inside review step) ─────────────────────────────────
+
+function CryptoPayButton({
+  cartId,
+  contact,
+}: {
+  cartId: string
+  contact: ContactData
+}) {
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  async function pay() {
+    setSubmitting(true)
+    setError(null)
+    try {
+      // The invoice is created only on this click, not at the review step, so
+      // a customer who never chooses crypto never gets an invoice that expires
+      // unpaid in the store's BTCPay history.
+      const session = await initiatePaymentSession(cartId, "btcpay", {
+        ageConfirmed: contact.ageConfirmed,
+        termsAccepted: contact.termsAccepted,
+      })
+      const url = (session?.payment_sessions?.[0]?.data as { checkout_url?: string } | undefined)
+        ?.checkout_url
+      if (!url) throw new Error("Could not start the crypto payment. Try again.")
+      // The cart is retired by the webhook once payment settles, not here — a
+      // customer who backs out of the payment page still has their basket.
+      window.location.assign(url)
+    } catch (e) {
+      setError((e as Error).message ?? "Could not start the crypto payment. Try again.")
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-sand-200 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-sand-900">
+        <Bitcoin size={18} strokeWidth={2} className="text-amber-600" />
+        Pay with Bitcoin
+      </div>
+      <ul className="list-disc space-y-1 pl-5 text-xs text-sand-600">
+        <li>You&apos;ll go to our secure payment page to pay from any Bitcoin wallet.</li>
+        <li>Lightning payments confirm in seconds; regular Bitcoin usually takes 10–30 minutes.</li>
+        <li>The price is locked for 15 minutes. You&apos;ll get an email as soon as payment confirms.</li>
+      </ul>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      <button
+        type="button"
+        onClick={pay}
+        disabled={submitting}
+        className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+      >
+        {submitting ? "Opening payment page…" : "Pay with Bitcoin →"}
+      </button>
+    </div>
+  )
+}
+
 // ─── Step 2: Review + pay ─────────────────────────────────────────────────────
 
 type CartSummary = {
@@ -308,17 +367,21 @@ function formatAmount(n: number | null | undefined) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n / 100)
 }
 
+export type PaymentMethods = { card: boolean; crypto: boolean }
+
 function ReviewStep({
   contact,
   cart,
   stripeClientSecret,
   orderId,
+  paymentMethods,
   onBack,
 }: {
   contact: ContactData
   cart: CartSummary
   stripeClientSecret: string | null
   orderId: string | null
+  paymentMethods: PaymentMethods
   onBack: () => void
 }) {
   const router = useRouter()
@@ -358,10 +421,17 @@ function ReviewStep({
         By placing this order you confirm you are 21+.
       </div>
 
-      {stripeClientSecret && stripePromise ? (
+      {paymentMethods.crypto && <CryptoPayButton cartId={cart.id} contact={contact} />}
+
+      {paymentMethods.card && stripeClientSecret && stripePromise ? (
         <Elements stripe={stripePromise} options={{ clientSecret: stripeClientSecret, appearance: { theme: "stripe" } }}>
           <StripePaymentForm cartId={cart.id} orderId={orderId} onSuccess={handleOrderSuccess} onBack={onBack} />
         </Elements>
+      ) : paymentMethods.crypto ? (
+        <button onClick={onBack}
+          className="w-full rounded-lg border border-sand-300 py-3 text-sm font-medium text-sand-700 hover:bg-sand-50 transition-colors">
+          ← Back
+        </button>
       ) : (
         <div className="flex gap-3">
           <button onClick={onBack}
@@ -388,6 +458,8 @@ type Props = {
   defaults?: CheckoutDefaults
   isSignedIn?: boolean
   hasSavedAddress?: boolean
+  /** Decided on the server from settings and configuration. */
+  paymentMethods: PaymentMethods
 }
 
 export function CheckoutForm({
@@ -398,6 +470,7 @@ export function CheckoutForm({
   defaults = {},
   isSignedIn = false,
   hasSavedAddress = false,
+  paymentMethods,
 }: Props) {
   const [step, setStep] = useState(1)
   const [contactData, setContactData] = useState<ContactData | null>(null)
@@ -448,17 +521,21 @@ export function CheckoutForm({
       }
     }
 
-    try {
-      const collection = await initiatePaymentSession(cartId, "stripe", {
-        ageConfirmed: data.ageConfirmed,
-        termsAccepted: data.termsAccepted,
-      })
-      const session = collection?.payment_sessions?.[0]
-      const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
-      setStripeClientSecret(sessionData.client_secret ?? null)
-      setOrderId(collection?.order_id ?? null)
-    } catch (e) {
-      setError((e as Error).message ?? "Could not initiate payment. Try again.")
+    // Card needs its PaymentIntent before the review step can render the card
+    // form. Crypto creates its invoice later, only if the customer picks it.
+    if (paymentMethods.card) {
+      try {
+        const collection = await initiatePaymentSession(cartId, "stripe", {
+          ageConfirmed: data.ageConfirmed,
+          termsAccepted: data.termsAccepted,
+        })
+        const session = collection?.payment_sessions?.[0]
+        const sessionData = (session?.data ?? {}) as Record<string, string | null | undefined>
+        setStripeClientSecret(sessionData.client_secret ?? null)
+        setOrderId(collection?.order_id ?? null)
+      } catch (e) {
+        setError((e as Error).message ?? "Could not initiate payment. Try again.")
+      }
     }
 
     setContactData(data)
@@ -489,6 +566,7 @@ export function CheckoutForm({
           cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, items }}
           stripeClientSecret={stripeClientSecret}
           orderId={orderId}
+          paymentMethods={paymentMethods}
           onBack={() => setStep(1)}
         />
       )}

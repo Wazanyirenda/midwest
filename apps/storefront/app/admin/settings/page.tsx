@@ -98,8 +98,8 @@ export default async function AdminSettingsPage() {
         />
         <SettingToggle
           field="cryptoPaymentsEnabled"
-          label="Crypto payments (NOWPayments)"
-          description="No underwriting and no chargebacks. Requires NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET."
+          label="Crypto payments (BTCPay Server)"
+          description="Bitcoin and Lightning, paid straight into your own wallet with no processor in between. No underwriting and no chargebacks. Requires BTCPAY_URL, BTCPAY_STORE_ID, BTCPAY_API_KEY and BTCPAY_WEBHOOK_SECRET."
           warning="Crypto payments cannot be reversed — refunds must be issued manually."
           initial={settings.cryptoPaymentsEnabled}
         />
@@ -179,8 +179,8 @@ export default async function AdminSettingsPage() {
         />
         <SettingField
           field="printAlertEmail"
-          label="Email me when printing has a problem"
-          description="Sent the moment a paid order's receipt can't print — the computer at the shop is off or asleep, the print agent isn't running, the printer is unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Leave empty for no alerts."
+          label="Email me when something needs attention"
+          description="Sent when a crypto order is underpaid or paid twice, and when a paid order's receipt can't print — the printer or the computer it runs through is off or unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Leave empty for no alerts."
           initial={settings.printAlertEmail}
           placeholder="you@example.com"
           maxLength={254}

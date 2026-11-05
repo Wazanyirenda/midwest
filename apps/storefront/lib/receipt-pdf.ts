@@ -152,7 +152,7 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   ].filter(Boolean)
 
   const provider =
-    order.paymentProvider === "nowpayments"
+    order.paymentProvider === "btcpay"
       ? "Cryptocurrency"
       : order.paymentProvider === "stripe"
         ? "Card"

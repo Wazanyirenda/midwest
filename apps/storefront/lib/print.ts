@@ -146,7 +146,7 @@ function itemLabel(item: LabelOrder["items"][number]): string {
 
 function paymentLine(order: LabelOrder): string {
   const method =
-    order.payment_provider === "nowpayments"
+    order.payment_provider === "btcpay"
       ? "Crypto"
       : order.payment_provider === "stripe"
         ? "Card"

@@ -3,6 +3,7 @@ import { Lock, Package } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getUser, getProfile } from "@/lib/auth"
 import { getSiteSettings } from "@/lib/settings"
+import { isConfigured as isCryptoConfigured } from "@/lib/btcpay"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { CheckoutForm, type CheckoutDefaults } from "@/components/store/checkout-form"
 import { StockNote } from "@/components/store/stock-note"
@@ -82,6 +83,12 @@ export default async function CheckoutPage() {
             defaults={defaults}
             isSignedIn={!!user}
             hasSavedAddress={hasSavedAddress}
+            paymentMethods={{
+              card: settings.cardPaymentsEnabled,
+              // Both switched on AND configured, so the button never leads to
+              // a "not available" error.
+              crypto: settings.cryptoPaymentsEnabled && isCryptoConfigured(),
+            }}
           />
         </div>
 

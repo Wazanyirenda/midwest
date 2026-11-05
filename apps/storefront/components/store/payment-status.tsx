@@ -5,11 +5,15 @@ import Link from "next/link"
 import { Check, Clock, AlertCircle } from "lucide-react"
 import { getOrderPaymentStatus } from "@/app/actions/checkout"
 
-// The webhook usually lands within a second or two, but a provider retry or a
-// slow delivery can take longer. Poll a bounded number of times, then tell the
-// customer their money is safe and stop.
+// A card webhook usually lands within a second or two. Bitcoin is slower: the
+// customer is redirected back once the payment is seen, and it settles after a
+// block confirmation, typically 10-30 minutes. So poll quickly at first, tell
+// the customer their money is safe, then keep checking slowly for half an hour
+// so the page still turns into the receipt if they leave it open.
 const POLL_MS = 2000
 const MAX_POLLS = 20
+const SLOW_POLL_MS = 15000
+const MAX_SLOW_POLLS = 120
 
 type Phase = "waiting" | "paid" | "canceled" | "timeout" | "unknown"
 
@@ -32,8 +36,9 @@ export function PaymentStatus({
   )
 
   useEffect(() => {
-    if (phase !== "waiting") return
+    if (phase !== "waiting" && phase !== "timeout") return
 
+    const slow = phase === "timeout"
     let polls = 0
     let cancelled = false
 
@@ -46,11 +51,13 @@ export function PaymentStatus({
       if (next) {
         setPhase(next)
         clearInterval(timer)
-      } else if (polls >= MAX_POLLS) {
+      } else if (!slow && polls >= MAX_POLLS) {
         setPhase("timeout")
         clearInterval(timer)
+      } else if (slow && polls >= MAX_SLOW_POLLS) {
+        clearInterval(timer)
       }
-    }, POLL_MS)
+    }, slow ? SLOW_POLL_MS : POLL_MS)
 
     return () => {
       cancelled = true

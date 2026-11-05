@@ -111,7 +111,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   // Card is off by default: Stripe's Restricted Businesses policy prohibits
   // peptides, and processing them gets the account closed with a 90-180 day
   // fund hold. Do not enable until a processor that permits this category is in
-  // place. Crypto is off until NOWPayments credentials exist.
+  // place. Crypto is off until BTCPay Server is configured.
   cardPaymentsEnabled: false,
   cryptoPaymentsEnabled: false,
   cryptoTolerancePercent: 2,

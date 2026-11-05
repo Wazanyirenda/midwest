@@ -9,7 +9,8 @@ import { getShippingOptions } from "@/lib/shipping"
 import { getUser } from "@/lib/auth"
 import { rateLimit } from "@/lib/rate-limit"
 import { getSiteSettings } from "@/lib/settings"
-import { createInvoice, isConfigured as isCryptoConfigured } from "@/lib/nowpayments"
+import { createInvoice, isConfigured as isCryptoConfigured } from "@/lib/btcpay"
+import { syncOrder } from "@/lib/btcpay-sync"
 // Confirmation mail is sent by the Stripe webhook, not from here — see
 // app/api/webhooks/stripe/route.ts.
 
@@ -84,7 +85,7 @@ function getStripe(): Stripe {
  */
 export async function initiatePaymentSession(
   cartId: string,
-  providerId: "stripe" | "nowpayments",
+  providerId: "stripe" | "btcpay",
   attestation: CheckoutAttestation
 ) {
   // Checked before anything else: an order that cannot lawfully be placed must
@@ -106,11 +107,11 @@ export async function initiatePaymentSession(
   const settings = await getSiteSettings()
   const user = await getUser()
 
-  if (providerId === "nowpayments") {
+  if (providerId === "btcpay") {
     if (!settings.cryptoPaymentsEnabled || !isCryptoConfigured()) {
       throw new Error("Crypto payments are not available right now.")
     }
-    return createCryptoSession(cart, user?.id ?? null, attested)
+    return createCryptoSession(cart, user?.id ?? null, attested, settings.cryptoTolerancePercent)
   }
 
   // Card is gated by a setting rather than by code so it can be switched on the
@@ -265,13 +266,28 @@ export async function finalizeCheckout(cartId: string) {
  * only the payment status — never grants anything.
  */
 export async function getOrderPaymentStatus(orderId: string) {
-  const { data } = await supabase
-    .from("orders")
-    .select("id,display_id,status")
-    .eq("id", orderId)
-    .maybeSingle()
+  const read = () =>
+    supabase.from("orders").select("id,display_id,status,payment_provider").eq("id", orderId).maybeSingle()
 
+  let { data } = await read()
   if (!data) return { status: "unknown" as const }
+
+  // A crypto order still pending here may already be paid with its webhook
+  // lost — the site was down, or the delivery failed. Ask BTCPay directly; it
+  // goes through the same exactly-once path the webhook uses. This is a
+  // server-side provider lookup, never the browser's word for it.
+  if (data.status === "pending" && data.payment_provider === "btcpay") {
+    const gate = await rateLimit("paymentLookup", orderId)
+    if (gate.allowed) {
+      try {
+        if ((await syncOrder(orderId)) !== "unchanged") data = (await read()).data ?? data
+      } catch (e) {
+        // BTCPay unreachable: report what we know and let the next poll retry.
+        console.error("[checkout] BTCPay status check failed:", e)
+      }
+    }
+  }
+
   return { status: data.status as string, displayId: data.display_id }
 }
 
@@ -279,15 +295,16 @@ export async function getOrderPaymentStatus(orderId: string) {
  * Crypto session: create the order first (pending), then the invoice, then
  * store its id as the payment reference.
  *
- * Order-before-invoice is deliberate — the IPN can arrive within seconds of the
- * customer paying, and it raises (returning 500 for a retry) if no order matches
- * the reference. Creating the invoice first would open a window where a fast
- * payment has nothing to attach to.
+ * Order-before-invoice is deliberate — the webhook raises (returning 500 for a
+ * retry) if no order matches the invoice, so an order must exist before there
+ * is anything to pay. The reference is stored before the browser is sent to
+ * the checkout page, so no payment can precede it.
  */
 async function createCryptoSession(
   cart: Awaited<ReturnType<typeof getCartById>>,
   userId: string | null,
-  attested: { age_confirmed_at: string; terms_accepted_at: string }
+  attested: { age_confirmed_at: string; terms_accepted_at: string },
+  tolerancePercent: number
 ) {
   if (!cart) throw new Error("Cart not found")
 
@@ -309,7 +326,7 @@ async function createCryptoSession(
     shipping_cents: cart.shipping_total,
     total_cents: cart.total,
     status: "pending" as const,
-    payment_provider: "nowpayments" as const,
+    payment_provider: "btcpay" as const,
     ...attested,
     updated_at: new Date().toISOString(),
   }
@@ -352,25 +369,22 @@ async function createCryptoSession(
   const invoice = await createInvoice({
     orderId,
     amountCents: cart.total,
-    successUrl: `${appUrl}/checkout/success?order_id=${orderId}`,
-    cancelUrl: `${appUrl}/checkout`,
+    redirectUrl: `${appUrl}/checkout/success?order_id=${orderId}`,
+    tolerancePercent,
   })
 
-  // NOWPayments reports payment_id in the IPN, not invoice id, so the reference
-  // is set by the first IPN. Store the invoice id meanwhile for support lookups.
+  // BTCPay's webhook names the invoice id, so it is the payment reference from
+  // the start — a fresh invoice for a retried checkout replaces the old one.
   const { error } = await supabase
     .from("orders")
-    .update({ payment_reference: String(invoice.id) })
+    .update({ payment_reference: invoice.id })
     .eq("id", orderId)
   if (error) throw new Error(`Could not save invoice reference: ${error.message}`)
 
   return {
     order_id: orderId,
     payment_sessions: [
-      {
-        provider_id: "nowpayments",
-        data: { invoice_url: invoice.invoice_url, invoice_id: invoice.id },
-      },
+      { provider_id: "btcpay", data: { checkout_url: invoice.checkoutLink } },
     ],
   }
 }

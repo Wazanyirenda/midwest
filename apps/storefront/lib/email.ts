@@ -630,3 +630,54 @@ export async function sendPrintAlertEmail(alert: {
     { category: "transactional", template, mailbox: "orders" }
   )
 }
+
+/**
+ * Tells the owner a crypto order was underpaid and is waiting on a person: the
+ * customer sent less than the invoice and it expired, so the order was neither
+ * marked paid nor dropped. Same recipient setting as the print alerts.
+ */
+export async function sendPaymentReviewEmail(alert: {
+  displayId: number
+  receivedCents: number
+  expectedCents: number
+  /** Paid in full a second time, on another invoice for an order already paid. */
+  secondPayment?: boolean
+}): Promise<void> {
+  const { printAlertEmail: to } = await getSiteSettings()
+  if (!to) return
+
+  const subject = alert.secondPayment
+    ? `Order #${alert.displayId} was paid twice — needs review`
+    : `Order #${alert.displayId} was underpaid — needs review`
+  const body = `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+      ${
+        alert.secondPayment
+          ? `Order #${alert.displayId} was already paid, and the customer has paid
+             ${formatAmount(alert.receivedCents)} again on a second invoice. The
+             order was not changed.`
+          : `The customer for order #${alert.displayId} paid ${formatAmount(alert.receivedCents)}
+             of ${formatAmount(alert.expectedCents)}, and the payment window has closed.
+             The order has not been marked paid and nothing has shipped.`
+      }
+    </p>
+    <p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
+      ${
+        alert.secondPayment
+          ? "Refund the extra payment from your BTCPay store, or offer it as store credit."
+          : "Contact the customer to arrange the difference, or refund what they sent from your BTCPay store."
+      }
+    </p>
+    <p style="margin:24px 0 0;">
+      <a href="${appUrl()}/admin/payments"
+         style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+        Open payments
+      </a>
+    </p>`
+
+  await send(to, subject, renderLayout("An order was underpaid", body), {
+    category: "transactional",
+    template: "payment_review",
+    entityId: String(alert.displayId),
+    mailbox: "orders",
+  })
+}
