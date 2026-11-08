@@ -8,7 +8,6 @@ import type { AuthUser } from "./auth-buttons"
 
 const NAV_LINKS = [
   { label: "Peptides",         href: "/products" },
-  { label: "Lab Supplies",     href: "/products?category=supplies" },
   { label: "Research Library", href: "/blog" },
   { label: "FAQs",             href: "/faq" },
   { label: "My Account",       href: "/account" },

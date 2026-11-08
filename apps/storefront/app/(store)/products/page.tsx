@@ -35,7 +35,6 @@ export default async function ProductsPage({
   const wishlisted = user ? await getWishlistedProductIds(user.id) : new Set<string>()
 
   const peptides = products.filter((p) => p.category === "peptide")
-  const equipment = products.filter((p) => p.category === "equipment")
   const hasFilter = !!q || !!tag
 
   return (
@@ -105,17 +104,6 @@ export default async function ProductsPage({
         <ProductGrid products={peptides} wishlisted={wishlisted} />
       )}
 
-      {equipment.length > 0 && (
-        <>
-          <div className="mt-14 mb-8">
-            <p className="font-mono text-xs font-semibold tracking-widest text-sand-600 uppercase mb-1">
-              For your lab
-            </p>
-            <h2 className="text-2xl font-bold text-sand-900">Lab Supplies</h2>
-          </div>
-          <ProductGrid products={equipment} wishlisted={wishlisted} />
-        </>
-      )}
     </div>
   )
 }

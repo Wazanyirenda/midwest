@@ -17,7 +17,7 @@ const FEATURED = [
   { handle: "ipamorelin",   badge: null },
   { handle: "cjc-1295-dac", badge: null },
   { handle: "nad-plus",     badge: null },
-  { handle: "glp-3",        badge: "New" },
+  { handle: "retatrutide",   badge: "New" },
   { handle: "ghk-cu",       badge: null },
   { handle: "tesamorelin",  badge: null },
 ]

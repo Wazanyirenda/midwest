@@ -50,7 +50,6 @@ export async function Header() {
             <nav className="hidden md:flex items-center gap-6 text-sm">
               {[
                 { label: "Peptides", href: "/products" },
-                { label: "Lab Supplies", href: "/products?category=supplies" },
                 { label: "Research", href: "/blog" },
                 { label: "FAQs", href: "/faq" },
               ].map((link) => (

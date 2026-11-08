@@ -74,20 +74,7 @@ export function ProductForm({ product }: { product?: Product }) {
           </p>
         </div>
 
-        <div>
-          <label htmlFor="category" className={label}>
-            Category
-          </label>
-          <select
-            id="category"
-            name="category"
-            defaultValue={product?.category ?? "peptide"}
-            className={field}
-          >
-            <option value="peptide">Peptide</option>
-            <option value="equipment">Equipment</option>
-          </select>
-        </div>
+        <input type="hidden" name="category" value="peptide" />
 
         <div className="sm:col-span-2">
           <label htmlFor="tags" className={label}>

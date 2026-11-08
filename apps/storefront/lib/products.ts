@@ -36,7 +36,6 @@ export const CATEGORY_TAGS: Record<string, string> = {
   "anti-aging": "Anti-aging",
   coa: "COA Verified",
   new: "New Arrivals",
-  supplies: "Lab Supplies",
 }
 
 // Tags every peptide carries regardless of what it is — they make a poor
@@ -57,7 +56,7 @@ export function categoryLabel(product: Product): string {
     const label = CATEGORY_TAGS[tag]
     if (label && !GENERIC_TAGS.has(tag)) return label
   }
-  return product.category === "equipment" ? "Lab Supplies" : "Research Peptide"
+  return "Research Peptide"
 }
 
 export async function listProducts(
