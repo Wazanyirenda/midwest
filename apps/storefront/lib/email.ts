@@ -690,6 +690,79 @@ export async function sendPaymentAddressChangedAlert(change: {
   })
 }
 
+// ─── Cancellation requests ───────────────────────────────────────────────────
+
+/** Staff: a customer asked to cancel. Nothing happens until someone decides. */
+export async function sendCancellationRequestedAlert(order: {
+  id: string
+  order_code: string
+  email: string
+  status: string
+  total_cents: number
+}): Promise<void> {
+  const paid = order.status === "paid"
+  const body = `
+    ${paragraph(
+      `The customer for order <strong>${escapeHtml(order.order_code)}</strong> (${escapeHtml(order.email)}, ${formatAmount(
+        order.total_cents
+      )}) has asked to cancel it.`
+    )}
+    ${paragraph(
+      paid
+        ? "This order is <strong>paid</strong>. If you approve, it won't ship, its stock goes back on the shelf, and you'll need to refund the customer yourself."
+        : "This order <strong>hasn't been paid</strong>, so approving simply cancels it."
+    )}
+    ${paragraph("If it has already been packed or shipped, decline it and tell the customer why.")}
+    ${buttonHtml(adminOrderLink(order), "Approve or decline")}`
+
+  await sendToStaff(
+    `Cancellation requested: ${order.order_code}`,
+    `Cancellation request: ${order.order_code}`,
+    body,
+    { template: "staff_cancellation_requested", entityId: order.id }
+  )
+}
+
+/** Customer: the answer to their cancellation request. */
+export async function sendCancellationDecisionEmail(order: {
+  id: string
+  order_code: string
+  email: string
+  approved: boolean
+  wasPaid?: boolean
+  crypto?: boolean
+  reason?: string | null
+}): Promise<void> {
+  const code = escapeHtml(order.order_code)
+  const body = order.approved
+    ? `${paragraph(`As you asked, order <strong>${code}</strong> has been canceled and won't be shipped.`)}
+       ${
+         order.wasPaid
+           ? paragraph(
+               order.crypto
+                 ? "We'll be in touch about your refund. Reply to this email if you'd like it as store credit or sent back to a wallet address."
+                 : "Your refund is on its way and should reach you within 5–10 business days."
+             )
+           : paragraph("No payment was taken for this order, so there's nothing to refund.")
+       }`
+    : `${paragraph(`We weren't able to cancel order <strong>${code}</strong>, so it's going ahead as normal.`)}
+       ${order.reason ? paragraph(`Reason: ${escapeHtml(order.reason)}`) : ""}
+       ${paragraph("Reply to this email if you have any questions.")}`
+
+  await send(
+    order.email,
+    order.approved ? `Order ${order.order_code} was canceled` : `About your cancellation request for ${order.order_code}`,
+    renderLayout(order.approved ? "Your order was canceled" : "Your order is going ahead", `${body}
+      ${buttonHtml(`${appUrl()}/account/orders/${order.id}`, "View your order")}`),
+    {
+      category: "transactional",
+      template: order.approved ? "cancellation_approved" : "cancellation_declined",
+      entityId: order.id,
+      mailbox: "orders",
+    }
+  )
+}
+
 /**
  * Sent once, when the account is created.
  *

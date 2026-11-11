@@ -9,6 +9,8 @@ import { OrderStatusSelect } from "@/components/admin/order-status-select"
 import { OrderTrackingForm } from "@/components/admin/order-tracking-form"
 import { ReprintButton } from "@/components/admin/reprint-button"
 import { ManualPaymentReview } from "@/components/admin/manual-payment-review"
+import { CancellationReview } from "@/components/admin/cancellation-review"
+import { ArchiveAllCanceledButton, ArchiveButton } from "@/components/admin/archive-button"
 
 export const dynamic = "force-dynamic"
 
@@ -32,6 +34,7 @@ type OrderRow = {
   payment_txid: string | null
   payment_submitted_at: string | null
   approved_at: string | null
+  archived_at: string | null
   items: Array<{
     id: string
     product_title: string
@@ -44,10 +47,12 @@ type OrderRow = {
 const VIEWS = {
   all: "All",
   review: "Awaiting approval",
+  cancel: "Cancellation requests",
   unpaid: "Awaiting payment",
   paid: "Paid, to ship",
   shipped: "Shipped",
   canceled: "Canceled",
+  archived: "Archived",
 } as const
 type View = keyof typeof VIEWS
 
@@ -68,7 +73,7 @@ export default async function AdminOrdersPage({
       "id,order_code,email,status,total_cents,shipping_address," +
         "tracking_number,tracking_carrier,cancellation_requested_at,cancel_reason,created_at," +
         "payment_provider,payment_asset,payment_network,payment_address,payment_amount_crypto," +
-        "payment_txid,payment_submitted_at,approved_at," +
+        "payment_txid,payment_submitted_at,approved_at,archived_at," +
         "items:order_items(id,product_title,variant_title,quantity,unit_price_cents)"
     )
     .order("created_at", { ascending: false })
@@ -76,19 +81,26 @@ export default async function AdminOrdersPage({
 
   if (view === "review") {
     query = query.eq("status", "pending").eq("payment_provider", "manual").not("payment_submitted_at", "is", null)
+  } else if (view === "cancel") {
+    query = query.not("cancellation_requested_at", "is", null).in("status", ["pending", "paid"])
   } else if (view === "unpaid") {
     query = query.eq("status", "pending").is("payment_submitted_at", null)
   } else if (view === "paid") {
     query = query.eq("status", "paid")
-  } else if (view !== "all") {
+  } else if (view !== "all" && view !== "archived") {
     query = query.eq("status", view)
   }
 
-  // An order code is matched exactly; anything else is treated as an email.
-  if (/^MW-[A-Z0-9]{6}$/i.test(q)) query = query.eq("order_code", q.toUpperCase())
+  // An order code is matched exactly, archived or not — it's the one search
+  // that names a single order. Anything else is treated as an email.
+  const codeSearch = /^MW-[A-Z0-9]{6}$/i.test(q)
+  if (codeSearch) query = query.eq("order_code", q.toUpperCase())
   else if (q) query = query.ilike("email", `%${q}%`)
 
-  const [{ data }, canApprove, { count: reviewCount }] = await Promise.all([
+  if (view === "archived") query = query.not("archived_at", "is", null)
+  else if (!codeSearch) query = query.is("archived_at", null)
+
+  const [{ data }, canApprove, { count: reviewCount }, { count: cancelCount }] = await Promise.all([
     query,
     isAdmin(),
     supabase
@@ -97,6 +109,11 @@ export default async function AdminOrdersPage({
       .eq("status", "pending")
       .eq("payment_provider", "manual")
       .not("payment_submitted_at", "is", null),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .not("cancellation_requested_at", "is", null)
+      .in("status", ["pending", "paid"]),
   ])
 
   const orders = (data ?? []) as unknown as OrderRow[]
@@ -153,9 +170,20 @@ export default async function AdminOrdersPage({
                 {reviewCount}
               </span>
             )}
+            {v === "cancel" && (cancelCount ?? 0) > 0 && (
+              <span className="ml-1.5 rounded-full bg-amber-600 px-1.5 py-px text-[10px] font-bold text-white">
+                {cancelCount}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
+
+      {view === "canceled" && orders.length > 0 && (
+        <div className="flex justify-end">
+          <ArchiveAllCanceledButton />
+        </div>
+      )}
 
       {orders.length === 0 && (
         <p className="rounded-xl border border-dashed border-sand-300 bg-white px-6 py-16 text-center text-sm text-sand-600">
@@ -172,6 +200,9 @@ export default async function AdminOrdersPage({
         const manualPending = order.payment_provider === "manual" && order.status === "pending"
         const awaitingApproval = manualPending && !!order.payment_submitted_at
         const txLink = explorerUrl(order.payment_network, order.payment_txid)
+        // An open cancellation request is decided before anything else moves.
+        const cancelOpen =
+          !!order.cancellation_requested_at && ["pending", "paid"].includes(order.status)
         return (
           <div
             key={order.id}
@@ -194,6 +225,9 @@ export default async function AdminOrdersPage({
                       Cancellation requested
                     </span>
                   )}
+                  {order.archived_at && (
+                    <span className="rounded-full bg-sand-200 px-2.5 py-0.5 text-xs font-medium text-sand-700">archived</span>
+                  )}
                   <span className="text-xs text-sand-600">{new Date(order.created_at).toLocaleString("en-US")}</span>
                 </div>
                 <p className="mt-1 text-sm text-sand-600">{order.email}</p>
@@ -210,9 +244,20 @@ export default async function AdminOrdersPage({
 
               <div className="flex items-center gap-4">
                 <span className="text-lg font-bold text-sand-900">{formatCartTotal(order.total_cents)}</span>
-                {!manualPending && <OrderStatusSelect orderId={order.id} current={order.status} />}
+                {!manualPending && !cancelOpen && (
+                  <OrderStatusSelect orderId={order.id} current={order.status} />
+                )}
               </div>
             </div>
+
+            {cancelOpen && order.cancellation_requested_at && (
+              <CancellationReview
+                orderId={order.id}
+                requestedAt={order.cancellation_requested_at}
+                paid={order.status === "paid"}
+                canDecide={canApprove}
+              />
+            )}
 
             {order.payment_provider === "manual" && order.payment_asset && (
               <div className="mt-4 rounded-lg border border-sand-200 bg-sand-50 p-4 text-sm">
@@ -252,7 +297,12 @@ export default async function AdminOrdersPage({
                     </>
                   )}
                 </dl>
-                {manualPending && (
+                {manualPending && cancelOpen && (
+                  <p className="mt-4 border-t border-sand-200 pt-4 text-xs text-sand-600">
+                    Decide the cancellation request above before approving this payment.
+                  </p>
+                )}
+                {manualPending && !cancelOpen && (
                   <div className="mt-4 border-t border-sand-200 pt-4">
                     {awaitingApproval && (
                       <p className="mb-3 text-xs text-sand-600">
@@ -272,7 +322,12 @@ export default async function AdminOrdersPage({
                 trackingNumber={order.tracking_number}
                 trackingCarrier={order.tracking_carrier}
               />
-              <ReprintButton orderId={order.id} />
+              <span className="flex flex-wrap items-center gap-2">
+                {(order.archived_at || ["canceled", "delivered", "refunded"].includes(order.status)) && (
+                  <ArchiveButton orderId={order.id} archived={!!order.archived_at} />
+                )}
+                <ReprintButton orderId={order.id} />
+              </span>
             </div>
 
             <div className="mt-4 divide-y divide-sand-100 rounded-lg bg-sand-50">

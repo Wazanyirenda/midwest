@@ -92,7 +92,7 @@ export default async function AdminOverviewPage() {
           )}
           {stats.cancellationRequests > 0 && (
             <Link
-              href="/admin/orders"
+              href="/admin/orders?view=cancel"
               className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:bg-amber-100"
             >
               <strong>{stats.cancellationRequests}</strong> cancellation{" "}

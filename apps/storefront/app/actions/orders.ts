@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { requireUser } from "@/lib/auth"
+import { sendCancellationRequestedAlert } from "@/lib/email"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { getOrderById } from "@/lib/orders"
 import { getOrCreateCartId } from "./cart"
@@ -87,6 +89,17 @@ export async function requestCancellation(orderId: string): Promise<void> {
     })
     .eq("id", orderId)
   if (error) throw new Error(`Could not request cancellation: ${error.message}`)
+
+  // Staff decide in /admin/orders; this only makes sure someone knows to look.
+  after(() =>
+    sendCancellationRequestedAlert({
+      id: order.id,
+      order_code: order.order_code,
+      email: order.email,
+      status: order.db_status,
+      total_cents: order.total,
+    })
+  )
 
   revalidatePath(`/account/orders/${orderId}`)
   revalidatePath("/admin/orders")
