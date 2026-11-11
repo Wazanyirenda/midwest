@@ -5,8 +5,9 @@
  * who picks you because of a logo and then can't find it at payment is worse off
  * than one who never saw it.
  *
- * Which badges appear is controlled from /admin/settings, not from code. Apple
- * Pay and Amazon Pay default to off: both are enabled on the Stripe account but
+ * Card marks follow the card-payments switch and coin marks follow the crypto
+ * addresses in /admin/settings, so neither can advertise a method checkout
+ * isn't offering. Apple Pay and Amazon Pay default to off: both are enabled on the Stripe account but
  * neither is usable yet (Apple Pay needs domain verification; both need the
  * account to finish onboarding).
  */
@@ -23,20 +24,47 @@ function Tile({ label, children }: { label: string; children: React.ReactNode })
   )
 }
 
+const COIN_STYLE: Record<string, { label: string; color: string }> = {
+  BTC: { label: "Bitcoin", color: "#F7931A" },
+  USDT: { label: "Tether (USDT)", color: "#26A17B" },
+  USDC: { label: "USD Coin", color: "#2775CA" },
+}
+
 export function PaymentBadges({
   className = "",
+  showCards = false,
+  coins = [],
   showApplePay = false,
   showAmazonPay = false,
 }: {
   className?: string
+  /** Card marks only when card checkout is actually switched on. */
+  showCards?: boolean
+  /** Coins checkout is offering right now. */
+  coins?: string[]
   showApplePay?: boolean
   showAmazonPay?: boolean
 }) {
+  if (!showCards && coins.length === 0) return null
+
   return (
     <ul
       aria-label="Accepted payment methods"
       className={`flex flex-wrap items-center justify-center gap-2 ${className}`}
     >
+      {coins.map((coin) => (
+        <Tile key={coin} label={COIN_STYLE[coin]?.label ?? coin}>
+          <span
+            className="text-[10px] font-bold tracking-wide"
+            style={{ color: COIN_STYLE[coin]?.color ?? "#514e48" }}
+          >
+            {coin}
+          </span>
+        </Tile>
+      ))}
+
+      {showCards && (
+        <>
       <Tile label="Visa">
         <svg viewBox="0 0 40 13" className="h-3 w-auto" aria-hidden="true">
           <text
@@ -136,6 +164,8 @@ export function PaymentBadges({
             />
           </svg>
         </Tile>
+      )}
+        </>
       )}
     </ul>
   )

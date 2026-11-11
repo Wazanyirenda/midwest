@@ -62,12 +62,12 @@ export default async function AdminSettingsPage() {
 
       <Section
         title="Payment badges"
-        description="Card logos shown on the cart and checkout pages."
+        description="Payment logos on the cart page. They only ever show methods checkout is offering: coin marks for each crypto address you've set, and card logos only while card payments are on."
       >
         <SettingToggle
           field="showPaymentBadges"
           label="Show payment badges"
-          description="Visa, Mastercard, Amex, and Discover — all accepted today."
+          description="Shows BTC, USDT and USDC marks for the coins you accept. Visa, Mastercard, Amex and Discover appear only if card payments are switched on."
           initial={settings.showPaymentBadges}
         />
         <SettingToggle
@@ -90,6 +90,8 @@ export default async function AdminSettingsPage() {
           <div className="rounded-lg bg-sand-50 p-3">
             {settings.showPaymentBadges ? (
               <PaymentBadges
+                showCards={settings.cardPaymentsEnabled}
+                coins={manualOptions.map((o) => o.asset)}
                 showApplePay={settings.showApplePayBadge}
                 showAmazonPay={settings.showAmazonPayBadge}
               />

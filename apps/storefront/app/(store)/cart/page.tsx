@@ -4,6 +4,7 @@ import { Lock, ShoppingCart, Trash2, BookmarkPlus } from "lucide-react"
 import { getCart, formatCartTotal } from "@/lib/cart"
 import { getSiteSettings } from "@/lib/settings"
 import { PaymentBadges } from "@/components/store/payment-badges"
+import { paymentOptions } from "@/lib/manual-payments"
 import { StockNote } from "@/components/store/stock-note"
 import { QuantityStepper } from "@/components/store/quantity-stepper"
 import { clearCart, removeLineItem } from "@/app/actions/cart"
@@ -194,12 +195,14 @@ export default async function CartPage() {
 
               <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-sand-600">
                 <Lock size={12} strokeWidth={1.75} />
-                Secure card checkout
+                {settings.cardPaymentsEnabled ? "Secure card checkout" : "Secure checkout"}
               </p>
 
               {settings.showPaymentBadges && (
                 <PaymentBadges
                   className="mt-3"
+                  showCards={settings.cardPaymentsEnabled}
+                  coins={paymentOptions(settings).map((o) => o.asset)}
                   showApplePay={settings.showApplePayBadge}
                   showAmazonPay={settings.showAmazonPayBadge}
                 />

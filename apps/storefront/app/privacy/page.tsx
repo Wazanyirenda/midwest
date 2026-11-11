@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account information:</strong> Name, email address, password (hashed)</li>
           <li><strong>Order information:</strong> Shipping address, billing address, order history</li>
-          <li><strong>Payment information:</strong> We never see or store card numbers. Card payments, where enabled, are processed by Stripe; cryptocurrency payments are processed through our own BTCPay Server payment page and paid directly to our wallet. We retain only the payment reference and the amount.</li>
+          <li><strong>Payment information:</strong> Cryptocurrency payments (BTC, USDT, USDC) are sent from your own wallet directly to ours, with no payment processor in between. We keep the coin, the amount, our receiving address and the transaction ID you give us, so we can match your payment to your order. Blockchain transactions are public by nature: anyone can see a transaction on the blockchain, but not that it relates to you or your order. We never see or store card numbers; card payments, if we offer them in future, are processed by Stripe.</li>
           <li><strong>Communications:</strong> Messages you send to our support team</li>
         </ul>
 
@@ -67,8 +67,8 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase</strong> &mdash; hosts our database and accounts. Your account, addresses and order history are stored here.</li>
           <li><strong>Vercel</strong> &mdash; hosts and serves the website. Processes your IP address and request logs.</li>
-          <li><strong>Our BTCPay Server host</strong> &mdash; runs our cryptocurrency payment page. It sees the payment amount and an order reference, never your name or address.</li>
-          <li><strong>Stripe</strong> &mdash; processes card payments where card checkout is enabled.</li>
+          <li><strong>Coinbase and Kraken</strong> &mdash; we read the live Bitcoin price from them to work out the amount for a Bitcoin order. No information about you or your order is sent to them.</li>
+          <li><strong>Stripe</strong> &mdash; would process card payments, only if we enable card checkout.</li>
           <li><strong>Porkbun</strong> &mdash; delivers our email: order confirmations, shipping updates and password resets.</li>
           <li><strong>Resend</strong> &mdash; alternative email delivery provider, used when configured.</li>
           <li><strong>Google Analytics</strong> &mdash; site usage statistics. Loaded only if you accept analytics cookies.</li>

@@ -709,7 +709,7 @@ export async function sendCancellationRequestedAlert(order: {
     )}
     ${paragraph(
       paid
-        ? "This order is <strong>paid</strong>. If you approve, it won't ship, its stock goes back on the shelf, and you'll need to refund the customer yourself."
+        ? "This order is <strong>paid</strong>. If you approve, it won't ship, its stock goes back on the shelf, and you'll need to issue the refund yourself (store credit for crypto, per the refund policy)."
         : "This order <strong>hasn't been paid</strong>, so approving simply cancels it."
     )}
     ${paragraph("If it has already been packed or shipped, decline it and tell the customer why.")}
@@ -740,7 +740,7 @@ export async function sendCancellationDecisionEmail(order: {
          order.wasPaid
            ? paragraph(
                order.crypto
-                 ? "We'll be in touch about your refund. Reply to this email if you'd like it as store credit or sent back to a wallet address."
+                 ? "As set out in our refund policy, crypto payments are refunded as store credit, which never expires. We'll email you once it's on your account."
                  : "Your refund is on its way and should reach you within 5–10 business days."
              )
            : paragraph("No payment was taken for this order, so there's nothing to refund.")

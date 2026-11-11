@@ -56,7 +56,7 @@ export default function RefundsPage() {
         </p>
         <ul>
           <li>
-            <strong>Card payments</strong> are refunded to the original card and appear within
+            <strong>Card payments</strong>, if we offer them, are refunded to the original card and appear within
             5&ndash;10 business days, depending on your bank. We do not control that timing.
           </li>
           <li>
@@ -71,8 +71,9 @@ export default function RefundsPage() {
         <h2>5. Underpaid crypto orders</h2>
         <p>
           Crypto payments are sent from your own wallet, and network fees mean the amount that
-          arrives is sometimes slightly below the invoice. Small shortfalls inside our tolerance
-          are accepted automatically. A larger shortfall places the order under review rather
+          arrives is sometimes slightly below the amount shown on your order. We check every
+          payment by hand before approving an order, and a small shortfall is accepted. A larger
+          shortfall places the order under review rather
           than cancelling it: we will contact you to either collect the difference or issue
           store credit for the amount received.
         </p>
