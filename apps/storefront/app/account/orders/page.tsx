@@ -77,7 +77,7 @@ export default async function OrdersPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sand-900">
-                      Order #{order.display_id}
+                      Order {order.order_code}
                     </span>
                     <StatusBadge status={order.status} />
                   </div>

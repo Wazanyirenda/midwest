@@ -21,7 +21,7 @@ export default async function AdminOverviewPage() {
       getTopProducts(WINDOW_DAYS),
       supabase
         .from("orders")
-        .select("id,display_id,email,total_cents,status,created_at")
+        .select("id,order_code,email,total_cents,status,created_at")
         .order("created_at", { ascending: false })
         .limit(8),
       getPrintSummary(),
@@ -180,7 +180,7 @@ export default async function AdminOverviewPage() {
                 {recent.map((o) => (
                   <tr key={o.id} className="hover:bg-sand-50">
                     <td className="px-4 py-2.5 font-mono text-xs text-sand-700">
-                      #{o.display_id}
+                      {o.order_code}
                     </td>
                     <td className="px-4 py-2.5 text-sand-600">{o.email}</td>
                     <td className="px-4 py-2.5">
@@ -229,7 +229,7 @@ export default async function AdminOverviewPage() {
                   className="flex items-center justify-between gap-3 px-4 py-2.5"
                 >
                   <span className="font-mono text-xs text-sand-700">
-                    {job.display_id ? `#${job.display_id}` : "—"}
+                    {job.order_code ?? "—"}
                   </span>
                   <PrintStatusBadge status={job.status} />
                   <span className="ml-auto text-xs text-sand-600">

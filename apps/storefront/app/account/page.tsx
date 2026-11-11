@@ -187,7 +187,7 @@ export default async function AccountPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-sm font-medium text-ink">
-                          #{order.display_id}
+                          {order.order_code}
                         </span>
                         <StatusPill status={order.status} />
                       </div>

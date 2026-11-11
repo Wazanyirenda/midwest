@@ -4,6 +4,7 @@ import { getCart, formatCartTotal } from "@/lib/cart"
 import { getUser, getProfile } from "@/lib/auth"
 import { getSiteSettings } from "@/lib/settings"
 import { isConfigured as isCryptoConfigured } from "@/lib/btcpay"
+import { paymentOptions } from "@/lib/manual-payments"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { CheckoutForm, type CheckoutDefaults } from "@/components/store/checkout-form"
 import { StockNote } from "@/components/store/stock-note"
@@ -88,6 +89,9 @@ export default async function CheckoutPage() {
               // Both switched on AND configured, so the button never leads to
               // a "not available" error.
               crypto: settings.cryptoPaymentsEnabled && isCryptoConfigured(),
+              // Coin and network only: the wallet address is shown on the
+              // order page once the order exists, not before.
+              manual: paymentOptions(settings).map(({ asset, network }) => ({ asset, network })),
             }}
           />
         </div>

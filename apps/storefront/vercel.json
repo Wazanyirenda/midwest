@@ -13,6 +13,10 @@
     {
       "path": "/api/cron/btcpay-reconcile",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/expire-unpaid",
+      "schedule": "0 13 * * *"
     }
   ]
 }

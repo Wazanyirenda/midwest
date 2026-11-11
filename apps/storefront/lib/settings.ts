@@ -48,6 +48,23 @@ export type SiteSettings = {
   labelPrinterHost: string
   /** Where receipt-printing problems are emailed. Empty = no alerts. */
   printAlertEmail: string
+  /** Pay-by-hand crypto checkout: customer sends coins, staff approve. */
+  manualPaymentsEnabled: boolean
+  /** Wallet addresses. A coin is offered only once its address is set. */
+  paymentAddressBtc: string
+  paymentAddressUsdt: string
+  paymentNetworkUsdt: string
+  paymentAddressUsdc: string
+  paymentNetworkUsdc: string
+  /** How long a quoted BTC amount stays valid before it must be re-priced. */
+  btcQuoteMinutes: number
+  /** Unpaid orders with no payment submitted are canceled after this long. */
+  unpaidOrderCancelHours: number
+  /** Comma-separated. New orders, submitted payments and receipt copies. */
+  orderAlertEmails: string
+  emailOrderReceivedSubject: string
+  emailOrderReceivedHeading: string
+  emailOrderReceivedBody: string
 }
 
 const DEFAULT_DISCLAIMER = `All products sold by Midwestern Peptides are intended strictly for laboratory research use. They are not designed or approved for human or animal consumption, and must not be used for any diagnostic, therapeutic, or medical application.
@@ -122,6 +139,21 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   labelPrinterSerial: "",
   labelPrinterHost: "",
   printAlertEmail: "",
+  // Mirror the seeded rows in 20261110000035_manual_crypto_payments.sql. Off
+  // with no addresses, so a settings outage can never show a customer a
+  // wallet to pay into.
+  manualPaymentsEnabled: false,
+  paymentAddressBtc: "",
+  paymentAddressUsdt: "",
+  paymentNetworkUsdt: "ethereum",
+  paymentAddressUsdc: "",
+  paymentNetworkUsdc: "ethereum",
+  btcQuoteMinutes: 60,
+  unpaidOrderCancelHours: 48,
+  orderAlertEmails: "orders@midwesternpeptides.com, support@midwesternpeptides.com",
+  emailOrderReceivedSubject: "Order {{order_number}} received - payment instructions",
+  emailOrderReceivedHeading: "Thanks - here's how to pay",
+  emailOrderReceivedBody: "We have received order {{order_number}}. To complete it, send the exact amount below to our wallet.\n\nOnce you have paid, open your order and paste your transaction ID so we can match the payment to your order. We check payments by hand and will email you as soon as yours is approved.\n\nUnpaid orders are canceled automatically after {{cancel_hours}} hours.",
 }
 
 /** DB key ↔ camelCase field. The DB key is the stable name. */
@@ -164,6 +196,18 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   labelPrinterSerial: "label_printer_serial",
   labelPrinterHost: "label_printer_host",
   printAlertEmail: "print_alert_email",
+  manualPaymentsEnabled: "manual_payments_enabled",
+  paymentAddressBtc: "payment_address_btc",
+  paymentAddressUsdt: "payment_address_usdt",
+  paymentNetworkUsdt: "payment_network_usdt",
+  paymentAddressUsdc: "payment_address_usdc",
+  paymentNetworkUsdc: "payment_network_usdc",
+  btcQuoteMinutes: "btc_quote_minutes",
+  unpaidOrderCancelHours: "unpaid_order_cancel_hours",
+  orderAlertEmails: "order_alert_emails",
+  emailOrderReceivedSubject: "email_order_received_subject",
+  emailOrderReceivedHeading: "email_order_received_heading",
+  emailOrderReceivedBody: "email_order_received_body",
 }
 
 /**

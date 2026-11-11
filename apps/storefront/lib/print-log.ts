@@ -14,7 +14,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 export type PrintJobRow = {
   id: string
   order_id: string | null
-  display_id: number | null
+  order_code: string | null
   status: PrintJobStatus
   attempts: number
   last_error: string | null
@@ -43,16 +43,16 @@ export type PrintSummary = {
 
 const JOB_FIELDS =
   "id,order_id,status,attempts,last_error,created_at,printed_at," +
-  "order:orders(display_id)"
+  "order:orders(order_code)"
 
-type JoinedRow = Omit<PrintJobRow, "display_id"> & {
-  order: { display_id: number } | null
+type JoinedRow = Omit<PrintJobRow, "order_code"> & {
+  order: { order_code: string } | null
 }
 
 function flatten(rows: JoinedRow[]): PrintJobRow[] {
   return rows.map(({ order, ...job }) => ({
     ...job,
-    display_id: order?.display_id ?? null,
+    order_code: order?.order_code ?? null,
   }))
 }
 

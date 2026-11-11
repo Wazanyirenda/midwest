@@ -12,7 +12,7 @@ const SETTLED = ["paid", "shipped", "delivered"]
 
 type TxRow = {
   id: string
-  display_id: number
+  order_code: string
   email: string
   status: string
   total_cents: number
@@ -56,7 +56,7 @@ export default async function AdminPaymentsPage() {
     supabase
       .from("orders")
       .select(
-        "id,display_id,email,status,total_cents,payment_provider," +
+        "id,order_code,email,status,total_cents,payment_provider," +
           "payment_reference,created_at,updated_at"
       )
       .order("created_at", { ascending: false })
@@ -143,7 +143,7 @@ export default async function AdminPaymentsPage() {
                         href="/admin/orders"
                         className="font-mono text-xs text-sand-700 hover:text-brand-700"
                       >
-                        #{o.display_id}
+                        {o.order_code}
                       </Link>
                     </td>
                     <td className="px-4 py-2.5 text-sand-600">{o.email}</td>

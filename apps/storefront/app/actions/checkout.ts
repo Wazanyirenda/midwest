@@ -2,15 +2,20 @@
 
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
+import { after } from "next/server"
 import Stripe from "stripe"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
-import { getCartById, CART_COOKIE } from "@/lib/cart"
+import { getCart, getCartById, CART_COOKIE } from "@/lib/cart"
 import { getShippingOptions } from "@/lib/shipping"
 import { getUser } from "@/lib/auth"
 import { rateLimit } from "@/lib/rate-limit"
 import { getSiteSettings } from "@/lib/settings"
 import { createInvoice, isConfigured as isCryptoConfigured } from "@/lib/btcpay"
 import { syncOrder } from "@/lib/btcpay-sync"
+import { paymentOptions, quoteAmount } from "@/lib/manual-payments"
+import { ASSETS, type Asset } from "@/lib/crypto-assets"
+import { sendNewOrderAlert, sendOrderReceivedEmail } from "@/lib/email"
+import type { ReceiptOrder } from "@/lib/receipt-pdf"
 // Confirmation mail is sent by the Stripe webhook, not from here — see
 // app/api/webhooks/stripe/route.ts.
 
@@ -238,7 +243,7 @@ export async function initiatePaymentSession(
 export async function finalizeCheckout(cartId: string) {
   const { data: order } = await supabase
     .from("orders")
-    .select("id,display_id,status")
+    .select("id,order_code,status")
     .eq("cart_id", cartId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -257,7 +262,7 @@ export async function finalizeCheckout(cartId: string) {
   revalidatePath("/checkout/success")
   return {
     type: "order" as const,
-    order: { id: order.id, display_id: order.display_id, status: order.status },
+    order: { id: order.id, order_code: order.order_code, status: order.status },
   }
 }
 
@@ -267,7 +272,7 @@ export async function finalizeCheckout(cartId: string) {
  */
 export async function getOrderPaymentStatus(orderId: string) {
   const read = () =>
-    supabase.from("orders").select("id,display_id,status,payment_provider").eq("id", orderId).maybeSingle()
+    supabase.from("orders").select("id,order_code,status,payment_provider").eq("id", orderId).maybeSingle()
 
   let { data } = await read()
   if (!data) return { status: "unknown" as const }
@@ -288,7 +293,7 @@ export async function getOrderPaymentStatus(orderId: string) {
     }
   }
 
-  return { status: data.status as string, displayId: data.display_id }
+  return { status: data.status as string, orderCode: data.order_code }
 }
 
 /**
@@ -387,4 +392,164 @@ async function createCryptoSession(
       { provider_id: "btcpay", data: { checkout_url: invoice.checkoutLink } },
     ],
   }
+}
+
+// ─── Manual crypto ────────────────────────────────────────────────────────────
+
+/** Orders this recent for the same cart are a double-click, not a new order. */
+const DUPLICATE_ORDER_WINDOW_MS = 10 * 60 * 1000
+
+/**
+ * Places an order to be paid by hand in BTC, USDT or USDC.
+ *
+ * The order is created pending and the cart retired: the customer pays from
+ * their own wallet afterwards, using the address and amount on their order
+ * page. Nothing here or in the browser can mark it paid — only a staff member
+ * approving it in /admin/orders (approveManualPayment) can.
+ *
+ * Prices, totals and the coin amount all come from the server; the browser
+ * only says which coin it wants.
+ */
+export async function placeManualOrder(
+  cartId: string,
+  asset: Asset,
+  attestation: CheckoutAttestation
+): Promise<{ orderId?: string; error?: string }> {
+  let attested: { age_confirmed_at: string; terms_accepted_at: string }
+  try {
+    attested = attestationTimestamps(attestation)
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+
+  const user = await getUser()
+  if (!user) return { error: "Please sign in to place your order." }
+  if (!ASSETS.includes(asset)) return { error: "Choose how you'd like to pay." }
+
+  const gate = await rateLimit("payment", cartId)
+  if (!gate.allowed) return { error: "Too many attempts. Please wait a moment." }
+
+  // The cookie's cart, checked against its owner — never a cart picked by id
+  // from the browser.
+  const cart = await getCart()
+  if (!cart || cart.id !== cartId) return { error: "Your cart has changed. Please refresh the page." }
+  if (!cart.email) return { error: "Add your contact details first." }
+  if (cart.items.length === 0) return { error: "Your cart is empty." }
+
+  const short = cart.items.find((i) => i.quantity > i.variant.inventory_quantity)
+  if (short) {
+    return { error: `Only ${short.variant.inventory_quantity} of ${short.variant.product.title} left. Please update your cart.` }
+  }
+
+  const option = paymentOptions(await getSiteSettings()).find((o) => o.asset === asset)
+  if (!option) return { error: "That payment method isn't available right now." }
+
+  const { data: recent } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("cart_id", cart.id)
+    .eq("user_id", user.id)
+    .eq("payment_provider", "manual")
+    .eq("status", "pending")
+    .gte("created_at", new Date(Date.now() - DUPLICATE_ORDER_WINDOW_MS).toISOString())
+    .limit(1)
+    .maybeSingle()
+  if (recent) return { orderId: recent.id }
+
+  let amount: number
+  try {
+    amount = await quoteAmount(asset, cart.total)
+  } catch {
+    return {
+      error: "We couldn't get a Bitcoin price right now. Try again in a minute, or pay with USDT or USDC.",
+    }
+  }
+
+  const now = new Date().toISOString()
+  const { data: order, error } = await supabase
+    .from("orders")
+    .insert({
+      cart_id: cart.id,
+      user_id: user.id,
+      email: cart.email,
+      shipping_address: cart.shipping_address,
+      subtotal_cents: cart.subtotal,
+      shipping_cents: cart.shipping_total,
+      total_cents: cart.total,
+      status: "pending",
+      payment_provider: "manual",
+      payment_asset: option.asset,
+      payment_network: option.network,
+      payment_address: option.address,
+      payment_amount_crypto: amount,
+      payment_quoted_at: now,
+      ...attested,
+      updated_at: now,
+    })
+    .select("id,order_code")
+    .single()
+  if (error || !order) {
+    console.error("[checkout] could not create manual order:", error?.message)
+    return { error: "We couldn't place your order. Please try again." }
+  }
+
+  // The order code doubles as the payment reference, which is how approval
+  // finds the order through process_payment_success.
+  const { error: refError } = await supabase
+    .from("orders")
+    .update({ payment_reference: order.order_code })
+    .eq("id", order.id)
+
+  const { error: itemsError } = await supabase.from("order_items").insert(
+    cart.items.map((i) => ({
+      order_id: order.id,
+      variant_id: i.variant.id,
+      product_title: i.variant.product.title,
+      variant_title: i.variant.title,
+      quantity: i.quantity,
+      unit_price_cents: i.unit_price,
+    }))
+  )
+  if (refError || itemsError) {
+    // An order without its lines can't be fulfilled or approved; remove it so
+    // the customer can simply try again.
+    console.error("[checkout] could not complete manual order:", refError?.message ?? itemsError?.message)
+    await supabase.from("orders").delete().eq("id", order.id)
+    return { error: "We couldn't place your order. Please try again." }
+  }
+
+  await supabase.from("carts").update({ completed_at: now }).eq("id", cart.id)
+  const cookieStore = await cookies()
+  cookieStore.delete(CART_COOKIE)
+
+  const address = cart.shipping_address
+  const emailOrder = {
+    id: order.id,
+    order_code: order.order_code as string,
+    email: cart.email,
+    customer_name: address ? `${address.first_name ?? ""} ${address.last_name ?? ""}`.trim() : null,
+    shipping_address: address as ReceiptOrder["shippingAddress"],
+    items: cart.items.map((i) => ({
+      product_title: i.variant.product.title,
+      variant_title: i.variant.title,
+      quantity: i.quantity,
+      unit_price_cents: i.unit_price,
+    })),
+    subtotal_cents: cart.subtotal,
+    shipping_cents: cart.shipping_total,
+    total_cents: cart.total,
+    payment_asset: option.asset,
+    payment_network: option.network,
+    payment_address: option.address,
+    payment_amount_crypto: amount,
+  }
+  // After the response, so slow mail never holds up the customer. Neither send
+  // can throw: failures are logged in email_log.
+  after(async () => {
+    await sendOrderReceivedEmail(emailOrder)
+    await sendNewOrderAlert(emailOrder)
+  })
+
+  revalidatePath("/", "layout")
+  return { orderId: order.id }
 }

@@ -109,7 +109,7 @@ function rule(ctx: Ctx, y: number) {
 
 export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   const doc = await PDFDocument.create()
-  doc.setTitle(`Receipt — Order #${order.displayId}`)
+  doc.setTitle(`Receipt — Order ${order.displayId}`)
   doc.setProducer("Midwestern Peptides")
 
   const page = doc.addPage([PAGE_W, PAGE_H])
@@ -127,7 +127,7 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   textRight(ctx, "RECEIPT", right, y, { size: 15, bold: true, color: MUTED })
   y -= 16
   text(ctx, "North Dakota, USA", MARGIN, y, { size: 9, color: MUTED })
-  textRight(ctx, `Order #${order.displayId}`, right, y, { size: 9, color: MUTED })
+  textRight(ctx, `Order ${order.displayId}`, right, y, { size: 9, color: MUTED })
   y -= 12
   text(ctx, "support@midwesternpeptides.com", MARGIN, y, { size: 9, color: MUTED })
   textRight(ctx, formatDate(order.createdAt), right, y, { size: 9, color: MUTED })

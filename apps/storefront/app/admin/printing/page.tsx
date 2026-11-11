@@ -36,7 +36,7 @@ function Row({ job }: { job: PrintJobRow }) {
   return (
     <tr className="hover:bg-sand-50">
       <td className="px-4 py-2.5 font-mono text-xs text-sand-700">
-        {job.display_id ? `#${job.display_id}` : "—"}
+        {job.order_code ?? "—"}
       </td>
       <td className="px-4 py-2.5">
         <PrintStatusBadge status={job.status} />

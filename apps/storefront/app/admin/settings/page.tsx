@@ -7,6 +7,8 @@ import { SettingField } from "@/components/admin/setting-field"
 import { EmailStatus } from "@/components/admin/email-status"
 import { SettingSelect } from "@/components/admin/setting-select"
 import { PaymentBadges } from "@/components/store/payment-badges"
+import { paymentOptions } from "@/lib/manual-payments"
+import { STABLECOIN_NETWORKS, isNetwork, isValidAddress, networkLabel } from "@/lib/crypto-assets"
 
 export const dynamic = "force-dynamic"
 
@@ -35,6 +37,19 @@ export default async function AdminSettingsPage() {
   const transport = transportStatus()
   const bulkTransport = transportStatus("resend")
   const bulkReady = bulkTransport.kind === "resend"
+  const manualOptions = paymentOptions(settings)
+  // An address saved under one network stays invalid if the network is
+  // changed afterwards; say so rather than silently dropping the coin.
+  const addressWarnings = (
+    [
+      ["USDT", settings.paymentAddressUsdt, settings.paymentNetworkUsdt],
+      ["USDC", settings.paymentAddressUsdc, settings.paymentNetworkUsdc],
+    ] as const
+  ).flatMap(([coin, address, network]) =>
+    address && !(isNetwork(network) && isValidAddress(network, address))
+      ? [`The ${coin} address isn't a valid ${networkLabel(network)} address, so ${coin} isn't offered. Check the network matches your wallet.`]
+      : []
+  )
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -98,8 +113,8 @@ export default async function AdminSettingsPage() {
         />
         <SettingToggle
           field="cryptoPaymentsEnabled"
-          label="Crypto payments (BTCPay Server)"
-          description="Bitcoin and Lightning, paid straight into your own wallet with no processor in between. No underwriting and no chargebacks. Requires BTCPAY_URL, BTCPAY_STORE_ID, BTCPAY_API_KEY and BTCPAY_WEBHOOK_SECRET."
+          label="Automatic crypto payments (BTCPay Server)"
+          description="Only if you run a BTCPay Server, which confirms payments automatically. Leave off when using the hand-checked crypto payments below. Requires BTCPAY_URL, BTCPAY_STORE_ID, BTCPAY_API_KEY and BTCPAY_WEBHOOK_SECRET."
           warning="Crypto payments cannot be reversed — refunds must be issued manually."
           initial={settings.cryptoPaymentsEnabled}
         />
@@ -112,6 +127,120 @@ export default async function AdminSettingsPage() {
           min={0}
           max={10}
           suffix="%"
+        />
+      </Section>
+
+      <Section
+        title="Crypto payments (checked by hand)"
+        description="Customers send BTC, USDT or USDC straight to your wallet, then paste their transaction ID on their order. You check it on the blockchain and approve the order from the Orders page. A coin only appears at checkout once its address below is filled in."
+      >
+        <SettingToggle
+          field="manualPaymentsEnabled"
+          label="Offer crypto payments at checkout"
+          description="Turn on once at least one address below is filled in and you've sent a small test payment to it from another wallet."
+          warning="Payments are never marked paid automatically. Each order waits for you to approve it, and crypto can't be reversed: refunds have to be sent by hand."
+          initial={settings.manualPaymentsEnabled}
+        />
+        {manualOptions.length === 0 && settings.manualPaymentsEnabled && (
+          <p className="py-3 text-xs font-medium text-amber-700">
+            Switched on, but no valid address is set, so checkout isn&apos;t offering crypto yet.
+          </p>
+        )}
+        <SettingField
+          field="paymentAddressBtc"
+          label="Bitcoin (BTC) address"
+          description="From your wallet's Receive screen. Starts with bc1, 1 or 3. Leave empty to not offer Bitcoin."
+          initial={settings.paymentAddressBtc}
+          placeholder="bc1q…"
+          maxLength={100}
+        />
+        <SettingField
+          field="paymentAddressUsdt"
+          label="Tether (USDT) address"
+          description="Leave empty to not offer USDT."
+          initial={settings.paymentAddressUsdt}
+          maxLength={100}
+        />
+        <SettingSelect
+          field="paymentNetworkUsdt"
+          label="USDT network"
+          description="Must be the network your USDT address is on. Customers are told to send on this network only. Coins sent on the wrong one are lost."
+          initial={settings.paymentNetworkUsdt}
+          options={STABLECOIN_NETWORKS.map((n) => ({ value: n.value, label: n.label }))}
+        />
+        <SettingField
+          field="paymentAddressUsdc"
+          label="USD Coin (USDC) address"
+          description="Leave empty to not offer USDC."
+          initial={settings.paymentAddressUsdc}
+          maxLength={100}
+        />
+        <SettingSelect
+          field="paymentNetworkUsdc"
+          label="USDC network"
+          description="Must be the network your USDC address is on."
+          initial={settings.paymentNetworkUsdc}
+          options={STABLECOIN_NETWORKS.map((n) => ({ value: n.value, label: n.label }))}
+        />
+        {addressWarnings.map((w) => (
+          <p key={w} className="py-3 text-xs font-medium text-amber-700">
+            {w}
+          </p>
+        ))}
+        <SettingField
+          field="btcQuoteMinutes"
+          label="Hold the Bitcoin price for"
+          description="The BTC amount is worked out from the live price when the order is placed. After this long, the customer's order page asks them to refresh it before paying. Stablecoins are always $1, so they don't expire."
+          initial={settings.btcQuoteMinutes}
+          type="number"
+          min={15}
+          max={1440}
+          suffix="minutes"
+        />
+        <SettingField
+          field="unpaidOrderCancelHours"
+          label="Cancel unpaid orders after"
+          description="Orders with no transaction ID submitted by then are canceled and the customer is emailed. Orders that have one are never auto-canceled; they wait for you. Checked once a day, so a cancellation can come up to a day later than this."
+          initial={settings.unpaidOrderCancelHours}
+          type="number"
+          min={12}
+          max={336}
+          suffix="hours"
+        />
+        <SettingField
+          field="orderAlertEmails"
+          label="Send order notifications to"
+          description="Every new order, every submitted payment, and a copy of each paid receipt. Also told whenever a payment address above changes. Separate addresses with commas, up to 5."
+          initial={settings.orderAlertEmails}
+          placeholder="orders@midwesternpeptides.com, support@midwesternpeptides.com"
+          maxLength={1000}
+        />
+      </Section>
+
+      <Section
+        title="Order received (awaiting payment)"
+        description="Sent to the customer the moment a crypto order is placed. The amount, coin, network, wallet address and order code are added below your text automatically. Placeholders: {{order_number}}, {{cancel_hours}}."
+      >
+        <SettingField
+          field="emailOrderReceivedSubject"
+          label="Subject line"
+          initial={settings.emailOrderReceivedSubject}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderReceivedHeading"
+          label="Heading"
+          description="The large line at the top of the email body."
+          initial={settings.emailOrderReceivedHeading}
+          maxLength={300}
+        />
+        <SettingField
+          field="emailOrderReceivedBody"
+          label="Body text"
+          description="Blank lines separate paragraphs. Plain text only."
+          initial={settings.emailOrderReceivedBody}
+          rows={6}
+          maxLength={2000}
         />
       </Section>
 
@@ -305,7 +434,7 @@ export default async function AdminSettingsPage() {
 
       <Section
         title="Order confirmation"
-        description="Sent from orders@ the moment payment is confirmed, with the itemised PDF receipt attached. Available placeholder: {{order_number}}."
+        description="Sent from orders@ the moment payment is confirmed (for crypto orders, when you approve one), with the itemised PDF receipt attached. A copy also goes to your order notification addresses. Available placeholder: {{order_number}}."
       >
         <SettingField
           field="emailOrderConfirmationSubject"

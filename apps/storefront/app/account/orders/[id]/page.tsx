@@ -5,6 +5,9 @@ import { requireUser } from "@/lib/auth"
 import { getOrderById, carrierTrackingUrl } from "@/lib/orders"
 import { ReorderButton } from "@/components/store/reorder-button"
 import { CancelRequestButton } from "@/components/store/cancel-request-button"
+import { ManualPaymentPanel } from "@/components/store/manual-payment-panel"
+import { getSiteSettings } from "@/lib/settings"
+import { quoteExpired } from "@/lib/manual-payments"
 
 export const metadata: Metadata = {
   title: "Order Details",
@@ -15,6 +18,7 @@ export const dynamic = "force-dynamic"
 
 type Props = {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ placed?: string }>
 }
 
 const STATUS_STEPS = ["pending", "processing", "shipped", "delivered"]
@@ -37,10 +41,10 @@ function formatDate(dateStr: string) {
   })
 }
 
-export default async function OrderDetailPage({ params }: Props) {
-  const { id } = await params
+export default async function OrderDetailPage({ params, searchParams }: Props) {
+  const [{ id }, { placed }] = await Promise.all([params, searchParams])
   const user = await requireUser("/account/orders")
-  const o = await getOrderById(id, user)
+  const [o, settings] = await Promise.all([getOrderById(id, user), getSiteSettings()])
 
   if (!o) {
     return (
@@ -80,7 +84,11 @@ export default async function OrderDetailPage({ params }: Props) {
     )
   }
 
-  const statusStyle = STATUS_STYLES[o.status] ?? { label: o.status, cls: "bg-sand-100 text-sand-600" }
+  const awaitingManualPayment = o.db_status === "pending" && !!o.manual_payment
+  const awaitingApproval = awaitingManualPayment && !!o.manual_payment?.submittedAt
+  const statusStyle = awaitingApproval
+    ? { label: "Payment being checked", cls: "bg-blue-100 text-blue-700" }
+    : (STATUS_STYLES[o.status] ?? { label: o.status, cls: "bg-sand-100 text-sand-600" })
   const currentStep = STATUS_STEPS.indexOf(o.status)
   const isCanceled = o.db_status === "canceled"
   const canRequestCancel =
@@ -94,13 +102,13 @@ export default async function OrderDetailPage({ params }: Props) {
         <span>/</span>
         <Link href="/account/orders" className="hover:text-sand-700">Orders</Link>
         <span>/</span>
-        <span className="text-sand-900">#{o.display_id}</span>
+        <span className="text-sand-900">{o.order_code}</span>
       </nav>
 
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-sand-900">Order #{o.display_id}</h1>
+          <h1 className="text-2xl font-bold text-sand-900">Order {o.order_code}</h1>
           <p className="mt-1 text-sm text-sand-600">Placed {formatDate(o.created_at)}</p>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle.cls}`}>
@@ -108,8 +116,37 @@ export default async function OrderDetailPage({ params }: Props) {
         </span>
       </div>
 
+      {placed && awaitingManualPayment && !awaitingApproval && (
+        <div className="mb-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
+          <strong>Order placed.</strong> We&apos;ve emailed you these payment details too.
+        </div>
+      )}
+
+      {awaitingManualPayment && o.manual_payment && (
+        <ManualPaymentPanel
+          orderId={o.id}
+          orderCode={o.order_code}
+          payment={o.manual_payment}
+          quoteExpired={
+            !o.manual_payment.submittedAt &&
+            quoteExpired(o.manual_payment.asset, o.manual_payment.quotedAt, settings.btcQuoteMinutes)
+          }
+          quoteMinutes={settings.btcQuoteMinutes}
+          cancelHours={settings.unpaidOrderCancelHours}
+        />
+      )}
+
       {/* Progress tracker / canceled banner */}
-      {isCanceled ? (
+      {isCanceled && o.manual_payment ? (
+        <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+          This order was canceled{o.cancel_reason ? `: ${o.cancel_reason.toLowerCase()}` : ""}. If you
+          sent a payment for it,{" "}
+          <a href="mailto:support@midwesternpeptides.com" className="font-medium underline">
+            contact support
+          </a>{" "}
+          with your transaction ID and we&apos;ll sort it out.
+        </div>
+      ) : isCanceled ? (
         <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           This order was canceled. If you were charged, the refund will arrive
           within 5–10 business days. Questions?{" "}

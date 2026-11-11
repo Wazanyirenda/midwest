@@ -6,14 +6,21 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bitcoin, Check } from "lucide-react"
+import { Bitcoin, Check, Coins } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { updateCartContact } from "@/app/actions/cart"
-import { initiatePaymentSession, addShippingMethod, listShippingOptions, finalizeCheckout } from "@/app/actions/checkout"
+import {
+  initiatePaymentSession,
+  addShippingMethod,
+  listShippingOptions,
+  finalizeCheckout,
+  placeManualOrder,
+} from "@/app/actions/checkout"
 import { saveAddressFromCheckout } from "@/app/actions/addresses"
 import { Field, inputCls } from "@/components/ui/form-field"
 import { US_STATES } from "@/lib/us-states"
+import { assetLabel, networkLabel, type Asset } from "@/lib/crypto-assets"
 
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 
@@ -353,6 +360,89 @@ function CryptoPayButton({
   )
 }
 
+// ─── Manual crypto (used inside review step) ──────────────────────────────────
+
+function ManualCryptoPay({
+  cartId,
+  contact,
+  options,
+}: {
+  cartId: string
+  contact: ContactData
+  options: ManualOption[]
+}) {
+  const [asset, setAsset] = useState<Asset>(options[0]?.asset ?? "USDT")
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  async function place() {
+    setSubmitting(true)
+    setError(null)
+    const result = await placeManualOrder(cartId, asset, {
+      ageConfirmed: contact.ageConfirmed,
+      termsAccepted: contact.termsAccepted,
+    })
+    if (result.error || !result.orderId) {
+      setError(result.error ?? "We couldn't place your order. Please try again.")
+      setSubmitting(false)
+      return
+    }
+    // A full navigation, not a client push: the cart is gone and the header's
+    // cart count must refresh with it.
+    window.location.assign(`/account/orders/${result.orderId}?placed=1`)
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border border-sand-200 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-sand-900">
+        <Coins size={18} strokeWidth={2} className="text-amber-600" />
+        Pay with crypto
+      </div>
+
+      <fieldset className="space-y-2">
+        <legend className="sr-only">Choose a coin</legend>
+        {options.map((o) => (
+          <label
+            key={o.asset}
+            className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+              asset === o.asset ? "border-brand-500 bg-brand-50" : "border-sand-200 hover:border-sand-300"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <input
+                type="radio"
+                name="crypto-asset"
+                value={o.asset}
+                checked={asset === o.asset}
+                onChange={() => setAsset(o.asset)}
+                className="h-4 w-4 border-sand-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="font-medium text-sand-900">{assetLabel(o.asset)}</span>
+            </span>
+            <span className="text-xs text-sand-600">{networkLabel(o.network)}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <ol className="list-decimal space-y-1 pl-5 text-xs text-sand-600">
+        <li>Place your order. You&apos;ll see the exact amount and our wallet address, and we&apos;ll email them to you.</li>
+        <li>Send the payment from your own wallet.</li>
+        <li>Paste the transaction ID on your order page. We check it and email you when it&apos;s approved.</li>
+      </ol>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      <button
+        type="button"
+        onClick={place}
+        disabled={submitting}
+        className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+      >
+        {submitting ? "Placing order…" : `Place order and pay with ${asset} →`}
+      </button>
+    </div>
+  )
+}
+
 // ─── Step 2: Review + pay ─────────────────────────────────────────────────────
 
 type CartSummary = {
@@ -367,7 +457,14 @@ function formatAmount(n: number | null | undefined) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n / 100)
 }
 
-export type PaymentMethods = { card: boolean; crypto: boolean }
+export type ManualOption = { asset: Asset; network: string }
+
+export type PaymentMethods = {
+  card: boolean
+  crypto: boolean
+  /** Coins offered for pay-by-hand crypto. Empty when it's switched off. */
+  manual: ManualOption[]
+}
 
 function ReviewStep({
   contact,
@@ -421,13 +518,17 @@ function ReviewStep({
         By placing this order you confirm you are 21+.
       </div>
 
+      {paymentMethods.manual.length > 0 && (
+        <ManualCryptoPay cartId={cart.id} contact={contact} options={paymentMethods.manual} />
+      )}
+
       {paymentMethods.crypto && <CryptoPayButton cartId={cart.id} contact={contact} />}
 
       {paymentMethods.card && stripeClientSecret && stripePromise ? (
         <Elements stripe={stripePromise} options={{ clientSecret: stripeClientSecret, appearance: { theme: "stripe" } }}>
           <StripePaymentForm cartId={cart.id} orderId={orderId} onSuccess={handleOrderSuccess} onBack={onBack} />
         </Elements>
-      ) : paymentMethods.crypto ? (
+      ) : paymentMethods.crypto || paymentMethods.manual.length > 0 ? (
         <button onClick={onBack}
           className="w-full rounded-lg border border-sand-300 py-3 text-sm font-medium text-sand-700 hover:bg-sand-50 transition-colors">
           ← Back

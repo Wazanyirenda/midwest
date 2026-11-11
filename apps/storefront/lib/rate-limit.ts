@@ -24,6 +24,9 @@ export const LIMITS = {
   // per order so an open tab, or a script with an order id, can't turn our
   // status endpoint into a flood of BTCPay API calls.
   paymentLookup: { limit: 6, windowSeconds: 60 },
+  // Each submitted transaction ID emails staff, so a script resubmitting
+  // must not become a mail flood. Per user, not per order.
+  paymentProof: { limit: 10, windowSeconds: 3600 },
 } as const
 
 export type LimitName = keyof typeof LIMITS

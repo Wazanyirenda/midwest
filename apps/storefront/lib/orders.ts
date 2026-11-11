@@ -5,16 +5,27 @@ import type { ReceiptOrder } from "@/lib/receipt-pdf"
 
 export type OrderListItem = {
   id: string
-  display_id: number
+  order_code: string
   created_at: string
   status: string
   total: number
   items: Array<{ title: string; quantity: number }>
 }
 
+/** What a manual crypto order told the customer to pay, and what they sent. */
+export type ManualPayment = {
+  asset: string
+  network: string
+  address: string
+  amount: string
+  quotedAt: string | null
+  txid: string | null
+  submittedAt: string | null
+}
+
 export type OrderDetail = {
   id: string
-  display_id: number
+  order_code: string
   created_at: string
   status: string
   db_status: string
@@ -27,6 +38,9 @@ export type OrderDetail = {
   tracking_number: string | null
   tracking_carrier: string | null
   cancellation_requested_at: string | null
+  cancel_reason: string | null
+  /** Present only for orders paid by hand in BTC, USDT or USDC. */
+  manual_payment: ManualPayment | null
   shipping_address: {
     first_name: string
     last_name: string
@@ -48,7 +62,7 @@ export type OrderDetail = {
 
 type OrderRow = {
   id: string
-  display_id: number
+  order_code: string
   email: string
   user_id: string | null
   status: string
@@ -60,6 +74,14 @@ type OrderRow = {
   tracking_number: string | null
   tracking_carrier: string | null
   cancellation_requested_at: string | null
+  cancel_reason: string | null
+  payment_asset: string | null
+  payment_network: string | null
+  payment_address: string | null
+  payment_amount_crypto: number | string | null
+  payment_quoted_at: string | null
+  payment_txid: string | null
+  payment_submitted_at: string | null
   created_at: string
   items: Array<{
     id: string
@@ -72,9 +94,11 @@ type OrderRow = {
 }
 
 const ORDER_FIELDS =
-  "id,display_id,email,user_id,status,subtotal_cents,shipping_cents,total_cents," +
+  "id,order_code,email,user_id,status,subtotal_cents,shipping_cents,total_cents," +
   "shipping_address,payment_provider,tracking_number,tracking_carrier," +
-  "cancellation_requested_at,created_at," +
+  "cancellation_requested_at,cancel_reason,created_at," +
+  "payment_asset,payment_network,payment_address,payment_amount_crypto," +
+  "payment_quoted_at,payment_txid,payment_submitted_at," +
   "items:order_items(id,product_title,variant_title,quantity,unit_price_cents,variant_id)"
 
 // Customers see "processing" for a paid-but-not-shipped order; the DB keeps
@@ -89,10 +113,24 @@ function itemTitle(item: OrderRow["items"][number]): string {
     : item.product_title
 }
 
-function paymentMethodLabel(provider: string | null): string {
+function paymentMethodLabel(provider: string | null, asset?: string | null): string {
   if (provider === "stripe") return "Card (Stripe)"
   if (provider === "btcpay") return "Crypto"
+  if (provider === "manual") return asset ? `Crypto (${asset})` : "Crypto"
   return "—"
+}
+
+function manualPayment(order: OrderRow): ManualPayment | null {
+  if (order.payment_provider !== "manual" || !order.payment_asset || !order.payment_network) return null
+  return {
+    asset: order.payment_asset,
+    network: order.payment_network,
+    address: order.payment_address ?? "",
+    amount: String(order.payment_amount_crypto ?? ""),
+    quotedAt: order.payment_quoted_at,
+    txid: order.payment_txid,
+    submittedAt: order.payment_submitted_at,
+  }
 }
 
 /**
@@ -164,7 +202,7 @@ export async function getOrdersForUser(user: User): Promise<OrderListItem[]> {
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .map((o) => ({
       id: o.id,
-      display_id: o.display_id,
+      order_code: o.order_code,
       created_at: o.created_at,
       status: toDisplayStatus(o.status),
       total: o.total_cents,
@@ -189,7 +227,7 @@ export async function getOrderById(
 
   return {
     id: order.id,
-    display_id: order.display_id,
+    order_code: order.order_code,
     created_at: order.created_at,
     status: toDisplayStatus(order.status),
     db_status: order.status,
@@ -198,10 +236,12 @@ export async function getOrderById(
     subtotal: order.subtotal_cents,
     shipping_total: order.shipping_cents,
     tax_total: 0,
-    payment_method: paymentMethodLabel(order.payment_provider),
+    payment_method: paymentMethodLabel(order.payment_provider, order.payment_asset),
     tracking_number: order.tracking_number,
     tracking_carrier: order.tracking_carrier,
     cancellation_requested_at: order.cancellation_requested_at,
+    cancel_reason: order.cancel_reason,
+    manual_payment: manualPayment(order),
     shipping_address: order.shipping_address,
     items: order.items.map((i) => ({
       id: i.id,
@@ -238,7 +278,7 @@ export async function getReceiptForUser(
   if (!ownsOrder(order, user) || !hasReceipt(order.status)) return null
 
   return {
-    displayId: order.display_id,
+    displayId: order.order_code,
     createdAt: order.created_at,
     email: order.email,
     status: order.status,

@@ -72,7 +72,7 @@ export default async function InvoicePage({ params }: Props) {
           </div>
           <div className="text-right">
             <p className="text-lg font-semibold text-sand-900">Invoice</p>
-            <p className="text-sm text-sand-600">Order #{o.display_id}</p>
+            <p className="text-sm text-sand-600">Order {o.order_code}</p>
             <p className="text-sm text-sand-600">{formatDate(o.created_at)}</p>
           </div>
         </div>

@@ -38,10 +38,10 @@ async function retireCart(orderId: string) {
     .is("completed_at", null)
 }
 
-async function displayIdFor(orderId: string | undefined): Promise<number | null> {
+async function orderCodeFor(orderId: string | undefined): Promise<string | null> {
   if (!orderId) return null
-  const { data } = await supabase.from("orders").select("display_id").eq("id", orderId).maybeSingle()
-  return (data?.display_id as number | undefined) ?? null
+  const { data } = await supabase.from("orders").select("order_code").eq("id", orderId).maybeSingle()
+  return (data?.order_code as string | undefined) ?? null
 }
 
 /**
@@ -82,10 +82,10 @@ async function applySettled(invoice: Invoice): Promise<SyncResult> {
       .from("webhook_events")
       .insert({ provider: PROVIDER, event_id: settledEventId(invoice.id), type: "second-payment" })
     if (!error) {
-      const displayId = await displayIdFor(invoice.metadata?.orderId)
-      if (displayId !== null) {
+      const orderCode = await orderCodeFor(invoice.metadata?.orderId)
+      if (orderCode !== null) {
         await sendPaymentReviewEmail({
-          displayId,
+          orderCode,
           receivedCents: Math.round(Number(invoice.amount) * 100),
           expectedCents: 0,
           secondPayment: true,
@@ -118,7 +118,7 @@ async function applySettled(invoice: Invoice): Promise<SyncResult> {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id,display_id,email,total_cents,shipping_cents,subtotal_cents," +
+      "id,order_code,email,total_cents,shipping_cents,subtotal_cents," +
         "created_at,status,payment_provider,shipping_address," +
         "items:order_items(product_title,variant_title,quantity,unit_price_cents)"
     )
@@ -143,10 +143,10 @@ async function applyUnderpaid(invoice: Invoice): Promise<SyncResult> {
   if (error) throw new Error(error.message)
 
   if ((data as { status?: string } | null)?.status === "review") {
-    const displayId = await displayIdFor(invoice.metadata?.orderId)
-    if (displayId !== null) {
+    const orderCode = await orderCodeFor(invoice.metadata?.orderId)
+    if (orderCode !== null) {
       await sendPaymentReviewEmail({
-        displayId,
+        orderCode,
         receivedCents: paidCents,
         expectedCents: Math.round(Number(invoice.amount) * 100),
       })

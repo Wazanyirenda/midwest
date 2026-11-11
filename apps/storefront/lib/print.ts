@@ -41,7 +41,7 @@ const MAX_COPIES = 5
 const AGENT_STALE_MS = 90 * 1000
 
 export type LabelOrder = {
-  display_id: number
+  order_code: string
   email: string
   created_at: string
   status: string
@@ -59,7 +59,7 @@ export type LabelOrder = {
 }
 
 const ORDER_LABEL_FIELDS =
-  "display_id,email,created_at,status,payment_provider,subtotal_cents," +
+  "order_code,email,created_at,status,payment_provider,subtotal_cents," +
   "shipping_cents,total_cents,shipping_address," +
   "items:order_items(product_title,variant_title,quantity,unit_price_cents)"
 
@@ -174,7 +174,7 @@ export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
   parts.push(line(y, 56, "Midwestern Peptides"))
   parts.push(amount(y + 10, 44, "RECEIPT"))
   y += 70
-  parts.push(line(y, 34, `Order #${order.display_id}   ${placedAt(order.created_at)}`))
+  parts.push(line(y, 34, `Order ${order.order_code}   ${placedAt(order.created_at)}`))
   y += 48
   parts.push(rule(y))
   y += 26
@@ -241,7 +241,7 @@ export function renderOrderLabelZpl(order: LabelOrder, copies: number): string {
   parts.push(line(fy, 32, paymentLine(order)))
   fy += 48
 
-  parts.push(`^BY3,3,90^FO${MARGIN},${fy}^BCN,90,Y,N,N^FD${order.display_id}^FS`)
+  parts.push(`^BY3,3,90^FO${MARGIN},${fy}^BCN,90,Y,N,N^FD${order.order_code}^FS`)
   fy += 140
 
   parts.push(line(fy, 24, "For laboratory research use only. Not for human or veterinary use."))
@@ -356,7 +356,7 @@ export async function queueOrderLabel(
     // Cloud printing reports its own failures through the job row. For the
     // local agent, the only sign of trouble is the agent going quiet.
     if (!zebraCloudConfigured() && (await agentRecentlySeen()) === false) {
-      await sendPrintAlertEmail({ kind: "offline", displayIds: [order.display_id] })
+      await sendPrintAlertEmail({ kind: "offline", orderCodes: [order.order_code] })
     }
     return {}
   } catch (e) {

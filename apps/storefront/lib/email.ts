@@ -4,6 +4,12 @@ import { deliver, mailboxFrom, type Mailbox } from "@/lib/email-transport"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { getSiteSettings } from "@/lib/settings"
 import { buildReceiptPdf, type ReceiptOrder } from "@/lib/receipt-pdf"
+import {
+  assetLabel,
+  explorerUrl,
+  formatCryptoAmount,
+  networkLabel,
+} from "@/lib/crypto-assets"
 
 // Templates and the consent gate. Delivery itself is in lib/email-transport.ts,
 // which picks SMTP or Resend from the environment. A failed send must NEVER
@@ -266,9 +272,9 @@ type EmailOrderItem = {
   unit_price_cents: number
 }
 
-export async function sendOrderConfirmationEmail(order: {
+type ReceiptEmailOrder = {
   id: string
-  display_id: number
+  order_code: string
   email: string
   items: EmailOrderItem[]
   subtotal_cents: number
@@ -278,52 +284,19 @@ export async function sendOrderConfirmationEmail(order: {
   status?: string
   payment_provider?: string | null
   shipping_address?: ReceiptOrder["shippingAddress"]
-}): Promise<void> {
-  const settings = await getSiteSettings()
-  const vars = { order_number: `#${order.display_id}` }
-  const rows = order.items
-    .map(
-      (i) => `<tr>
-        <td style="padding:8px 0;font-size:14px;color:#514e48;">
-          ${i.product_title}${i.variant_title ? ` — ${i.variant_title}` : ""} × ${i.quantity}
-        </td>
-        <td align="right" style="padding:8px 0;font-size:14px;color:#1c1b18;font-weight:bold;">
-          ${formatAmount(i.unit_price_cents * i.quantity)}
-        </td>
-      </tr>`
-    )
-    .join("")
+}
 
-  const body = `
-    ${copyToParagraphs(settings.emailOrderConfirmationBody, vars)}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-top:1px solid #ebe9e3;border-bottom:1px solid #ebe9e3;">
-      ${rows}
-      <tr>
-        <td style="padding:8px 0;font-size:13px;color:#8f8b7f;border-top:1px solid #ebe9e3;">Subtotal</td>
-        <td align="right" style="padding:8px 0;font-size:13px;color:#8f8b7f;border-top:1px solid #ebe9e3;">${formatAmount(order.subtotal_cents)}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0;font-size:13px;color:#8f8b7f;">Shipping</td>
-        <td align="right" style="padding:4px 0;font-size:13px;color:#8f8b7f;">${formatAmount(order.shipping_cents)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;font-size:15px;color:#1c1b18;font-weight:bold;">Total</td>
-        <td align="right" style="padding:8px 0;font-size:15px;color:#1c1b18;font-weight:bold;">${formatAmount(order.total_cents)}</td>
-      </tr>
-    </table>
-    <p style="margin:24px 0 0;">
-      <a href="${appUrl()}/account/orders/${order.id}"
-         style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
-        View your order
-      </a>
-    </p>`
+type Attachment = { filename: string; content: Buffer; contentType: string }
 
-  // The receipt is generated per send and never stored — regenerating it is
-  // cheap, and a PDF of someone's address is not something to keep lying around.
-  let attachments: Array<{ filename: string; content: Buffer; contentType: string }> | undefined
+/**
+ * The PDF receipt as an attachment. Generated per send and never stored —
+ * regenerating it is cheap, and a PDF of someone's address is not something to
+ * keep lying around. Undefined when it fails to draw, so the email still goes.
+ */
+async function receiptAttachments(order: ReceiptEmailOrder): Promise<Attachment[] | undefined> {
   try {
     const pdf = await buildReceiptPdf({
-      displayId: order.display_id,
+      displayId: order.order_code,
       createdAt: order.created_at ?? new Date().toISOString(),
       email: order.email,
       status: order.status ?? "paid",
@@ -339,18 +312,72 @@ export async function sendOrderConfirmationEmail(order: {
         unitPriceCents: i.unit_price_cents,
       })),
     })
-    attachments = [
-      {
-        filename: `receipt-${order.display_id}.pdf`,
-        content: pdf,
-        contentType: "application/pdf",
-      },
-    ]
+    return [{ filename: `receipt-${order.order_code}.pdf`, content: pdf, contentType: "application/pdf" }]
   } catch (e) {
-    // A receipt that fails to draw must not cost the customer their
-    // confirmation email — send it without the attachment.
     console.error("[email] receipt PDF failed:", e)
+    return undefined
   }
+}
+
+/** Itemised lines plus subtotal, shipping and total, for order emails. */
+function orderTableHtml(order: {
+  items: EmailOrderItem[]
+  subtotal_cents: number
+  shipping_cents: number
+  total_cents: number
+}): string {
+  const rows = order.items
+    .map(
+      (i) => `<tr>
+        <td style="padding:8px 0;font-size:14px;color:#514e48;">
+          ${escapeHtml(i.product_title)}${i.variant_title ? ` — ${escapeHtml(i.variant_title)}` : ""} × ${i.quantity}
+        </td>
+        <td align="right" style="padding:8px 0;font-size:14px;color:#1c1b18;font-weight:bold;">
+          ${formatAmount(i.unit_price_cents * i.quantity)}
+        </td>
+      </tr>`
+    )
+    .join("")
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-top:1px solid #ebe9e3;border-bottom:1px solid #ebe9e3;">
+      ${rows}
+      <tr>
+        <td style="padding:8px 0;font-size:13px;color:#8f8b7f;border-top:1px solid #ebe9e3;">Subtotal</td>
+        <td align="right" style="padding:8px 0;font-size:13px;color:#8f8b7f;border-top:1px solid #ebe9e3;">${formatAmount(order.subtotal_cents)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-size:13px;color:#8f8b7f;">Shipping</td>
+        <td align="right" style="padding:4px 0;font-size:13px;color:#8f8b7f;">${formatAmount(order.shipping_cents)}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;font-size:15px;color:#1c1b18;font-weight:bold;">Total</td>
+        <td align="right" style="padding:8px 0;font-size:15px;color:#1c1b18;font-weight:bold;">${formatAmount(order.total_cents)}</td>
+      </tr>
+    </table>`
+}
+
+function buttonHtml(href: string, label: string): string {
+  return `<p style="margin:24px 0 0;">
+      <a href="${href}"
+         style="display:inline-block;background-color:#1d6ad4;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:8px;">
+        ${label}
+      </a>
+    </p>`
+}
+
+function paragraph(html: string): string {
+  return `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">${html}</p>`
+}
+
+export async function sendOrderConfirmationEmail(order: ReceiptEmailOrder): Promise<void> {
+  const settings = await getSiteSettings()
+  const vars = { order_number: order.order_code }
+
+  const body = `
+    ${copyToParagraphs(settings.emailOrderConfirmationBody, vars)}
+    ${orderTableHtml(order)}
+    ${buttonHtml(`${appUrl()}/account/orders/${order.id}`, "View your order")}`
+
+  const attachments = await receiptAttachments(order)
 
   await send(
     order.email,
@@ -364,6 +391,284 @@ export async function sendOrderConfirmationEmail(order: {
       attachments,
     }
   )
+}
+
+// ─── Manual crypto payments ──────────────────────────────────────────────────
+// The customer pays from their own wallet and staff approve by hand, so both
+// sides are told at each step: order placed, payment submitted, approved or
+// canceled.
+
+export type ManualPaymentDetails = {
+  payment_asset: string | null
+  payment_network: string | null
+  payment_address: string | null
+  payment_amount_crypto: number | string | null
+}
+
+export type ManualEmailOrder = ReceiptEmailOrder &
+  ManualPaymentDetails & {
+    customer_name?: string | null
+  }
+
+function cryptoAmountText(order: ManualPaymentDetails): string {
+  if (order.payment_amount_crypto == null) return ""
+  return `${formatCryptoAmount(order.payment_amount_crypto, order.payment_asset ?? "")} ${
+    order.payment_asset ?? ""
+  }`
+}
+
+/** A label/value table on a tinted panel. Every value is escaped. */
+function detailsPanelHtml(rows: Array<[label: string, value: string, mono?: boolean]>): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background-color:#f5f4f0;border-radius:8px;">
+      <tr><td style="padding:12px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${rows
+            .map(
+              ([label, value, mono]) => `<tr>
+            <td style="padding:5px 12px 5px 0;font-size:13px;color:#8f8b7f;width:120px;vertical-align:top;">${escapeHtml(label)}</td>
+            <td style="padding:5px 0;font-size:14px;color:#1c1b18;font-weight:bold;word-break:break-all;${
+              mono ? "font-family:Consolas,Menlo,monospace;font-size:13px;" : ""
+            }">${escapeHtml(value)}</td>
+          </tr>`
+            )
+            .join("")}
+        </table>
+      </td></tr>
+    </table>`
+}
+
+/** Customer: order placed, here is how to pay. */
+export async function sendOrderReceivedEmail(order: ManualEmailOrder): Promise<void> {
+  const settings = await getSiteSettings()
+  const vars = {
+    order_number: order.order_code,
+    cancel_hours: String(settings.unpaidOrderCancelHours),
+  }
+
+  const body = `
+    ${copyToParagraphs(settings.emailOrderReceivedBody, vars)}
+    ${detailsPanelHtml([
+      ["Send exactly", cryptoAmountText(order)],
+      ["Coin", assetLabel(order.payment_asset)],
+      ["Network", networkLabel(order.payment_network)],
+      ["To address", order.payment_address ?? "", true],
+      ["Order", order.order_code, true],
+    ])}
+    ${paragraph(
+      `<strong>Send only ${escapeHtml(order.payment_asset ?? "")} on the ${escapeHtml(
+        networkLabel(order.payment_network)
+      )} network to this address.</strong> Coins sent on another network, or to a mistyped address, cannot be recovered.`
+    )}
+    ${
+      order.payment_asset === "BTC"
+        ? paragraph(
+            `This Bitcoin amount is held for ${settings.btcQuoteMinutes} minutes. If you pay later than that, open your order first for an updated amount.`
+          )
+        : ""
+    }
+    ${orderTableHtml(order)}
+    ${buttonHtml(`${appUrl()}/account/orders/${order.id}`, "I've paid: add my transaction ID")}`
+
+  await send(
+    order.email,
+    subjectLine(settings.emailOrderReceivedSubject, vars),
+    renderLayout(subjectLine(settings.emailOrderReceivedHeading, vars), body),
+    {
+      category: "transactional",
+      template: "order_received",
+      entityId: order.id,
+      mailbox: "orders",
+    }
+  )
+}
+
+/** Each address in the order-alert setting, de-duplicated. */
+async function staffRecipients(): Promise<string[]> {
+  const { orderAlertEmails } = await getSiteSettings()
+  return [
+    ...new Set(
+      orderAlertEmails
+        .split(/[,;\s]+/)
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ]
+}
+
+async function sendToStaff(
+  subject: string,
+  heading: string,
+  body: string,
+  options: { template: string; entityId: string; attachments?: Attachment[] }
+): Promise<void> {
+  for (const to of await staffRecipients()) {
+    await send(to, subject, renderLayout(heading, body), {
+      category: "transactional",
+      mailbox: "orders",
+      ...options,
+    })
+  }
+}
+
+/** Name, email and ship-to. Only ever sent to the store's own inboxes. */
+function customerBlockHtml(order: ManualEmailOrder): string {
+  const a = order.shipping_address
+  const lines = a
+    ? [
+        `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(),
+        a.address_1,
+        a.address_2,
+        `${a.city ?? ""}, ${a.province ?? ""} ${a.postal_code ?? ""}`.trim(),
+      ].filter((line): line is string => !!line)
+    : []
+  return paragraph(
+    `<strong>${escapeHtml(order.customer_name || "Customer")}</strong> · ${escapeHtml(order.email)}${
+      lines.length ? `<br/>${lines.map(escapeHtml).join("<br/>")}` : ""
+    }`
+  )
+}
+
+function adminOrderLink(order: { order_code: string }): string {
+  return `${appUrl()}/admin/orders?q=${encodeURIComponent(order.order_code)}`
+}
+
+/** Staff: a new order is waiting for payment. */
+export async function sendNewOrderAlert(order: ManualEmailOrder): Promise<void> {
+  const body = `
+    ${paragraph(
+      "A new order was placed and is <strong>waiting for payment</strong>. Nothing to do yet: you'll get another email when the customer submits their transaction ID."
+    )}
+    ${customerBlockHtml(order)}
+    ${paragraph(
+      `Expecting <strong>${escapeHtml(cryptoAmountText(order))}</strong> on ${escapeHtml(
+        networkLabel(order.payment_network)
+      )}.`
+    )}
+    ${orderTableHtml(order)}
+    ${buttonHtml(adminOrderLink(order), "Open the order")}`
+
+  await sendToStaff(
+    `New order ${order.order_code}: ${formatAmount(order.total_cents)} (${order.payment_asset ?? "crypto"})`,
+    `New order ${order.order_code}`,
+    body,
+    { template: "staff_new_order", entityId: order.id }
+  )
+}
+
+/** Staff: the customer says they've paid. Check the blockchain and approve. */
+export async function sendPaymentSubmittedAlert(
+  order: ManualEmailOrder & { payment_txid: string }
+): Promise<void> {
+  const link = explorerUrl(order.payment_network, order.payment_txid)
+  const body = `
+    ${paragraph(
+      `The customer for order <strong>${escapeHtml(order.order_code)}</strong> says they've paid. Check the transaction, then approve or reject the order.`
+    )}
+    ${customerBlockHtml(order)}
+    ${detailsPanelHtml([
+      ["Should receive", `${cryptoAmountText(order)} (${formatAmount(order.total_cents)})`],
+      ["Network", networkLabel(order.payment_network)],
+      ["To address", order.payment_address ?? "", true],
+      ["Transaction ID", order.payment_txid, true],
+    ])}
+    ${paragraph(
+      "On the explorer, confirm it went <strong>to the address above</strong>, the amount is right, and it is confirmed. A customer can paste any transaction ID; only the blockchain shows it was theirs and was paid to you."
+    )}
+    ${
+      link
+        ? `<p style="margin:0 0 8px;"><a href="${link}" style="color:#1d6ad4;font-size:14px;">View the transaction on the blockchain</a></p>`
+        : ""
+    }
+    ${buttonHtml(adminOrderLink(order), "Approve or reject")}`
+
+  await sendToStaff(
+    `Payment submitted for ${order.order_code}: check and approve`,
+    `Payment to check: ${order.order_code}`,
+    body,
+    { template: "staff_payment_submitted", entityId: order.id }
+  )
+}
+
+/** Staff: a copy of the paid receipt, for the store's records. */
+export async function sendPaidReceiptCopy(order: ManualEmailOrder): Promise<void> {
+  const body = `
+    ${paragraph(
+      `Order <strong>${escapeHtml(order.order_code)}</strong> was approved as paid. The receipt is attached, and the customer has been sent the same one.`
+    )}
+    ${customerBlockHtml(order)}
+    ${orderTableHtml(order)}
+    ${buttonHtml(adminOrderLink(order), "Open the order")}`
+
+  await sendToStaff(
+    `Paid: order ${order.order_code}, ${formatAmount(order.total_cents)}`,
+    `Order ${order.order_code} paid`,
+    body,
+    { template: "staff_receipt_copy", entityId: order.id, attachments: await receiptAttachments(order) }
+  )
+}
+
+/** Customer: an unpaid order was canceled, or a payment couldn't be verified. */
+export async function sendOrderCanceledEmail(order: {
+  id: string
+  order_code: string
+  email: string
+  kind: "unpaid" | "rejected"
+  cancelHours?: number
+  reason?: string | null
+}): Promise<void> {
+  const code = escapeHtml(order.order_code)
+  const body =
+    order.kind === "unpaid"
+      ? `${paragraph(
+          `Order <strong>${code}</strong> was canceled because we didn't receive a payment for it within ${
+            order.cancelHours ?? 48
+          } hours.`
+        )}
+         ${paragraph(
+           "If you did send a payment, reply to this email with your transaction ID and we'll sort it out. Otherwise you're welcome to place a new order at any time."
+         )}`
+      : `${paragraph(`We couldn't verify the payment for order <strong>${code}</strong>, so it has been canceled.`)}
+         ${order.reason ? paragraph(`Reason: ${escapeHtml(order.reason)}`) : ""}
+         ${paragraph(
+           "If you think this is a mistake, reply to this email with your transaction ID and we'll look into it straight away."
+         )}`
+
+  await send(order.email, `Order ${order.order_code} was canceled`, renderLayout("Your order was canceled", body), {
+    category: "transactional",
+    template: order.kind === "unpaid" ? "order_canceled_unpaid" : "order_canceled_rejected",
+    entityId: order.id,
+    mailbox: "orders",
+  })
+}
+
+/**
+ * Staff: a wallet address in settings changed. Anyone who got into an admin
+ * account could swap in their own address and collect every payment after it,
+ * so every change is announced to the order inboxes with the old value kept.
+ */
+export async function sendPaymentAddressChangedAlert(change: {
+  label: string
+  previous: string
+  next: string
+  changedBy: string
+}): Promise<void> {
+  const body = `
+    ${paragraph(
+      `The <strong>${escapeHtml(change.label)}</strong> was changed in settings by ${escapeHtml(change.changedBy)}.`
+    )}
+    ${detailsPanelHtml([
+      ["Before", change.previous || "(empty)", true],
+      ["After", change.next || "(empty)", true],
+    ])}
+    ${paragraph(
+      "<strong>If you didn't make this change, act now:</strong> turn off crypto payments in settings, change your password, and check who has admin access. New customers are shown the new address from now on."
+    )}
+    ${buttonHtml(`${appUrl()}/admin/settings`, "Open settings")}`
+
+  await sendToStaff(`Security: ${change.label} was changed`, "A payment address was changed", body, {
+    template: "staff_address_changed",
+    entityId: change.label,
+  })
 }
 
 /**
@@ -415,7 +720,7 @@ const STATUS_COPY: Record<string, { subject: string; body: string }> = {
 
 export async function sendOrderStatusEmail(order: {
   id: string
-  display_id: number
+  order_code: string
   email: string
   status: string
   tracking_number?: string | null
@@ -425,7 +730,7 @@ export async function sendOrderStatusEmail(order: {
   if (!copy) return // only ship/deliver/cancel notify customers
 
   const settings = await getSiteSettings()
-  const vars = { order_number: `#${order.display_id}` }
+  const vars = { order_number: order.order_code }
   // Shipped is the one customers read most, so it is the one made editable.
   const shipped = order.status === "shipped"
 
@@ -466,7 +771,7 @@ export async function sendOrderStatusEmail(order: {
     order.email,
     shipped
       ? subjectLine(settings.emailOrderShippedSubject, vars)
-      : `Order #${order.display_id}: ${copy.subject}`,
+      : `Order ${order.order_code}: ${copy.subject}`,
     renderLayout(
       shipped ? subjectLine(settings.emailOrderShippedHeading, vars) : copy.subject,
       body
@@ -563,7 +868,7 @@ const PRINT_OFFLINE_ALERT_GAP_MS = 60 * 60 * 1000
  */
 export async function sendPrintAlertEmail(alert: {
   kind: "offline" | "failed"
-  displayIds: number[]
+  orderCodes: string[]
   detail?: string
 }): Promise<void> {
   const { printAlertEmail: to } = await getSiteSettings()
@@ -582,7 +887,7 @@ export async function sendPrintAlertEmail(alert: {
     if ((count ?? 0) > 0) return
   }
 
-  const orders = alert.displayIds.map((id) => `#${id}`).join(", ")
+  const orders = alert.orderCodes.join(", ")
   const subject =
     alert.kind === "offline"
       ? `Receipt printing is offline — order ${orders} is waiting`
@@ -637,7 +942,7 @@ export async function sendPrintAlertEmail(alert: {
  * marked paid nor dropped. Same recipient setting as the print alerts.
  */
 export async function sendPaymentReviewEmail(alert: {
-  displayId: number
+  orderCode: string
   receivedCents: number
   expectedCents: number
   /** Paid in full a second time, on another invoice for an order already paid. */
@@ -647,15 +952,15 @@ export async function sendPaymentReviewEmail(alert: {
   if (!to) return
 
   const subject = alert.secondPayment
-    ? `Order #${alert.displayId} was paid twice — needs review`
-    : `Order #${alert.displayId} was underpaid — needs review`
+    ? `Order ${alert.orderCode} was paid twice — needs review`
+    : `Order ${alert.orderCode} was underpaid — needs review`
   const body = `<p style="font-size:14px;color:#514e48;line-height:1.6;margin:0 0 16px;">
       ${
         alert.secondPayment
-          ? `Order #${alert.displayId} was already paid, and the customer has paid
+          ? `Order ${alert.orderCode} was already paid, and the customer has paid
              ${formatAmount(alert.receivedCents)} again on a second invoice. The
              order was not changed.`
-          : `The customer for order #${alert.displayId} paid ${formatAmount(alert.receivedCents)}
+          : `The customer for order ${alert.orderCode} paid ${formatAmount(alert.receivedCents)}
              of ${formatAmount(alert.expectedCents)}, and the payment window has closed.
              The order has not been marked paid and nothing has shipped.`
       }
@@ -677,7 +982,7 @@ export async function sendPaymentReviewEmail(alert: {
   await send(to, subject, renderLayout("An order was underpaid", body), {
     category: "transactional",
     template: "payment_review",
-    entityId: String(alert.displayId),
+    entityId: alert.orderCode,
     mailbox: "orders",
   })
 }

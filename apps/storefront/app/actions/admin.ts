@@ -13,6 +13,13 @@ export async function updateOrderStatus(
 ) {
   await requireAdmin()
 
+  // Setting "paid" by hand would skip everything payment does: stock, the
+  // receipt print, and the customer's confirmation. Payment state only moves
+  // through process_payment_success — Approve payment, or a provider webhook.
+  if (status === "paid") {
+    throw new Error("Use Approve payment on the order to mark it paid.")
+  }
+
   const { error } = await supabase
     .from("orders")
     .update({ status, updated_at: new Date().toISOString() })
@@ -24,7 +31,7 @@ export async function updateOrderStatus(
   if (["shipped", "delivered", "canceled"].includes(status)) {
     const { data: order } = await supabase
       .from("orders")
-      .select("id,display_id,email,status,tracking_number,tracking_carrier")
+      .select("id,order_code,email,status,tracking_number,tracking_carrier")
       .eq("id", orderId)
       .maybeSingle()
     if (order) {

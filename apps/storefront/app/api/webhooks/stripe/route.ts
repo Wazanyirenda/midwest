@@ -13,7 +13,7 @@ const PROVIDER = "stripe"
 type ProcessResult = {
   status: "processed" | "duplicate" | "already_processed"
   order_id?: string
-  display_id?: number
+  order_code?: string
   email?: string
 }
 
@@ -123,7 +123,7 @@ async function sendConfirmation(orderId: string): Promise<void> {
     const { data: order } = await supabase
       .from("orders")
       .select(
-        "id,display_id,email,subtotal_cents,shipping_cents,total_cents," +
+        "id,order_code,email,subtotal_cents,shipping_cents,total_cents," +
           "created_at,status,payment_provider,shipping_address," +
           "items:order_items(product_title,variant_title,quantity,unit_price_cents)"
       )

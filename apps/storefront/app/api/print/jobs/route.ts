@@ -145,13 +145,13 @@ export async function POST(request: Request) {
       .eq("id", job.id)
       .eq("status", "claimed")
       .gte("attempts", MAX_ATTEMPTS)
-      .select("order:orders(display_id)")
+      .select("order:orders(order_code)")
 
-    const displayIds = (retired ?? [])
-      .map((r) => (r as unknown as { order: { display_id: number } | null }).order?.display_id)
-      .filter((id): id is number => typeof id === "number")
-    if (displayIds.length > 0) {
-      await sendPrintAlertEmail({ kind: "failed", displayIds, detail: job.error })
+    const orderCodes = (retired ?? [])
+      .map((r) => (r as unknown as { order: { order_code: string } | null }).order?.order_code)
+      .filter((code): code is string => typeof code === "string")
+    if (orderCodes.length > 0) {
+      await sendPrintAlertEmail({ kind: "failed", orderCodes, detail: job.error })
     }
 
     // Otherwise back to queued: a printer briefly out of paper retries. A row
