@@ -210,7 +210,7 @@ export default async function AdminSettingsPage() {
         <SettingField
           field="orderAlertEmails"
           label="Send order notifications to"
-          description="Every new order, every submitted payment, and a copy of each paid receipt. Also told whenever a payment address above changes. Separate addresses with commas, up to 5."
+          description="Every new order, every submitted payment, and a copy of each paid receipt. Also told whenever a payment address above changes, and when this list itself changes (the old and new addresses are both told, so nobody can be removed quietly). Separate addresses with commas, up to 5. Adding a personal email outside the store's domain is a good idea for these security alerts."
           initial={settings.orderAlertEmails}
           placeholder="orders@midwesternpeptides.com, support@midwesternpeptides.com"
           maxLength={1000}
@@ -309,10 +309,10 @@ export default async function AdminSettingsPage() {
         <SettingField
           field="printAlertEmail"
           label="Email me when something needs attention"
-          description="Sent when a crypto order is underpaid or paid twice, and when a paid order's receipt can't print — the printer or the computer it runs through is off or unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Leave empty for no alerts."
+          description="Sent when a crypto order is underpaid or paid twice, and when a paid order's receipt can't print — the printer or the computer it runs through is off or unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Separate several addresses with commas, up to 5. Leave empty for no alerts."
           initial={settings.printAlertEmail}
-          placeholder="you@example.com"
-          maxLength={254}
+          placeholder="support@midwesternpeptides.com, you@gmail.com"
+          maxLength={1000}
         />
       </Section>
 

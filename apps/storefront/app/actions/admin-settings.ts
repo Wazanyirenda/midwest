@@ -13,7 +13,7 @@ import {
   type SiteSettings,
 } from "@/lib/settings"
 import { STABLECOIN_NETWORKS, isNetwork, isValidAddress, networkLabel } from "@/lib/crypto-assets"
-import { sendPaymentAddressChangedAlert } from "@/lib/email"
+import { sendPaymentAddressChangedAlert, splitEmailList } from "@/lib/email"
 
 type Result = { error?: string }
 
@@ -39,10 +39,14 @@ const STRING_MAX: Partial<Record<keyof SiteSettings, number>> = {
   emailAbandonedCartBody: 2000,
   emailOrderReceivedBody: 2000,
   orderAlertEmails: 1000,
+  printAlertEmail: 1000,
 }
 
-// Settings that must hold an email address when they hold anything at all.
-const EMAIL_FIELDS: ReadonlySet<keyof SiteSettings> = new Set(["printAlertEmail"])
+// Settings that hold a comma-separated list of email addresses (or nothing).
+const EMAIL_LIST_FIELDS: ReadonlySet<keyof SiteSettings> = new Set([
+  "printAlertEmail",
+  "orderAlertEmails",
+])
 
 // Settings whose value must be one of a fixed set.
 const ENUM_VALUES: Partial<Record<keyof SiteSettings, readonly string[]>> = {
@@ -51,8 +55,9 @@ const ENUM_VALUES: Partial<Record<keyof SiteSettings, readonly string[]>> = {
   paymentNetworkUsdc: STABLECOIN_NETWORKS.map((n) => n.value),
 }
 
-// Where customers send money. Each one is checked against its network, and
-// every change is emailed to the order inboxes (see sendPaymentAddressChangedAlert).
+// Where customers send money, and who is told when it changes. Addresses are
+// checked against their network, and every change to any of these is emailed
+// (see sendPaymentAddressChangedAlert).
 const PAYMENT_DESTINATIONS: Partial<
   Record<keyof SiteSettings, { label: string; network: (s: SiteSettings) => string }>
 > = {
@@ -61,6 +66,7 @@ const PAYMENT_DESTINATIONS: Partial<
   paymentAddressUsdc: { label: "USDC payment address", network: (s) => s.paymentNetworkUsdc },
   paymentNetworkUsdt: { label: "USDT payment network", network: () => "" },
   paymentNetworkUsdc: { label: "USDC payment network", network: () => "" },
+  orderAlertEmails: { label: "order notification email list", network: () => "" },
 }
 
 const MAX_ALERT_RECIPIENTS = 5
@@ -84,7 +90,7 @@ export async function updateSetting(
     return { error: `Must be one of: ${allowed.join(", ")}` }
   }
 
-  if (field === "orderAlertEmails" && typeof value === "string") {
+  if (EMAIL_LIST_FIELDS.has(field) && typeof value === "string") {
     const list = value
       .split(/[,;\s]+/)
       .map((v) => v.trim())
@@ -108,13 +114,6 @@ export async function updateSetting(
         error: `That isn't a valid ${networkLabel(network)} address. Copy it from your wallet's Receive screen.`,
       }
     }
-  }
-
-  if (EMAIL_FIELDS.has(field) && typeof value === "string" && value.trim() !== "") {
-    if (!z.string().email().max(254).safeParse(value.trim()).success) {
-      return { error: "Enter a valid email address, or leave it empty." }
-    }
-    value = value.trim()
   }
 
   if (typeof value === "number") {
@@ -149,6 +148,11 @@ export async function updateSetting(
         previous,
         next: String(stored),
         changedBy: admin?.email ?? "an admin",
+        // The list as it was and as it is now: whoever was removed hears too.
+        recipients:
+          field === "orderAlertEmails"
+            ? [...new Set([...splitEmailList(previous), ...splitEmailList(String(stored))])]
+            : undefined,
       })
     )
   }

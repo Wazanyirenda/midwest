@@ -49,8 +49,18 @@ export default async function AdminOverviewPage() {
       {(stats.outOfStock.length > 0 ||
         stats.cancellationRequests > 0 ||
         stats.stalePendingCount > 0 ||
+        stats.awaitingApprovalCount > 0 ||
         printSummary.failed > 0) && (
         <div className="flex flex-wrap gap-2">
+          {stats.awaitingApprovalCount > 0 && (
+            <Link
+              href="/admin/orders?view=review"
+              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 hover:bg-blue-100"
+            >
+              <strong>{stats.awaitingApprovalCount}</strong> crypto payment
+              {stats.awaitingApprovalCount === 1 ? "" : "s"} to check and approve →
+            </Link>
+          )}
           {printSummary.failed > 0 && (
             <Link
               href="/admin/printing?status=failed"
@@ -72,12 +82,12 @@ export default async function AdminOverviewPage() {
           )}
           {stats.stalePendingCount > 0 && (
             <Link
-              href="/admin/orders"
+              href="/admin/orders?view=unpaid"
               className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:bg-amber-100"
             >
-              <strong>{stats.stalePendingCount}</strong> order
-              {stats.stalePendingCount === 1 ? "" : "s"} pending over an hour —
-              check Stripe for a missed payment →
+              <strong>{stats.stalePendingCount}</strong> card or BTCPay order
+              {stats.stalePendingCount === 1 ? "" : "s"} unpaid after an hour —
+              the payment may not have come through →
             </Link>
           )}
           {stats.cancellationRequests > 0 && (

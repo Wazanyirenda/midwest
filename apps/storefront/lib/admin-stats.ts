@@ -27,8 +27,14 @@ export type DashboardStats = {
   productCount: number
   publishedCount: number
   pendingCount: number
-  /** Pending over an hour — the webhook never landed, or payment was abandoned. */
+  /**
+   * Card or BTCPay orders pending over an hour: the webhook never landed, or
+   * the customer walked away mid-payment. Hand-checked crypto orders are left
+   * out — those sit pending by design until the customer pays.
+   */
   stalePendingCount: number
+  /** Crypto orders whose customer has submitted a transaction ID. */
+  awaitingApprovalCount: number
   cancellationRequests: number
   series: DaySlice[]
   lowStock: LowStockRow[]
@@ -59,6 +65,7 @@ export async function getDashboardStats(days = 30): Promise<DashboardStats> {
     pendingRes,
     stalePendingRes,
     cancelRes,
+    awaitingApprovalRes,
   ] = await Promise.all([
       supabase
         .from("orders")
@@ -82,18 +89,25 @@ export async function getDashboardStats(days = 30): Promise<DashboardStats> {
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
-      // A pending order older than an hour means the Stripe webhook never
+      // A provider-paid order pending over an hour means its webhook never
       // arrived (or the customer walked away mid-payment). Worth a look.
       supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending")
+        .in("payment_provider", ["stripe", "btcpay", "nowpayments"])
         .lt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString()),
       supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
         .not("cancellation_requested_at", "is", null)
         .in("status", ["pending", "paid"]),
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending")
+        .eq("payment_provider", "manual")
+        .not("payment_submitted_at", "is", null),
     ])
 
   type OrderRow = {
@@ -163,6 +177,7 @@ export async function getDashboardStats(days = 30): Promise<DashboardStats> {
     publishedCount: products.filter((p) => p.status === "published").length,
     pendingCount: pendingRes.count ?? 0,
     stalePendingCount: stalePendingRes.count ?? 0,
+    awaitingApprovalCount: awaitingApprovalRes.count ?? 0,
     cancellationRequests: cancelRes.count ?? 0,
     series: [...buckets.values()],
     lowStock: flagged.filter((v) => v.inventory_quantity > 0),

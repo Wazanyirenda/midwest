@@ -482,12 +482,11 @@ export async function sendOrderReceivedEmail(order: ManualEmailOrder): Promise<v
   )
 }
 
-/** Each address in the order-alert setting, de-duplicated. */
-async function staffRecipients(): Promise<string[]> {
-  const { orderAlertEmails } = await getSiteSettings()
+/** A comma-separated address list, split, lower-cased and de-duplicated. */
+export function splitEmailList(value: string): string[] {
   return [
     ...new Set(
-      orderAlertEmails
+      value
         .split(/[,;\s]+/)
         .map((s) => s.trim().toLowerCase())
         .filter(Boolean)
@@ -499,13 +498,21 @@ async function sendToStaff(
   subject: string,
   heading: string,
   body: string,
-  options: { template: string; entityId: string; attachments?: Attachment[] }
+  options: {
+    template: string
+    entityId: string
+    attachments?: Attachment[]
+    /** Overrides the order-alert setting, for when that setting is what changed. */
+    recipients?: string[]
+  }
 ): Promise<void> {
-  for (const to of await staffRecipients()) {
-    await send(to, subject, renderLayout(heading, body), {
+  const { recipients, ...sendOptions } = options
+  const to = recipients ?? splitEmailList((await getSiteSettings()).orderAlertEmails)
+  for (const address of to) {
+    await send(address, subject, renderLayout(heading, body), {
       category: "transactional",
       mailbox: "orders",
-      ...options,
+      ...sendOptions,
     })
   }
 }
@@ -642,16 +649,20 @@ export async function sendOrderCanceledEmail(order: {
 }
 
 /**
- * Staff: a wallet address in settings changed. Anyone who got into an admin
- * account could swap in their own address and collect every payment after it,
- * so every change is announced to the order inboxes with the old value kept.
+ * Staff: a wallet address, its network, or the alert list itself changed.
+ * Anyone who got into an admin account could swap in their own address and
+ * collect every payment after it, so every change is announced with the old
+ * value kept. A change to the alert list goes to the old AND new addresses —
+ * otherwise removing the owner's email first would make the swap silent.
  */
 export async function sendPaymentAddressChangedAlert(change: {
   label: string
   previous: string
   next: string
   changedBy: string
+  recipients?: string[]
 }): Promise<void> {
+  const settings = await getSiteSettings()
   const body = `
     ${paragraph(
       `The <strong>${escapeHtml(change.label)}</strong> was changed in settings by ${escapeHtml(change.changedBy)}.`
@@ -661,13 +672,21 @@ export async function sendPaymentAddressChangedAlert(change: {
       ["After", change.next || "(empty)", true],
     ])}
     ${paragraph(
-      "<strong>If you didn't make this change, act now:</strong> turn off crypto payments in settings, change your password, and check who has admin access. New customers are shown the new address from now on."
+      "<strong>If you didn't make this change, act now:</strong> turn off crypto payments in settings, change your password, and check who has admin access, then put the old value back."
     )}
     ${buttonHtml(`${appUrl()}/admin/settings`, "Open settings")}`
 
-  await sendToStaff(`Security: ${change.label} was changed`, "A payment address was changed", body, {
+  await sendToStaff(`Security: ${change.label} was changed`, "A payment setting was changed", body, {
     template: "staff_address_changed",
     entityId: change.label,
+    // Both alert lists: a security alert should reach everyone who gets any
+    // alert, whichever box the owner happened to fill in.
+    recipients: [
+      ...new Set([
+        ...(change.recipients ?? splitEmailList(settings.orderAlertEmails)),
+        ...splitEmailList(settings.printAlertEmail),
+      ]),
+    ],
   })
 }
 
@@ -871,8 +890,8 @@ export async function sendPrintAlertEmail(alert: {
   orderCodes: string[]
   detail?: string
 }): Promise<void> {
-  const { printAlertEmail: to } = await getSiteSettings()
-  if (!to) return
+  const recipients = splitEmailList((await getSiteSettings()).printAlertEmail)
+  if (recipients.length === 0) return
 
   const template = alert.kind === "offline" ? "print_alert_offline" : "print_alert_failed"
 
@@ -919,7 +938,7 @@ export async function sendPrintAlertEmail(alert: {
            printing page.
          </p>`
 
-  await send(
+  for (const to of recipients) await send(
     to,
     subject,
     renderLayout(
@@ -948,8 +967,8 @@ export async function sendPaymentReviewEmail(alert: {
   /** Paid in full a second time, on another invoice for an order already paid. */
   secondPayment?: boolean
 }): Promise<void> {
-  const { printAlertEmail: to } = await getSiteSettings()
-  if (!to) return
+  const recipients = splitEmailList((await getSiteSettings()).printAlertEmail)
+  if (recipients.length === 0) return
 
   const subject = alert.secondPayment
     ? `Order ${alert.orderCode} was paid twice — needs review`
@@ -979,7 +998,7 @@ export async function sendPaymentReviewEmail(alert: {
       </a>
     </p>`
 
-  await send(to, subject, renderLayout("An order was underpaid", body), {
+  for (const to of recipients) await send(to, subject, renderLayout("An order was underpaid", body), {
     category: "transactional",
     template: "payment_review",
     entityId: alert.orderCode,
