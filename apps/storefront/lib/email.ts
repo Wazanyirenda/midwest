@@ -289,7 +289,7 @@ type ReceiptEmailOrder = {
 type Attachment = { filename: string; content: Buffer; contentType: string }
 
 /**
- * The PDF receipt as an attachment. Generated per send and never stored —
+ * The 4x6 PDF receipt as an attachment. Generated per send and never stored —
  * regenerating it is cheap, and a PDF of someone's address is not something to
  * keep lying around. Undefined when it fails to draw, so the email still goes.
  */
@@ -600,7 +600,7 @@ export async function sendPaymentSubmittedAlert(
 export async function sendPaidReceiptCopy(order: ManualEmailOrder): Promise<void> {
   const body = `
     ${paragraph(
-      `Order <strong>${escapeHtml(order.order_code)}</strong> was approved as paid. The receipt is attached, and the customer has been sent the same one.`
+      `Order <strong>${escapeHtml(order.order_code)}</strong> was approved as paid. The 4x6 receipt is attached (the customer has been sent the same one). Print two: one for inside the box, one for the outside. Postage is bought separately.`
     )}
     ${customerBlockHtml(order)}
     ${orderTableHtml(order)}

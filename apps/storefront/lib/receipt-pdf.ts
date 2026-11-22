@@ -2,12 +2,17 @@ import "server-only"
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib"
 
 /**
- * Receipt PDFs, drawn rather than rendered from HTML.
+ * Receipt PDFs on 4x6 pages, the size of the Zebra's label stock, so one file
+ * serves everyone: the customer's email, their account download, and the
+ * store's copy, which staff print twice — one copy in the box as the packing
+ * slip, one on it as the address label. It is not a carrier label: postage
+ * still comes from the carrier or a label service.
  *
- * A headless browser would give richer layout but cannot run on the serverless
- * functions this store deploys to. pdf-lib is pure JS with no native binary and
- * no font files to bundle — StandardFonts are built into every PDF reader — so
- * the same code works locally and in production.
+ * Drawn rather than rendered from HTML. A headless browser would give richer
+ * layout but cannot run on the serverless functions this store deploys to.
+ * pdf-lib is pure JS with no native binary and no font files to bundle —
+ * StandardFonts are built into every PDF reader — so the same code works
+ * locally and in production.
  */
 
 export type ReceiptOrder = {
@@ -27,6 +32,7 @@ export type ReceiptOrder = {
     city?: string | null
     province?: string | null
     postal_code?: string | null
+    phone?: string | null
   } | null
   items: Array<{
     productTitle: string
@@ -38,11 +44,29 @@ export type ReceiptOrder = {
 
 const INK = rgb(0.11, 0.106, 0.094)
 const MUTED = rgb(0.42, 0.404, 0.376)
-const RULE = rgb(0.85, 0.84, 0.82)
 
-const PAGE_W = 595.28 // A4 portrait, points
-const PAGE_H = 841.89
-const MARGIN = 56
+const PAGE_W = 288 // 4 in at 72 pt/in
+const PAGE_H = 432 // 6 in
+const MARGIN = 16
+const RIGHT = PAGE_W - MARGIN
+const WIDTH = RIGHT - MARGIN
+// Kept clear at the foot of every page: the totals on the last page, a
+// "continued" note on the others, and the research-use notice on all of them.
+const FOOTER = 92
+const AMOUNT_WIDTH = 56
+
+// Only these mean money was taken. A receipt for anything else must not claim
+// the order was paid.
+const PAID_STATUSES = new Set(["paid", "shipped", "delivered"])
+
+// Manual approval, BTCPay and NOWPayments all take crypto; only Stripe is card.
+const CRYPTO_PROVIDERS = new Set(["manual", "btcpay", "nowpayments"])
+
+function paymentMethod(provider: string | null): string {
+  if (provider && CRYPTO_PROVIDERS.has(provider)) return "Cryptocurrency"
+  if (provider === "stripe") return "Card"
+  return "Other"
+}
 
 function money(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
@@ -66,172 +90,183 @@ function safe(text: string): string {
     .replace(/[^\x20-\x7E]/g, "")
 }
 
-type Ctx = { page: PDFPage; body: PDFFont; bold: PDFFont }
+type Fonts = { body: PDFFont; bold: PDFFont }
+type TextOptions = { size?: number; bold?: boolean; color?: ReturnType<typeof rgb> }
 
-function text(
-  ctx: Ctx,
-  value: string,
-  x: number,
-  y: number,
-  opts: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb> } = {}
-) {
-  ctx.page.drawText(safe(value), {
+function text(page: PDFPage, fonts: Fonts, value: string, x: number, y: number, opts: TextOptions = {}) {
+  page.drawText(safe(value), {
     x,
     y,
     size: opts.size ?? 10,
-    font: opts.bold ? ctx.bold : ctx.body,
+    font: opts.bold ? fonts.bold : fonts.body,
     color: opts.color ?? INK,
   })
 }
 
-/** Right-aligns against a column edge, so the money column lines up. */
-function textRight(
-  ctx: Ctx,
-  value: string,
-  right: number,
-  y: number,
-  opts: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb> } = {}
-) {
+/** Right-aligns against the page edge, so the money column lines up. */
+function textRight(page: PDFPage, fonts: Fonts, value: string, y: number, opts: TextOptions = {}) {
   const size = opts.size ?? 10
-  const font = opts.bold ? ctx.bold : ctx.body
-  const width = font.widthOfTextAtSize(safe(value), size)
-  text(ctx, value, right - width, y, opts)
+  const font = opts.bold ? fonts.bold : fonts.body
+  text(page, fonts, value, RIGHT - font.widthOfTextAtSize(safe(value), size), y, opts)
 }
 
-function rule(ctx: Ctx, y: number) {
-  ctx.page.drawLine({
-    start: { x: MARGIN, y },
-    end: { x: PAGE_W - MARGIN, y },
-    thickness: 0.75,
-    color: RULE,
+function rule(page: PDFPage, y: number) {
+  page.drawLine({ start: { x: MARGIN, y }, end: { x: RIGHT, y }, thickness: 1, color: INK })
+}
+
+/** Greedy word wrap on real glyph widths, capped with an ellipsis. */
+function wrapLines(font: PDFFont, size: number, value: string, width: number, max: number): string[] {
+  const words = safe(value).split(/\s+/).filter(Boolean)
+  const lines: string[] = []
+  let current = ""
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word
+    if (font.widthOfTextAtSize(next, size) <= width) {
+      current = next
+      continue
+    }
+    if (current) lines.push(current)
+    current = word
+    if (lines.length === max) break
+  }
+  if (current && lines.length < max) lines.push(current)
+  if (lines.length === max && lines.join(" ").length < words.join(" ").length) {
+    let last = lines[max - 1]!
+    while (last && font.widthOfTextAtSize(`${last}...`, size) > width) last = last.slice(0, -1)
+    lines[max - 1] = `${last}...`
+  }
+  return lines
+}
+
+function notice(page: PDFPage, fonts: Fonts) {
+  text(page, fonts, "For laboratory research use only.", MARGIN, MARGIN + 13, { size: 7, color: MUTED })
+  text(page, fonts, "Not for human or veterinary consumption.", MARGIN, MARGIN + 4, {
+    size: 7,
+    color: MUTED,
   })
 }
 
 export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   const doc = await PDFDocument.create()
-  doc.setTitle(`Receipt — Order ${order.displayId}`)
+  doc.setTitle(`Receipt - Order ${order.displayId}`)
   doc.setProducer("Midwestern Peptides")
-
-  const page = doc.addPage([PAGE_W, PAGE_H])
-  const ctx: Ctx = {
-    page,
+  const fonts: Fonts = {
     body: await doc.embedFont(StandardFonts.Helvetica),
     bold: await doc.embedFont(StandardFonts.HelveticaBold),
   }
 
-  const right = PAGE_W - MARGIN
-  let y = PAGE_H - MARGIN
+  let page = doc.addPage([PAGE_W, PAGE_H])
+  let y = PAGE_H - MARGIN - 12
 
-  // ── Header
-  text(ctx, "MIDWESTERN PEPTIDES", MARGIN, y, { size: 15, bold: true })
-  textRight(ctx, "RECEIPT", right, y, { size: 15, bold: true, color: MUTED })
+  // ── Header: who it's from, which order, and whether it is paid
+  text(page, fonts, "MIDWESTERN PEPTIDES", MARGIN, y, { size: 12, bold: true })
+  textRight(page, fonts, "RECEIPT", y, { size: 12, bold: true, color: MUTED })
+  y -= 13
+  text(page, fonts, `Order ${order.displayId}`, MARGIN, y, { size: 9, bold: true })
+  textRight(page, fonts, formatDate(order.createdAt), y, { size: 8, color: MUTED })
+  y -= 11
+  text(page, fonts, "support@midwesternpeptides.com", MARGIN, y, { size: 8, color: MUTED })
+  const method = paymentMethod(order.paymentProvider)
+  const paid = PAID_STATUSES.has(order.status)
+  textRight(page, fonts, paid ? `PAID - ${method}` : `${order.status.toUpperCase()} - ${method}`, y, {
+    size: 8,
+    bold: true,
+  })
+  y -= 9
+  rule(page, y)
   y -= 16
-  text(ctx, "North Dakota, USA", MARGIN, y, { size: 9, color: MUTED })
-  textRight(ctx, `Order ${order.displayId}`, right, y, { size: 9, color: MUTED })
-  y -= 12
-  text(ctx, "support@midwesternpeptides.com", MARGIN, y, { size: 9, color: MUTED })
-  textRight(ctx, formatDate(order.createdAt), right, y, { size: 9, color: MUTED })
 
-  y -= 22
-  rule(ctx, y)
-  y -= 26
-
-  // ── Billed to / payment
-  text(ctx, "BILLED TO", MARGIN, y, { size: 8, bold: true, color: MUTED })
-  text(ctx, "PAYMENT", MARGIN + 280, y, { size: 8, bold: true, color: MUTED })
-  y -= 15
-
+  // ── Ship to, large enough to read across a packing bench
+  text(page, fonts, "SHIP TO", MARGIN, y, { size: 7, bold: true, color: MUTED })
+  y -= 17
   const a = order.shippingAddress
   const name = [a?.first_name, a?.last_name].filter(Boolean).join(" ")
-  const lines = [
-    name || order.email,
-    a?.address_1 ?? "",
-    a?.address_2 ?? "",
-    [a?.city, a?.province, a?.postal_code].filter(Boolean).join(", "),
-    name ? order.email : "",
-  ].filter(Boolean)
-
-  const provider =
-    order.paymentProvider === "btcpay"
-      ? "Cryptocurrency"
-      : order.paymentProvider === "stripe"
-        ? "Card"
-        : "—"
-  const payment = [provider, `Status: ${order.status}`]
-
-  const rows = Math.max(lines.length, payment.length)
-  for (let i = 0; i < rows; i++) {
-    if (lines[i]) text(ctx, lines[i]!, MARGIN, y, { size: 10 })
-    if (payment[i]) text(ctx, payment[i]!, MARGIN + 280, y, { size: 10 })
+  const address = a
+    ? [
+        a.address_1 ?? "",
+        a.address_2 ?? "",
+        [a.city, [a.province, a.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+      ].filter(Boolean)
+    : ["No shipping address on file"]
+  for (const l of wrapLines(fonts.bold, 15, name || order.email, WIDTH, 2)) {
+    text(page, fonts, l, MARGIN, y, { size: 15, bold: true })
+    y -= 18
+  }
+  for (const part of address) {
+    for (const l of wrapLines(fonts.body, 13, part, WIDTH, 2)) {
+      text(page, fonts, l, MARGIN, y, { size: 13 })
+      y -= 16
+    }
+  }
+  if (a?.phone) {
+    text(page, fonts, a.phone, MARGIN, y, { size: 10, color: MUTED })
     y -= 14
   }
+  if (name) {
+    text(page, fonts, order.email, MARGIN, y, { size: 9, color: MUTED })
+    y -= 13
+  }
+  y -= 2
+  rule(page, y)
+  y -= 14
 
-  y -= 12
-  rule(ctx, y)
-  y -= 20
-
-  // ── Items
-  const qtyX = 330
-  const priceRight = 450
-  const totalRight = right
-
-  text(ctx, "ITEM", MARGIN, y, { size: 8, bold: true, color: MUTED })
-  text(ctx, "QTY", qtyX, y, { size: 8, bold: true, color: MUTED })
-  textRight(ctx, "UNIT", priceRight, y, { size: 8, bold: true, color: MUTED })
-  textRight(ctx, "AMOUNT", totalRight, y, { size: 8, bold: true, color: MUTED })
-  y -= 8
-  rule(ctx, y)
-  y -= 18
+  // ── Items. A long order runs onto further 4x6 pages rather than being cut
+  // short, since this is the customer's receipt as well as the packing slip.
+  const itemsHeading = () => {
+    text(page, fonts, "ITEMS", MARGIN, y, { size: 7, bold: true, color: MUTED })
+    textRight(page, fonts, "AMOUNT", y, { size: 7, bold: true, color: MUTED })
+    y -= 14
+  }
+  itemsHeading()
 
   for (const item of order.items) {
-    text(ctx, item.productTitle, MARGIN, y, { size: 10 })
-    text(ctx, String(item.quantity), qtyX, y, { size: 10 })
-    textRight(ctx, money(item.unitPriceCents), priceRight, y, { size: 10 })
-    textRight(ctx, money(item.unitPriceCents * item.quantity), totalRight, y, { size: 10 })
-    y -= 13
+    const title = item.variantTitle ? `${item.productTitle} - ${item.variantTitle}` : item.productTitle
+    const lines = wrapLines(fonts.body, 10, `${item.quantity} x ${title}`, WIDTH - AMOUNT_WIDTH, 2)
+    // The unit price sits under the title, so "3 x ..." reads against its
+    // line total.
+    const each = item.quantity > 1 ? 11 : 0
+    const height = lines.length * 12 + each + 4
 
-    if (item.variantTitle) {
-      text(ctx, item.variantTitle, MARGIN + 10, y, { size: 9, color: MUTED })
-      y -= 13
+    if (y - height < MARGIN + FOOTER + 12) {
+      text(page, fonts, "Continued on the next page", MARGIN, MARGIN + FOOTER - 14, { size: 9, bold: true })
+      notice(page, fonts)
+      page = doc.addPage([PAGE_W, PAGE_H])
+      y = PAGE_H - MARGIN - 12
+      text(page, fonts, "MIDWESTERN PEPTIDES", MARGIN, y, { size: 12, bold: true })
+      textRight(page, fonts, `Order ${order.displayId}`, y, { size: 9, bold: true })
+      y -= 9
+      rule(page, y)
+      y -= 16
+      itemsHeading()
+    }
+
+    textRight(page, fonts, money(item.unitPriceCents * item.quantity), y, { size: 10, bold: true })
+    for (const l of lines) {
+      text(page, fonts, l, MARGIN, y, { size: 10 })
+      y -= 12
+    }
+    if (each) {
+      text(page, fonts, `${money(item.unitPriceCents)} each`, MARGIN + 12, y + 1, { size: 8, color: MUTED })
+      y -= each
     }
     y -= 4
   }
 
-  y -= 6
-  rule(ctx, y)
-  y -= 20
-
-  // ── Totals
-  for (const [label, value, bold] of [
-    ["Subtotal", money(order.subtotalCents), false],
-    ["Shipping", order.shippingCents === 0 ? "Free" : money(order.shippingCents), false],
+  // ── Totals and notice, pinned to the foot of the last page
+  let fy = MARGIN + FOOTER
+  rule(page, fy)
+  fy -= 13
+  for (const [label, value] of [
+    ["Subtotal", money(order.subtotalCents)],
+    ["Shipping", order.shippingCents === 0 ? "Free" : money(order.shippingCents)],
   ] as const) {
-    textRight(ctx, label, priceRight, y, { size: 10, color: MUTED })
-    textRight(ctx, value, totalRight, y, { size: 10, bold })
-    y -= 16
+    text(page, fonts, label, MARGIN, fy, { size: 9, color: MUTED })
+    textRight(page, fonts, value, fy, { size: 9 })
+    fy -= 12
   }
-
-  y -= 4
-  textRight(ctx, "Total paid", priceRight, y, { size: 11, bold: true })
-  textRight(ctx, money(order.totalCents), totalRight, y, { size: 11, bold: true })
-
-  // ── Research-use footer, pinned to the bottom of the page
-  const footY = MARGIN + 34
-  rule(ctx, footY + 26)
-  text(
-    ctx,
-    "All products are sold for laboratory research use only.",
-    MARGIN,
-    footY + 12,
-    { size: 8, color: MUTED }
-  )
-  text(
-    ctx,
-    "Not for human or veterinary consumption. Midwestern Peptides LLC.",
-    MARGIN,
-    footY,
-    { size: 8, color: MUTED }
-  )
+  text(page, fonts, paid ? "Total paid" : "Total", MARGIN, fy, { size: 11, bold: true })
+  textRight(page, fonts, money(order.totalCents), fy, { size: 11, bold: true })
+  notice(page, fonts)
 
   return Buffer.from(await doc.save())
 }
