@@ -80,6 +80,7 @@ export default async function CheckoutPage() {
             cartId={cart.id}
             cartTotal={cart.total ?? null}
             cartSubtotal={cart.subtotal ?? null}
+            cartShipping={cart.shipping_total}
             items={items}
             defaults={defaults}
             isSignedIn={!!user}
@@ -130,7 +131,7 @@ export default async function CheckoutPage() {
               </div>
               <div className="flex justify-between text-sand-600">
                 <span>Shipping</span>
-                <span>TBD</span>
+                <span>{cart.shipping_total === 0 ? "Free" : formatCartTotal(cart.shipping_total)}</span>
               </div>
             </div>
 

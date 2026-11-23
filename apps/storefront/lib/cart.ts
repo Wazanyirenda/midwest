@@ -1,6 +1,7 @@
 import { cache } from "react"
 import { cookies } from "next/headers"
 import { getUser } from "@/lib/auth"
+import { shippingCents } from "@/lib/shipping"
 import { supabaseAdmin as supabase } from "./supabase/admin"
 
 export const CART_COOKIE = "cart_id"
@@ -47,7 +48,7 @@ async function fetchCart(
   const { data, error } = await supabase
     .from("carts")
     .select(
-      "id,user_id,email,shipping_address,shipping_cents,completed_at," +
+      "id,user_id,email,shipping_address,completed_at," +
         "items:cart_items(id,quantity," +
         "variant:product_variants(id,title,price_cents,inventory_quantity," +
         "product:products(title,handle,thumbnail)))"
@@ -63,7 +64,6 @@ async function fetchCart(
     completed_at: string | null
     email: string | null
     shipping_address: Record<string, string> | null
-    shipping_cents: number | null
     items: Array<{
       id: string
       quantity: number
@@ -92,7 +92,7 @@ async function fetchCart(
   }))
 
   const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0)
-  const shipping_total = row.shipping_cents ?? 0
+  const shipping_total = shippingCents(subtotal)
 
   return {
     ownerId: row.user_id,

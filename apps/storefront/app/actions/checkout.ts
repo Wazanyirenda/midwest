@@ -6,7 +6,6 @@ import { after } from "next/server"
 import Stripe from "stripe"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getCart, getCartById, CART_COOKIE } from "@/lib/cart"
-import { getShippingOptions } from "@/lib/shipping"
 import { getUser } from "@/lib/auth"
 import { rateLimit } from "@/lib/rate-limit"
 import { getSiteSettings } from "@/lib/settings"
@@ -18,30 +17,6 @@ import { sendNewOrderAlert, sendOrderReceivedEmail } from "@/lib/email"
 import type { ReceiptOrder } from "@/lib/receipt-pdf"
 // Confirmation mail is sent by the Stripe webhook, not from here — see
 // app/api/webhooks/stripe/route.ts.
-
-// ─── Shipping ─────────────────────────────────────────────────────────────────
-
-export async function listShippingOptions(cartId: string) {
-  const cart = await getCartById(cartId)
-  if (!cart) throw new Error("Cart not found")
-  return getShippingOptions(cart.subtotal)
-}
-
-export async function addShippingMethod(cartId: string, optionId: string) {
-  const cart = await getCartById(cartId)
-  if (!cart) throw new Error("Cart not found")
-
-  const option = getShippingOptions(cart.subtotal).find((o) => o.id === optionId)
-  if (!option) throw new Error("Unknown shipping option")
-
-  await supabase
-    .from("carts")
-    .update({ shipping_cents: option.amount, updated_at: new Date().toISOString() })
-    .eq("id", cartId)
-
-  revalidatePath("/checkout")
-  return getCartById(cartId)
-}
 
 // ─── Payment ─────────────────────────────────────────────────────────────────
 

@@ -12,8 +12,6 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { updateCartContact } from "@/app/actions/cart"
 import {
   initiatePaymentSession,
-  addShippingMethod,
-  listShippingOptions,
   finalizeCheckout,
   placeManualOrder,
 } from "@/app/actions/checkout"
@@ -449,6 +447,7 @@ type CartSummary = {
   id: string
   total: number | null
   subtotal: number | null
+  shipping: number
   items: Array<{ id: string; title?: string; quantity?: number; unit_price?: number | null }>
 }
 
@@ -508,6 +507,10 @@ function ReviewStep({
             </span>
           </div>
         ))}
+        <div className="flex justify-between p-4 text-sm text-sand-600">
+          <span>Shipping</span>
+          <span>{cart.shipping === 0 ? "Free" : formatAmount(cart.shipping)}</span>
+        </div>
         <div className="flex justify-between p-4 font-semibold text-sand-900">
           <span>Total</span>
           <span>{formatAmount(cart.total)}</span>
@@ -555,6 +558,7 @@ type Props = {
   cartId: string
   cartTotal: number | null
   cartSubtotal: number | null
+  cartShipping: number
   items: CartSummary["items"]
   defaults?: CheckoutDefaults
   isSignedIn?: boolean
@@ -567,6 +571,7 @@ export function CheckoutForm({
   cartId,
   cartTotal,
   cartSubtotal,
+  cartShipping,
   items,
   defaults = {},
   isSignedIn = false,
@@ -594,16 +599,6 @@ export function CheckoutForm({
       postal_code: data.zip,
       country_code: "us",
     })
-
-    // Auto-select the first available shipping option
-    try {
-      const options = await listShippingOptions(cartId)
-      if (options?.[0]) {
-        await addShippingMethod(cartId, options[0].id)
-      }
-    } catch {
-      // No shipping options configured yet — continue anyway
-    }
 
     if (isSignedIn && data.saveAddress) {
       try {
@@ -664,7 +659,7 @@ export function CheckoutForm({
       {step === 2 && contactData && (
         <ReviewStep
           contact={contactData}
-          cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, items }}
+          cart={{ id: cartId, total: cartTotal, subtotal: cartSubtotal, shipping: cartShipping, items }}
           stripeClientSecret={stripeClientSecret}
           orderId={orderId}
           paymentMethods={paymentMethods}

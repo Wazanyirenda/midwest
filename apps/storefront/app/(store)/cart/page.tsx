@@ -164,7 +164,9 @@ export default async function CartPage() {
                 </div>
                 <div className="flex justify-between text-sand-600">
                   <span>Shipping</span>
-                  <span className="text-sand-600">Calculated at checkout</span>
+                  <span className="text-sand-600">
+                    {(cart?.shipping_total ?? 0) === 0 ? "Free" : formatCartTotal(cart?.shipping_total)}
+                  </span>
                 </div>
                 {(cart?.discount_total ?? 0) > 0 && (
                   <div className="flex justify-between text-green-600">
