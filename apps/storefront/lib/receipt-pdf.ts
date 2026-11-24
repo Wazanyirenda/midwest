@@ -43,9 +43,9 @@ export type ReceiptOrder = {
 }
 
 const INK = rgb(0.11, 0.106, 0.094)
-const MUTED = rgb(0.42, 0.404, 0.376)
-const HAIRLINE = rgb(0.85, 0.84, 0.82)
-const SHADE = rgb(0.95, 0.945, 0.935)
+const MUTED = rgb(0.3, 0.29, 0.27)
+const HAIRLINE = rgb(0.66, 0.65, 0.63)
+const SHADE = rgb(0.91, 0.905, 0.895)
 
 // Only these mean money was taken. A receipt for anything else must not claim
 // the order was paid.
@@ -162,18 +162,18 @@ const ITEM_WIDTH = COL_QTY - 40 - (R_LEFT + 8)
 const TOTALS_HEIGHT = 96
 
 function receiptFooter(page: PDFPage, fonts: Fonts, pageNo: number, pages: number) {
-  rule(page, R_LEFT, R_RIGHT, R_MARGIN + 34, HAIRLINE)
-  text(page, fonts, "Questions? support@midwesternpeptides.com", R_LEFT, R_MARGIN + 20, { size: 8, bold: true })
+  rule(page, R_LEFT, R_RIGHT, R_MARGIN + 38, HAIRLINE)
+  text(page, fonts, "Questions? support@midwesternpeptides.com", R_LEFT, R_MARGIN + 22, { size: 9, bold: true })
   text(
     page,
     fonts,
     "For laboratory research use only. Not for human or veterinary consumption.",
     R_LEFT,
     R_MARGIN + 8,
-    { size: 8, color: MUTED }
+    { size: 9, color: MUTED }
   )
   if (pages > 1) {
-    textRight(page, fonts, `Page ${pageNo} of ${pages}`, R_RIGHT, R_MARGIN + 8, { size: 8, color: MUTED })
+    textRight(page, fonts, `Page ${pageNo} of ${pages}`, R_RIGHT, R_MARGIN + 8, { size: 9, color: MUTED })
   }
 }
 
@@ -201,7 +201,7 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
     height: logoHeight,
   })
   textRight(page, fonts, "RECEIPT", R_RIGHT, top - 24, { size: 24, bold: true })
-  textRight(page, fonts, `Order ${order.displayId}`, R_RIGHT, top - 44, { size: 11, bold: true, color: MUTED })
+  textRight(page, fonts, `Order ${order.displayId}`, R_RIGHT, top - 46, { size: 12, bold: true, color: MUTED })
   let y = top - logoHeight - 18
   rule(page, R_LEFT, R_RIGHT, y)
   y -= 26
@@ -212,32 +212,32 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   const detailsLeft = R_LEFT + colW + colGap
   const blockTop = y
 
-  text(page, fonts, "SHIP TO", R_LEFT, y, { size: 8, bold: true, color: MUTED })
+  text(page, fonts, "SHIP TO", R_LEFT, y, { size: 9, bold: true, color: MUTED })
   y -= 18
   const { name, lines } = addressLines(order)
-  for (const l of wrapLines(fonts.bold, 12, name || order.email, colW, 2)) {
-    text(page, fonts, l, R_LEFT, y, { size: 12, bold: true })
-    y -= 16
+  for (const l of wrapLines(fonts.bold, 13, name || order.email, colW, 2)) {
+    text(page, fonts, l, R_LEFT, y, { size: 13, bold: true })
+    y -= 17
   }
   for (const part of lines) {
-    for (const l of wrapLines(fonts.body, 11, part, colW, 2)) {
-      text(page, fonts, l, R_LEFT, y, { size: 11 })
-      y -= 15
+    for (const l of wrapLines(fonts.body, 12, part, colW, 2)) {
+      text(page, fonts, l, R_LEFT, y, { size: 12 })
+      y -= 16
     }
   }
   const phone = order.shippingAddress?.phone
   if (phone) {
-    text(page, fonts, phone, R_LEFT, y, { size: 10, color: MUTED })
-    y -= 14
+    text(page, fonts, phone, R_LEFT, y, { size: 11, color: MUTED })
+    y -= 15
   }
   if (name) {
-    text(page, fonts, order.email, R_LEFT, y, { size: 10, color: MUTED })
-    y -= 14
+    text(page, fonts, order.email, R_LEFT, y, { size: 11, color: MUTED })
+    y -= 15
   }
   const shipBottom = y
 
   y = blockTop
-  text(page, fonts, "ORDER DETAILS", detailsLeft, y, { size: 8, bold: true, color: MUTED })
+  text(page, fonts, "ORDER DETAILS", detailsLeft, y, { size: 9, bold: true, color: MUTED })
   y -= 18
   for (const [label, value] of [
     ["Order number", String(order.displayId)],
@@ -245,9 +245,9 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
     ["Payment", method],
     ["Status", paid ? "Paid" : order.status.charAt(0).toUpperCase() + order.status.slice(1)],
   ] as const) {
-    text(page, fonts, label, detailsLeft, y, { size: 10, color: MUTED })
-    textRight(page, fonts, value, R_RIGHT, y, { size: 10, bold: true })
-    y -= 16
+    text(page, fonts, label, detailsLeft, y, { size: 11, color: MUTED })
+    textRight(page, fonts, value, R_RIGHT, y, { size: 11, bold: true })
+    y -= 17
   }
 
   y = Math.min(shipBottom, y) - 18
@@ -257,10 +257,10 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   const itemsHeading = () => {
     page.drawRectangle({ x: R_LEFT, y: y - 7, width: R_WIDTH, height: 22, color: SHADE })
     const hy = y
-    text(page, fonts, "ITEM", R_LEFT + 8, hy, { size: 8, bold: true, color: MUTED })
-    textRight(page, fonts, "QTY", COL_QTY, hy, { size: 8, bold: true, color: MUTED })
-    textRight(page, fonts, "UNIT PRICE", COL_UNIT, hy, { size: 8, bold: true, color: MUTED })
-    textRight(page, fonts, "AMOUNT", COL_AMOUNT, hy, { size: 8, bold: true, color: MUTED })
+    text(page, fonts, "ITEM", R_LEFT + 8, hy, { size: 9, bold: true, color: MUTED })
+    textRight(page, fonts, "QTY", COL_QTY, hy, { size: 9, bold: true, color: MUTED })
+    textRight(page, fonts, "UNIT PRICE", COL_UNIT, hy, { size: 9, bold: true, color: MUTED })
+    textRight(page, fonts, "AMOUNT", COL_AMOUNT, hy, { size: 9, bold: true, color: MUTED })
     y -= 28
   }
   const newPage = () => {
@@ -281,23 +281,23 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
   itemsHeading()
   for (const item of order.items) {
     const title = item.variantTitle ? `${item.productTitle} - ${item.variantTitle}` : item.productTitle
-    const titleLines = wrapLines(fonts.body, 10, title, ITEM_WIDTH, 3)
-    const height = titleLines.length * 13 + 12
+    const titleLines = wrapLines(fonts.body, 11, title, ITEM_WIDTH, 3)
+    const height = titleLines.length * 14 + 12
 
     if (y - height < floor) {
       newPage()
       itemsHeading()
     }
 
-    textRight(page, fonts, String(item.quantity), COL_QTY, y, { size: 10 })
-    textRight(page, fonts, money(item.unitPriceCents), COL_UNIT, y, { size: 10 })
-    textRight(page, fonts, money(item.unitPriceCents * item.quantity), COL_AMOUNT, y, { size: 10, bold: true })
+    textRight(page, fonts, String(item.quantity), COL_QTY, y, { size: 11 })
+    textRight(page, fonts, money(item.unitPriceCents), COL_UNIT, y, { size: 11 })
+    textRight(page, fonts, money(item.unitPriceCents * item.quantity), COL_AMOUNT, y, { size: 11, bold: true })
     for (const l of titleLines) {
-      text(page, fonts, l, R_LEFT + 8, y, { size: 10 })
-      y -= 13
+      text(page, fonts, l, R_LEFT + 8, y, { size: 11 })
+      y -= 14
     }
     y -= 4
-    rule(page, R_LEFT, R_RIGHT, y + 5, HAIRLINE, 0.75)
+    rule(page, R_LEFT, R_RIGHT, y + 5, HAIRLINE)
     y -= 8
   }
 
@@ -310,16 +310,16 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
     ["Subtotal", money(order.subtotalCents)],
     ["Shipping", order.shippingCents === 0 ? "Free" : money(order.shippingCents)],
   ] as const) {
-    text(page, fonts, label, totalsLeft, y, { size: 10, color: MUTED })
-    textRight(page, fonts, value, COL_AMOUNT, y, { size: 10 })
+    text(page, fonts, label, totalsLeft, y, { size: 11, color: MUTED })
+    textRight(page, fonts, value, COL_AMOUNT, y, { size: 11 })
     y -= 18
   }
   rule(page, totalsLeft, R_RIGHT, y + 6)
   y -= 14
-  text(page, fonts, paid ? "Total paid" : "Total", totalsLeft, y, { size: 13, bold: true })
-  textRight(page, fonts, money(order.totalCents), COL_AMOUNT, y, { size: 13, bold: true })
+  text(page, fonts, paid ? "Total paid" : "Total", totalsLeft, y, { size: 14, bold: true })
+  textRight(page, fonts, money(order.totalCents), COL_AMOUNT, y, { size: 14, bold: true })
   y -= 34
-  text(page, fonts, "Thank you for your order.", R_LEFT, y, { size: 10, color: MUTED })
+  text(page, fonts, "Thank you for your order.", R_LEFT, y, { size: 11, color: MUTED })
 
   const pages = doc.getPages()
   pages.forEach((p, i) => receiptFooter(p, fonts, i + 1, pages.length))
