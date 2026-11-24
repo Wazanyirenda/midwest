@@ -32,12 +32,19 @@ function when(iso: string | null): string {
   })
 }
 
+const KIND_LABELS: Record<string, string> = {
+  order_label: "Label",
+  order_receipt: "Receipt",
+  test: "Test",
+}
+
 function Row({ job }: { job: PrintJobRow }) {
   return (
     <tr className="hover:bg-sand-50">
       <td className="px-4 py-2.5 font-mono text-xs text-sand-700">
         {job.order_code ?? "—"}
       </td>
+      <td className="px-4 py-2.5 text-sand-600">{KIND_LABELS[job.kind] ?? job.kind}</td>
       <td className="px-4 py-2.5">
         <PrintStatusBadge status={job.status} />
       </td>
@@ -55,7 +62,9 @@ function Row({ job }: { job: PrintJobRow }) {
         )}
       </td>
       <td className="px-4 py-2.5 text-right">
-        {job.order_id && <ReprintButton orderId={job.order_id} />}
+        {job.order_id && (
+          <ReprintButton orderId={job.order_id} kind={job.kind === "order_receipt" ? "receipt" : "label"} />
+        )}
       </td>
     </tr>
   )
@@ -81,14 +90,14 @@ export default async function AdminPrintingPage({
       <header>
         <h1 className="text-xl font-semibold text-sand-900">Printing</h1>
         <p className="mt-0.5 text-sm text-sand-600">
-          Every label the shop has sent to the Zebra, and what happened to it.
+          Every shipping label and receipt sent to the shop&apos;s printers, and what happened to it.
         </p>
       </header>
 
-      {!settings.autoPrintOrderLabels && (
+      {!settings.autoPrintOrderLabels && !settings.autoPrintOrderReceipts && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Automatic printing is off — labels only go out when you press Print
-          label.{" "}
+          Automatic printing is off — nothing prints until you press Print
+          label or Print receipt.{" "}
           <Link href="/admin/settings" className="font-medium underline">
             Turn it on in Settings
           </Link>
@@ -99,9 +108,10 @@ export default async function AdminPrintingPage({
         <p className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           <AlertTriangle size={15} strokeWidth={2} className="mt-0.5 shrink-0" />
           <span>
-            <strong>{summary.failed}</strong> label
+            <strong>{summary.failed}</strong> print job
             {summary.failed === 1 ? "" : "s"} gave up after repeated attempts.
-            Check the printer, then press Print label on the affected orders.
+            Check the printer, then press Print label or Print receipt on the
+            affected orders.
           </span>
         </p>
       )}
@@ -115,7 +125,7 @@ export default async function AdminPrintingPage({
         <StatTile label="On its way" value={String(summary.pending)} hint="queued or sending" />
         <StatTile label="Failed" value={String(summary.failed)} hint="needs a look" />
         <StatTile
-          label="Last label"
+          label="Last printed"
           value={summary.lastPrintedAt ? when(summary.lastPrintedAt) : "Never"}
           hint={`${summary.total} total`}
         />
@@ -142,7 +152,7 @@ export default async function AdminPrintingPage({
         {jobs.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-sand-600">
             {filter === "all"
-              ? "No labels yet. One is queued automatically for every paid order once printing is switched on."
+              ? "Nothing printed yet. A label and a receipt are queued for every paid order once automatic printing is switched on in Settings."
               : "Nothing here."}
           </p>
         ) : (
@@ -151,6 +161,7 @@ export default async function AdminPrintingPage({
               <thead className="text-left text-xs uppercase tracking-wide text-sand-600">
                 <tr className="border-b border-sand-100">
                   <th className="px-4 py-2 font-medium">Order</th>
+                  <th className="px-4 py-2 font-medium">Type</th>
                   <th className="px-4 py-2 font-medium">Status</th>
                   <th className="px-4 py-2 font-medium">Queued</th>
                   <th className="px-4 py-2 font-medium">Printed</th>

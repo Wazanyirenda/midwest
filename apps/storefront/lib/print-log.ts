@@ -15,6 +15,7 @@ export type PrintJobRow = {
   id: string
   order_id: string | null
   order_code: string | null
+  kind: string
   status: PrintJobStatus
   attempts: number
   last_error: string | null
@@ -42,7 +43,7 @@ export type PrintSummary = {
 }
 
 const JOB_FIELDS =
-  "id,order_id,status,attempts,last_error,created_at,printed_at," +
+  "id,order_id,kind,status,attempts,last_error,created_at,printed_at," +
   "order:orders(order_code)"
 
 type JoinedRow = Omit<PrintJobRow, "order_code"> & {

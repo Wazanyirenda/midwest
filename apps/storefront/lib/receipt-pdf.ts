@@ -1,12 +1,14 @@
 import "server-only"
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib"
+import { code128B } from "@/lib/code128"
 import { RECEIPT_LOGO_PNG_BASE64 } from "@/lib/receipt-logo"
 
 /**
- * The order receipt as an A4 PDF, for the customer's email, their account
- * download and the store's copy, which staff print on the office printer and
- * pack in the box. It is not a postage label: postage still comes from the
- * carrier or a label service.
+ * Order PDFs: the receipt on A4, for the customer's email, their account
+ * download and the store's copy (printed on the office printer and packed in
+ * the box), and a 4x6 shipping label for the Zebra, for the outside of it.
+ * Neither is a postage label: postage still comes from the carrier or a label
+ * service.
  *
  * Drawn rather than rendered from HTML. A headless browser would give richer
  * layout but cannot run on the serverless functions this store deploys to.
@@ -40,6 +42,54 @@ export type ReceiptOrder = {
     quantity: number
     unitPriceCents: number
   }>
+}
+
+/** An order as the database returns it, before it is shaped for a PDF. */
+export type OrderPrintRow = {
+  order_code: string
+  email: string
+  created_at?: string
+  status?: string
+  payment_provider?: string | null
+  subtotal_cents: number
+  shipping_cents: number
+  total_cents: number
+  shipping_address?: ReceiptOrder["shippingAddress"]
+  items: Array<{
+    product_title: string
+    variant_title?: string | null
+    quantity: number
+    unit_price_cents: number
+  }>
+}
+
+/** The return-address setting as label lines: one per line, blanks dropped. */
+export function returnAddressLines(value: string): string[] {
+  return value
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 4)
+}
+
+export function toReceiptOrder(row: OrderPrintRow): ReceiptOrder {
+  return {
+    displayId: row.order_code,
+    createdAt: row.created_at ?? new Date().toISOString(),
+    email: row.email,
+    status: row.status ?? "paid",
+    paymentProvider: row.payment_provider ?? null,
+    subtotalCents: row.subtotal_cents,
+    shippingCents: row.shipping_cents,
+    totalCents: row.total_cents,
+    shippingAddress: row.shipping_address ?? null,
+    items: row.items.map((i) => ({
+      productTitle: i.product_title,
+      variantTitle: i.variant_title ?? null,
+      quantity: i.quantity,
+      unitPriceCents: i.unit_price_cents,
+    })),
+  }
 }
 
 const INK = rgb(0.11, 0.106, 0.094)
@@ -323,6 +373,124 @@ export async function buildReceiptPdf(order: ReceiptOrder): Promise<Buffer> {
 
   const pages = doc.getPages()
   pages.forEach((p, i) => receiptFooter(p, fonts, i + 1, pages.length))
+
+  return Buffer.from(await doc.save())
+}
+
+// ─── 4x6 shipping label ──────────────────────────────────────────────────────
+// For the outside of the box: who it's from, who it's for and the order
+// number. No items or prices — the receipt goes inside, where carriers and
+// anyone on a porch can't read what the parcel holds or what it's worth. It is
+// not a postage label; a label bought from USPS or a label service replaces it.
+
+const LABEL_W = 288 // 4 in at 72 pt/in
+const LABEL_H = 432 // 6 in
+// Wider than the printer needs, so nothing sits near an edge that a
+// slightly skewed roll could clip.
+const L_MARGIN = 26
+const L_RIGHT = LABEL_W - L_MARGIN
+const L_WIDTH = L_RIGHT - L_MARGIN
+
+// 1.44 pt is exactly 6 dots on the Zebra's 300 dpi head, so every bar prints
+// at a whole number of dots and the barcode stays scannable.
+const BARCODE_MODULE = 1.44
+const BARCODE_HEIGHT = 46
+
+export async function buildShippingLabelPdf(order: ReceiptOrder, returnAddress: string[]): Promise<Buffer> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`Shipping label - Order ${order.displayId}`)
+  doc.setProducer("Midwestern Peptides")
+  const fonts: Fonts = {
+    body: await doc.embedFont(StandardFonts.Helvetica),
+    bold: await doc.embedFont(StandardFonts.HelveticaBold),
+  }
+  const logo = await doc.embedPng(Buffer.from(RECEIPT_LOGO_PNG_BASE64, "base64"))
+  const page = doc.addPage([LABEL_W, LABEL_H])
+  const top = LABEL_H - L_MARGIN
+
+  // ── Logo, with the order number and date beside it
+  const logoHeight = 42
+  page.drawImage(logo, {
+    x: L_MARGIN,
+    y: top - logoHeight,
+    width: (logo.width / logo.height) * logoHeight,
+    height: logoHeight,
+  })
+  textRight(page, fonts, `Order ${order.displayId}`, L_RIGHT, top - 16, { size: 10, bold: true })
+  textRight(page, fonts, formatDate(order.createdAt), L_RIGHT, top - 28, { size: 8, color: MUTED })
+  let y = top - logoHeight - 8
+  rule(page, L_MARGIN, L_RIGHT, y)
+
+  // ── From: the return address, small. Left out entirely until one is set in
+  // admin, rather than printing a made-up address.
+  if (returnAddress.length > 0) {
+    y -= 14
+    text(page, fonts, "FROM", L_MARGIN, y, { size: 7, bold: true, color: MUTED })
+    y -= 12
+    for (const line of returnAddress.slice(0, 4)) {
+      for (const l of wrapLines(fonts.body, 9, line, L_WIDTH, 1)) {
+        text(page, fonts, l, L_MARGIN, y, { size: 9 })
+        y -= 11
+      }
+    }
+    y -= 4
+    rule(page, L_MARGIN, L_RIGHT, y)
+  }
+  const spaceTop = y
+
+  // ── The order number as a barcode, raised well clear of the bottom edge
+  const widths = code128B(String(order.displayId))
+  const barcodeWidth = widths.reduce((sum, w) => sum + w, 0) * BARCODE_MODULE
+  let x = (LABEL_W - barcodeWidth) / 2
+  const barY = L_MARGIN + 40
+  const spaceBottom = barY + BARCODE_HEIGHT + 14
+  rule(page, L_MARGIN, L_RIGHT, spaceBottom)
+  widths.forEach((w, i) => {
+    if (i % 2 === 0) {
+      page.drawRectangle({ x, y: barY, width: w * BARCODE_MODULE, height: BARCODE_HEIGHT, color: rgb(0, 0, 0) })
+    }
+    x += w * BARCODE_MODULE
+  })
+  const caption = String(order.displayId)
+  text(page, fonts, caption, (LABEL_W - fonts.bold.widthOfTextAtSize(safe(caption), 10)) / 2, barY - 15, {
+    size: 10,
+    bold: true,
+  })
+
+  // ── Ship to: as large as fits, since this is what the carrier reads, and
+  // centred in the space between the return address and the barcode
+  const { name, lines } = addressLines(order)
+  const rows: Array<{ value: string; size: number; bold: boolean; step: number; muted?: boolean }> = [
+    { value: "SHIP TO", size: 8, bold: true, step: 24, muted: true },
+    ...wrapLines(fonts.bold, 20, name || order.email, L_WIDTH, 2).map((value) => ({
+      value,
+      size: 20,
+      bold: true,
+      step: 24,
+    })),
+    ...lines.flatMap((part) =>
+      wrapLines(fonts.bold, 16, part, L_WIDTH, 2).map((value) => ({ value, size: 16, bold: true, step: 20 }))
+    ),
+  ]
+  const phone = order.shippingAddress?.phone
+  if (phone) rows.push({ value: phone, size: 10, bold: false, step: 14, muted: true })
+  // Glyphs rise about 0.75 of the font size above the baseline and drop about
+  // 0.2 below it; measure the block on that, not on line steps alone.
+  const first = rows[0]!
+  const last = rows[rows.length - 1]!
+  const blockHeight = 0.75 * first.size + rows.slice(0, -1).reduce((sum, r) => sum + r.step, 0) + 0.2 * last.size
+  const slack = Math.max(spaceTop - spaceBottom - blockHeight, 12)
+  y = spaceTop - slack / 2 - 0.75 * first.size
+  // The lines stay left-aligned, as carriers expect, but the block as a whole
+  // sits in the middle of the label.
+  const blockWidth = Math.max(
+    ...rows.map((r) => (r.bold ? fonts.bold : fonts.body).widthOfTextAtSize(safe(r.value), r.size))
+  )
+  const blockX = Math.max(L_MARGIN, (LABEL_W - blockWidth) / 2)
+  for (const row of rows) {
+    text(page, fonts, row.value, blockX, y, { size: row.size, bold: row.bold, color: row.muted ? MUTED : INK })
+    y -= row.step
+  }
 
   return Buffer.from(await doc.save())
 }

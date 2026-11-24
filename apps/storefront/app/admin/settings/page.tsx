@@ -272,25 +272,41 @@ export default async function AdminSettingsPage() {
       </Section>
 
       <Section
-        title="Order receipt printing"
-        description="Prints a 4×6 receipt on the Zebra as soon as an order is paid: ship-to name and address, items with prices, totals, and how it was paid. Setup steps are in tools/print-agent/README.md."
+        title="Order printing"
+        description="When an order is paid, the print station on the shop computer prints a 4×6 shipping label on the Zebra (for the outside of the box) and an A4 receipt on the office printer (for inside it). Setup steps are in tools/print-agent/SHOP_PC_PROMPT.md."
       >
         <SettingToggle
           field="autoPrintOrderLabels"
-          label="Print a receipt for every paid order"
-          description="Receipts queue the moment payment clears, whether or not anyone is at the computer. A receipt that can't print now stays queued and prints when the printer is back."
-          warning="Leave this off until a test receipt has printed. Nothing prints while it is off, and you can still print any order by hand from the Orders page."
+          label="Print a shipping label for every paid order"
+          description="Labels queue the moment payment clears, whether or not anyone is at the computer. A label that can't print now stays queued and prints when the printer is back."
+          warning="Leave this off until a test label has printed. Nothing prints while it is off, and you can still print any order by hand from the Orders page."
           initial={settings.autoPrintOrderLabels}
+        />
+        <SettingToggle
+          field="autoPrintOrderReceipts"
+          label="Print an A4 receipt for every paid order"
+          description="The same receipt the customer is emailed, printed on the office printer to pack in the box. Like labels, it waits in the queue if the printer is off."
+          warning="Leave this off until a receipt printed from the Orders page has come out right. Only the print station prints receipts, so the shop computer must be running it."
+          initial={settings.autoPrintOrderReceipts}
+        />
+        <SettingField
+          field="returnAddress"
+          label="Return address on labels"
+          description="Printed small in the FROM block of every shipping label, one line per line, up to 4 lines. Leave empty to print labels without a return address."
+          initial={settings.returnAddress}
+          placeholder={"Midwestern Peptides\n123 Example St\nFargo, ND 58102"}
+          rows={4}
+          maxLength={400}
         />
         <SettingField
           field="printLabelCopies"
-          label="Copies per order"
-          description="Two is useful if one goes on the box and one goes inside it."
+          label="Label copies per order"
+          description="Usually one: the label goes on the box and the receipt goes inside it."
           initial={settings.printLabelCopies}
           type="number"
           min={1}
           max={5}
-          suffix="receipts"
+          suffix="labels"
         />
         <SettingField
           field="labelPrinterSerial"
@@ -311,7 +327,7 @@ export default async function AdminSettingsPage() {
         <SettingField
           field="printAlertEmail"
           label="Email me when something needs attention"
-          description="Sent when a crypto order is underpaid or paid twice, and when a paid order's receipt can't print — the printer or the computer it runs through is off or unreachable, or a receipt failed after repeated tries. At most one 'printing is offline' email an hour. Separate several addresses with commas, up to 5. Leave empty for no alerts."
+          description="Sent when a crypto order is underpaid or paid twice, and when a paid order's label or receipt can't print — a printer or the shop computer is off or unreachable, or a print failed after repeated tries. At most one 'printing is offline' email an hour. Separate several addresses with commas, up to 5. Leave empty for no alerts."
           initial={settings.printAlertEmail}
           placeholder="support@midwesternpeptides.com, you@gmail.com"
           maxLength={1000}

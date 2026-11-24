@@ -40,6 +40,7 @@ const STRING_MAX: Partial<Record<keyof SiteSettings, number>> = {
   emailOrderReceivedBody: 2000,
   orderAlertEmails: 1000,
   printAlertEmail: 1000,
+  returnAddress: 400,
 }
 
 // Settings that hold a comma-separated list of email addresses (or nothing).

@@ -327,6 +327,7 @@ export default async function AdminOrdersPage({
                   <ArchiveButton orderId={order.id} archived={!!order.archived_at} />
                 )}
                 <ReprintButton orderId={order.id} />
+                <ReprintButton orderId={order.id} kind="receipt" />
               </span>
             </div>
 

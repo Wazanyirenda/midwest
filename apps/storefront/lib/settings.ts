@@ -46,6 +46,10 @@ export type SiteSettings = {
   labelPrinterSerial: string
   /** Printer's LAN address, read by the local print agent. */
   labelPrinterHost: string
+  /** Queue the A4 receipt for the shop's office printer when an order is paid. */
+  autoPrintOrderReceipts: boolean
+  /** Printed in the FROM block of shipping labels, one line per line. */
+  returnAddress: string
   /** Where receipt-printing problems are emailed. Empty = no alerts. */
   printAlertEmail: string
   /** Pay-by-hand crypto checkout: customer sends coins, staff approve. */
@@ -138,6 +142,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   printLabelCopies: 1,
   labelPrinterSerial: "",
   labelPrinterHost: "",
+  // Mirror the seeded rows in 20261124000038_print_receipts.sql. An empty
+  // return address leaves the label's FROM block out rather than inventing one.
+  autoPrintOrderReceipts: false,
+  returnAddress: "",
   printAlertEmail: "",
   // Mirror the seeded rows in 20261110000035_manual_crypto_payments.sql. Off
   // with no addresses, so a settings outage can never show a customer a
@@ -195,6 +203,8 @@ export const SETTING_KEYS: Record<keyof SiteSettings, string> = {
   printLabelCopies: "print_label_copies",
   labelPrinterSerial: "label_printer_serial",
   labelPrinterHost: "label_printer_host",
+  autoPrintOrderReceipts: "auto_print_order_receipts",
+  returnAddress: "return_address",
   printAlertEmail: "print_alert_email",
   manualPaymentsEnabled: "manual_payments_enabled",
   paymentAddressBtc: "payment_address_btc",

@@ -4,7 +4,7 @@ import { z } from "zod"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getSiteSettings } from "@/lib/settings"
 import { rateLimit } from "@/lib/rate-limit"
-import { recordAgentSeen } from "@/lib/print"
+import { LABEL_KINDS, RECEIPT_KINDS, recordAgentSeen, renderReceiptPayload } from "@/lib/print"
 import { sendPrintAlertEmail } from "@/lib/email"
 
 /**
@@ -15,10 +15,11 @@ import { sendPrintAlertEmail } from "@/lib/email"
  *
  * This is the only authenticated API surface the storefront exposes besides
  * webhooks and auth callbacks (AGENTS.md §1), so it is deliberately narrow:
- * bearer token only, rate limited, and the response carries rendered ZPL and
- * nothing else — never an order row, an email, or an id a caller could pivot
- * on. A claimed job is handed out once, so a stolen token cannot be used to
- * replay the queue and read past labels.
+ * bearer token only, rate limited, and the response carries each job's kind
+ * and its printable payload (ZPL for the Zebra, a base64 PDF for the receipt
+ * printer) and nothing else — never an order row, an email, or an id a caller
+ * could pivot on. A claimed job is handed out once, so a stolen token cannot be
+ * used to replay the queue and read past labels.
  */
 
 export const runtime = "nodejs"
@@ -77,29 +78,86 @@ async function guard(request: Request): Promise<NextResponse | null> {
   return null
 }
 
-/** Claims up to MAX_BATCH labels for this agent. */
+const PRINTER_KINDS: Record<string, readonly string[]> = {
+  label: LABEL_KINDS,
+  receipt: RECEIPT_KINDS,
+}
+
+/**
+ * The job kinds for the printers the station says are up, from
+ * `?ready=label,receipt`. No parameter means labels only: that is all an older
+ * agent can print, and it must never be handed a PDF to send to the Zebra.
+ */
+function readyKinds(request: Request): string[] {
+  const ready = new URL(request.url).searchParams.get("ready")
+  if (ready === null) return [...LABEL_KINDS]
+
+  const kinds = new Set<string>()
+  for (const printer of ready.slice(0, 40).split(",")) {
+    for (const kind of PRINTER_KINDS[printer.trim()] ?? []) kinds.add(kind)
+  }
+  return [...kinds]
+}
+
+type ClaimedJob = { id: string; kind: string; order_id: string | null; payload: string }
+
+/** Claims up to MAX_BATCH jobs for the printers this agent says are up. */
 export async function GET(request: Request) {
   const denied = await guard(request)
   if (denied) return denied
 
   await recordAgentSeen()
 
+  const settings = await getSiteSettings()
+  // The host is served from settings so a DHCP change is fixable in /admin
+  // without editing a config file on a machine at the shop. Empty means the
+  // agent falls back to its own PRINTER_HOST.
+  const printerHost = settings.labelPrinterHost
+
+  const kinds = readyKinds(request)
+  if (kinds.length === 0) return NextResponse.json({ jobs: [], printerHost })
+
   const { data, error } = await supabase.rpc("claim_print_jobs", {
     p_limit: MAX_BATCH,
     p_max_attempts: MAX_ATTEMPTS,
+    p_kinds: kinds,
   })
   if (error) {
     console.error("[print/jobs] claim failed:", error.message)
     return NextResponse.json({ error: "claim failed" }, { status: 500 })
   }
 
-  const settings = await getSiteSettings()
-  const jobs = (data ?? []) as Array<{ id: string; payload: string }>
+  const jobs: Array<{ id: string; kind: string; payload: string }> = []
+  for (const job of (data ?? []) as ClaimedJob[]) {
+    if (job.kind !== "order_receipt") {
+      jobs.push({ id: job.id, kind: job.kind, payload: job.payload })
+      continue
+    }
 
-  // The host is served from settings so a DHCP change is fixable in /admin
-  // without editing a config file on a machine at the shop. Empty means the
-  // agent falls back to its own PRINTER_HOST.
-  return NextResponse.json({ jobs, printerHost: settings.labelPrinterHost })
+    try {
+      if (!job.order_id) throw new Error("receipt job has no order")
+      jobs.push({ id: job.id, kind: job.kind, payload: await renderReceiptPayload(job.order_id) })
+    } catch (e) {
+      // Never hand out an empty receipt. Same handling as a failed print:
+      // retired once out of attempts, otherwise back in the queue, with the
+      // reason showing in admin either way.
+      console.error(`[print/jobs] receipt ${job.id} could not be drawn:`, e)
+      const last_error = "receipt could not be drawn"
+      await supabase
+        .from("print_jobs")
+        .update({ status: "failed", last_error })
+        .eq("id", job.id)
+        .eq("status", "claimed")
+        .gte("attempts", MAX_ATTEMPTS)
+      await supabase
+        .from("print_jobs")
+        .update({ status: "queued", last_error })
+        .eq("id", job.id)
+        .eq("status", "claimed")
+    }
+  }
+
+  return NextResponse.json({ jobs, printerHost })
 }
 
 /** Acknowledges a batch: what printed, and what did not and why. */

@@ -3,7 +3,13 @@ import { carrierTrackingUrl } from "@/lib/orders"
 import { deliver, mailboxFrom, type Mailbox } from "@/lib/email-transport"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { getSiteSettings } from "@/lib/settings"
-import { buildReceiptPdf, type ReceiptOrder } from "@/lib/receipt-pdf"
+import {
+  buildReceiptPdf,
+  buildShippingLabelPdf,
+  returnAddressLines,
+  toReceiptOrder,
+  type ReceiptOrder,
+} from "@/lib/receipt-pdf"
 import {
   assetLabel,
   explorerUrl,
@@ -295,27 +301,27 @@ type Attachment = { filename: string; content: Buffer; contentType: string }
  */
 async function receiptAttachments(order: ReceiptEmailOrder): Promise<Attachment[] | undefined> {
   try {
-    const pdf = await buildReceiptPdf({
-      displayId: order.order_code,
-      createdAt: order.created_at ?? new Date().toISOString(),
-      email: order.email,
-      status: order.status ?? "paid",
-      paymentProvider: order.payment_provider ?? null,
-      subtotalCents: order.subtotal_cents,
-      shippingCents: order.shipping_cents,
-      totalCents: order.total_cents,
-      shippingAddress: order.shipping_address ?? null,
-      items: order.items.map((i) => ({
-        productTitle: i.product_title,
-        variantTitle: i.variant_title ?? null,
-        quantity: i.quantity,
-        unitPriceCents: i.unit_price_cents,
-      })),
-    })
+    const pdf = await buildReceiptPdf(toReceiptOrder(order))
     return [{ filename: `receipt-${order.order_code}.pdf`, content: pdf, contentType: "application/pdf" }]
   } catch (e) {
     console.error("[email] receipt PDF failed:", e)
     return undefined
+  }
+}
+
+/**
+ * The 4x6 shipping label, for the store's copy only: it is for the outside of
+ * the box and means nothing to the customer. Same never-stored rule as the
+ * receipt. Empty when it fails to draw, so the receipt still goes.
+ */
+async function labelAttachment(order: ReceiptEmailOrder): Promise<Attachment[]> {
+  try {
+    const { returnAddress } = await getSiteSettings()
+    const pdf = await buildShippingLabelPdf(toReceiptOrder(order), returnAddressLines(returnAddress))
+    return [{ filename: `label-4x6-${order.order_code}.pdf`, content: pdf, contentType: "application/pdf" }]
+  } catch (e) {
+    console.error("[email] label PDF failed:", e)
+    return []
   }
 }
 
@@ -600,7 +606,7 @@ export async function sendPaymentSubmittedAlert(
 export async function sendPaidReceiptCopy(order: ManualEmailOrder): Promise<void> {
   const body = `
     ${paragraph(
-      `Order <strong>${escapeHtml(order.order_code)}</strong> was approved as paid. The A4 receipt is attached (the customer has been sent the same one). Print it and pack it in the box. Postage is bought separately.`
+      `Order <strong>${escapeHtml(order.order_code)}</strong> was approved as paid. Attached are the A4 receipt (the customer has been sent the same one) and the 4x6 shipping label. If the print station is running they have already printed; otherwise print them here: the receipt goes in the box, the label on it. Postage is bought separately.`
     )}
     ${customerBlockHtml(order)}
     ${orderTableHtml(order)}
@@ -610,7 +616,11 @@ export async function sendPaidReceiptCopy(order: ManualEmailOrder): Promise<void
     `Paid: order ${order.order_code}, ${formatAmount(order.total_cents)}`,
     `Order ${order.order_code} paid`,
     body,
-    { template: "staff_receipt_copy", entityId: order.id, attachments: await receiptAttachments(order) }
+    {
+      template: "staff_receipt_copy",
+      entityId: order.id,
+      attachments: [...((await receiptAttachments(order)) ?? []), ...(await labelAttachment(order))],
+    }
   )
 }
 

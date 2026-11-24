@@ -2,7 +2,7 @@ import "server-only"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { getAmountPaidCents, getInvoice, type Invoice } from "@/lib/btcpay"
 import { sendOrderConfirmationEmail, sendPaymentReviewEmail } from "@/lib/email"
-import { queueOrderLabel } from "@/lib/print"
+import { queueOrderPrints } from "@/lib/print"
 
 // Applies a BTCPay invoice's state to its order. The webhook, the success
 // page's status check and the reconciliation sweep all come through here, so a
@@ -113,7 +113,7 @@ async function applySettled(invoice: Invoice): Promise<SyncResult> {
 
   await retireCart(result.order_id)
   // Inside the same one-shot gate as the email, so no path prints twice.
-  await queueOrderLabel(result.order_id)
+  await queueOrderPrints(result.order_id)
 
   const { data: order } = await supabase
     .from("orders")

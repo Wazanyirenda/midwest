@@ -10,7 +10,7 @@ import { rateLimit } from "@/lib/rate-limit"
 import { getSiteSettings } from "@/lib/settings"
 import { isNetwork, isValidTxid, type Asset } from "@/lib/crypto-assets"
 import { paymentOptions, quoteAmount, quoteExpired } from "@/lib/manual-payments"
-import { queueOrderLabel } from "@/lib/print"
+import { queueOrderPrints } from "@/lib/print"
 import {
   sendOrderCanceledEmail,
   sendOrderConfirmationEmail,
@@ -221,7 +221,7 @@ export async function approveManualPayment(orderId: string): Promise<Result> {
     .eq("id", orderId)
 
   after(async () => {
-    await queueOrderLabel(orderId)
+    await queueOrderPrints(orderId)
     const full = await loadEmailOrder(orderId)
     if (!full) return
     await sendOrderConfirmationEmail(full)

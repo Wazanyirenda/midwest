@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { supabaseAdmin as supabase } from "@/lib/supabase/admin"
 import { sendOrderConfirmationEmail } from "@/lib/email"
-import { queueOrderLabel } from "@/lib/print"
+import { queueOrderPrints } from "@/lib/print"
 
 // Needs the Node runtime: signature verification uses crypto over the raw body.
 export const runtime = "nodejs"
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         // Only a real pending→paid transition sends mail and prints, so a
         // redelivery can't email the customer or print the label twice.
         if (result.status === "processed" && result.order_id) {
-          await queueOrderLabel(result.order_id)
+          await queueOrderPrints(result.order_id)
           await sendConfirmation(result.order_id)
         }
         break
